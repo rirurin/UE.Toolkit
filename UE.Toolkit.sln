@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UE.Toolkit.Reloaded", "UE.Toolkit.Reloaded\UE.Toolkit.Reloaded.csproj", "{BFBFEA56-F6B8-4AE3-9A39-C400CDBDB282}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BFBFEA56-F6B8-4AE3-9A39-C400CDBDB282}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BFBFEA56-F6B8-4AE3-9A39-C400CDBDB282}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BFBFEA56-F6B8-4AE3-9A39-C400CDBDB282}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BFBFEA56-F6B8-4AE3-9A39-C400CDBDB282}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

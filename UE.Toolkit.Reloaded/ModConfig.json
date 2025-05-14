@@ -1,0 +1,21 @@
+{
+  "ModId": "UE.Toolkit.Reloaded",
+  "ModName": "UE Toolkit",
+  "ModAuthor": "RyoTune",
+  "ModVersion": "1.0.0",
+  "ModDescription": "Description",
+  "ModDll": "UE.Toolkit.Reloaded.dll",
+  "ModIcon": "Preview.png",
+  "ModR2RManagedDll32": "x86/UE.Toolkit.Reloaded.dll",
+  "ModR2RManagedDll64": "x64/UE.Toolkit.Reloaded.dll",
+  "ModNativeDll32": "",
+  "ModNativeDll64": "",
+  "IsLibrary": false,
+  "ReleaseMetadataFileName": "UE.Toolkit.Reloaded.ReleaseMetadata.json",
+  "PluginData": {},
+  "IsUniversalMod": false,
+  "ModDependencies": [ "reloaded.sharedlib.hooks", "Reloaded.Memory.SigScan.ReloadedII" ],
+  "OptionalDependencies": [],
+  "SupportedAppId": [],
+  "ProjectUrl": ""
+}

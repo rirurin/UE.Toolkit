@@ -22,7 +22,7 @@ public unsafe struct FName
 
     public override string? ToString()
     {
-        if (UnrealGlobals.GFNamePool == null)
+        if (UnrealService.GFNamePool == null)
         {
             Log.Warning($"{nameof(FName)} global pool is not set, defaulting to base {nameof(base.ToString)}");
             return base.ToString();
@@ -40,7 +40,7 @@ public unsafe struct FName
         return (FNameEntry*)((ComparisonIndex.Value & 0xFFFF) * 2 + poolIdx);
     }
     
-    private static nint GetPool(uint poolIdx) => *((nint*)(UnrealGlobals.GFNamePool + 1) + poolIdx);
+    private static nint GetPool(uint poolIdx) => *((nint*)(UnrealService.GFNamePool + 1) + poolIdx);
 }
 
 [StructLayout(LayoutKind.Sequential, Size = 0x4)]

@@ -6,7 +6,6 @@ using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using UE.Toolkit.Interfaces;
 using UE.Toolkit.Interfaces.Common.Types.Unreal;
-using UE.Toolkit.Reloaded.Unreal;
 using UE.Toolkit.TestMod.Template;
 using UE.Toolkit.TestMod.Configuration;
 

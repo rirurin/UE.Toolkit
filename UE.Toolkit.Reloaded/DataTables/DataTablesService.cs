@@ -1,11 +1,12 @@
 // ReSharper disable InconsistentNaming
 
-using UE.Toolkit.Reloaded.Common.Types.DataTables;
-using UE.Toolkit.Reloaded.Common.Types.Unreal;
+using UE.Toolkit.Interfaces;
+using UE.Toolkit.Interfaces.Common.Types.DataTables;
+using UE.Toolkit.Interfaces.Common.Types.Unreal;
 
 namespace UE.Toolkit.Reloaded.DataTables;
 
-public unsafe class DataTablesService
+public unsafe class DataTablesService : IDataTables
 {
     private delegate void HandleDataTableChanged(UDataTable<UObjectBase>* self, FName changedRowName);
     private readonly SHFunction<HandleDataTableChanged>? _HandleDataTableChanged;

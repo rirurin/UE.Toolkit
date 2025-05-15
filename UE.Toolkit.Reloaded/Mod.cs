@@ -3,6 +3,7 @@ using System.Diagnostics;
 #endif
 using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
+using UE.Toolkit.Interfaces;
 using UE.Toolkit.Reloaded.Template;
 using UE.Toolkit.Reloaded.Configuration;
 using UE.Toolkit.Reloaded.DataTables;
@@ -11,7 +12,7 @@ using UE.Toolkit.Reloaded.UObjects;
 
 namespace UE.Toolkit.Reloaded;
 
-public class Mod : ModBase
+public class Mod : ModBase, IExports
 {
 #pragma warning disable CA2211
     public static Config Config = null!;
@@ -49,6 +50,9 @@ public class Mod : ModBase
         _objects = new();
         _tables = new();
         _memory = new();
+        
+        _modLoader.AddOrReplaceController<IDataTables>(_owner, _tables);
+        _modLoader.AddOrReplaceController<IUnrealObjects>(_owner, _objects);
     }
 
     #region Standard Overrides
@@ -73,4 +77,6 @@ public class Mod : ModBase
 #pragma warning restore CS8618
 
     #endregion
+
+    public Type[] GetTypes() => [typeof(IDataTables), typeof(IUnrealObjects)];
 }

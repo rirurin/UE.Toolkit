@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace UE.Toolkit.Reloaded.Common.Types.Unreal;
+namespace UE.Toolkit.Interfaces.Common.Types.Unreal;
 
 [StructLayout(LayoutKind.Explicit, Size = 0x10)]
 public struct FNamePool

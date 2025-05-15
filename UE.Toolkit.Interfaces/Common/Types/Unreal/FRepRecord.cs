@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace UE.Toolkit.Reloaded.Common.Types.Unreal;
+namespace UE.Toolkit.Interfaces.Common.Types.Unreal;
 
 [StructLayout(LayoutKind.Sequential)]
 public unsafe struct FRepRecord

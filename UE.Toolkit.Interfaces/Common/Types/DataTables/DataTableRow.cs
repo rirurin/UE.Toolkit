@@ -1,6 +1,6 @@
-using UE.Toolkit.Reloaded.Common.Types.Unreal;
+using UE.Toolkit.Interfaces.Common.Types.Unreal;
 
-namespace UE.Toolkit.Reloaded.Common.Types.DataTables;
+namespace UE.Toolkit.Interfaces.Common.Types.DataTables;
 
 /// <summary>
 /// <see cref="DataTable{TRow}"/> row wrapper for simpler use.

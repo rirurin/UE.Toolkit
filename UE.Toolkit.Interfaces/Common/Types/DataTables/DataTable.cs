@@ -1,7 +1,7 @@
 using System.Collections;
-using UE.Toolkit.Reloaded.Common.Types.Unreal;
+using UE.Toolkit.Interfaces.Common.Types.Unreal;
 
-namespace UE.Toolkit.Reloaded.Common.Types.DataTables;
+namespace UE.Toolkit.Interfaces.Common.Types.DataTables;
 
 /// <summary>
 /// <see cref="UDataTable{TRow}"/> wrapper for simpler use.

@@ -1,6 +1,7 @@
 // ReSharper disable InconsistentNaming
 // ReSharper disable BuiltInTypeReferenceStyleForMemberAccess
-namespace UE.Toolkit.Reloaded.Common.Types.Unreal;
+
+namespace UE.Toolkit.Interfaces.Common.Types.Unreal;
 
 [Flags]
 public enum EClassCastFlags : ulong

@@ -1,7 +1,7 @@
 // ReSharper disable InconsistentNaming
 // ReSharper disable GrammarMistakeInComment
 
-namespace UE.Toolkit.Reloaded.Common.Types.Unreal;
+namespace UE.Toolkit.Interfaces.Common.Types.Unreal;
 
 public enum EStructFlags
 {

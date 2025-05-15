@@ -4,13 +4,14 @@
 
 using System.Runtime.InteropServices;
 using System.Text;
-using UE.Toolkit.Reloaded.Unreal;
 
-namespace UE.Toolkit.Reloaded.Common.Types.Unreal;
+namespace UE.Toolkit.Interfaces.Common.Types.Unreal;
 
 [StructLayout(LayoutKind.Sequential, Size = 8)]
 public unsafe struct FName
 {
+    public static FNamePool* GFNamePool = null;
+    
     public FNameEntryId ComparisonIndex;
     // public int Number; // #if !UE_FNAME_OUTLINE_NUMBER
 
@@ -22,9 +23,9 @@ public unsafe struct FName
 
     public override string? ToString()
     {
-        if (UnrealNames.GFNamePool == null)
+        if (GFNamePool == null)
         {
-            Log.Warning($"{nameof(FName)} global pool is not set, defaulting to base {nameof(base.ToString)}");
+            //Log.Warning($"{nameof(FName)} global pool is not set, defaulting to base {nameof(base.ToString)}");
             return base.ToString();
         }
 
@@ -40,7 +41,7 @@ public unsafe struct FName
         return (FNameEntry*)((ComparisonIndex.Value & 0xFFFF) * 2 + poolIdx);
     }
     
-    private static nint GetPool(uint poolIdx) => *((nint*)(UnrealNames.GFNamePool + 1) + poolIdx);
+    private static nint GetPool(uint poolIdx) => *((nint*)(GFNamePool + 1) + poolIdx);
 }
 
 [StructLayout(LayoutKind.Sequential, Size = 0x4)]
@@ -94,8 +95,7 @@ public unsafe struct FNameEntry
         const int maxStrLen = NAME_SIZE - 1;
         if (newValue.Length > maxStrLen)
         {
-            Log.Error($"{nameof(SetValue)} || {nameof(newValue)} cannot be longer than {maxStrLen} characters.");
-            return;
+            throw new ArgumentException($"{nameof(SetValue)} || {nameof(newValue)} cannot be longer than {maxStrLen} characters.");
         }
 
         if (_header.bIsWide)

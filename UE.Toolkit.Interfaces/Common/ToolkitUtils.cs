@@ -1,4 +1,4 @@
-namespace UE.Toolkit.Reloaded.Common;
+namespace UE.Toolkit.Interfaces.Common;
 
 public static unsafe class ToolkitUtils
 {

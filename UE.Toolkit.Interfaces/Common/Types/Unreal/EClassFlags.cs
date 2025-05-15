@@ -2,7 +2,7 @@
 // ReSharper disable GrammarMistakeInComment
 // ReSharper disable CommentTypo
 // ReSharper disable IdentifierTypo
-namespace UE.Toolkit.Reloaded.Common.Types.Unreal;
+namespace UE.Toolkit.Interfaces.Common.Types.Unreal;
 
 [Flags]
 public enum EClassFlags : uint

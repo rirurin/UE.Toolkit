@@ -1,5 +1,5 @@
 // ReSharper disable InconsistentNaming
-namespace UE.Toolkit.Reloaded.Common.Types.Unreal;
+namespace UE.Toolkit.Interfaces.Common.Types.Unreal;
 
 public enum EObjectFlags : uint
 {

@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace UE.Toolkit.Reloaded.Common.Types.Unreal;
+namespace UE.Toolkit.Interfaces.Common.Types.Unreal;
 
 [StructLayout(LayoutKind.Sequential, Pack = 8, Size = 0x70)]
 public unsafe struct FProperty

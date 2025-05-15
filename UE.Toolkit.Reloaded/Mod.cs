@@ -5,18 +5,30 @@ using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using UE.Toolkit.Reloaded.Template;
 using UE.Toolkit.Reloaded.Configuration;
+using UE.Toolkit.Reloaded.DataTables;
+using UE.Toolkit.Reloaded.Unreal;
+using UE.Toolkit.Reloaded.UObjects;
 
 namespace UE.Toolkit.Reloaded;
 
 public class Mod : ModBase
 {
+#pragma warning disable CA2211
+    public static Config Config = null!;
+#pragma warning restore CA2211
+    
     private readonly IModLoader _modLoader;
     private readonly IReloadedHooks? _hooks;
     private readonly ILogger _log;
     private readonly IMod _owner;
 
-    private Config _config;
     private readonly IModConfig _modConfig;
+
+    private readonly UObjectsService _uobjs;
+    private readonly UnrealNames _globals;
+    private readonly UnrealMemory _memory;
+    private readonly UnrealObjects _objects;
+    private readonly DataTablesService _tables;
 
     public Mod(ModContext context)
     {
@@ -24,13 +36,19 @@ public class Mod : ModBase
         _hooks = context.Hooks;
         _log = context.Logger;
         _owner = context.Owner;
-        _config = context.Configuration;
+        Config = context.Configuration;
         _modConfig = context.ModConfig;
 #if DEBUG
         Debugger.Launch();
 #endif
         Project.Initialize(_modConfig, _modLoader, _log, true);
-        Log.LogLevel = _config.LogLevel;
+        Log.LogLevel = Config.LogLevel;
+
+        _globals = new();
+        _uobjs = new();
+        _objects = new();
+        _tables = new();
+        _memory = new();
     }
 
     #region Standard Overrides
@@ -39,9 +57,9 @@ public class Mod : ModBase
     {
         // Apply settings from configuration.
         // ... your code here.
-        _config = configuration;
+        Config = configuration;
         _log.WriteLine($"[{_modConfig.ModId}] Config Updated: Applying");
-        Log.LogLevel = _config.LogLevel;
+        Log.LogLevel = Config.LogLevel;
     }
 
     #endregion

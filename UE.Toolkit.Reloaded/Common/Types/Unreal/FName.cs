@@ -4,7 +4,7 @@
 
 using System.Runtime.InteropServices;
 using System.Text;
-using UE.Toolkit.Reloaded.Globals;
+using UE.Toolkit.Reloaded.Unreal;
 
 namespace UE.Toolkit.Reloaded.Common.Types.Unreal;
 
@@ -22,7 +22,7 @@ public unsafe struct FName
 
     public override string? ToString()
     {
-        if (UnrealService.GFNamePool == null)
+        if (UnrealNames.GFNamePool == null)
         {
             Log.Warning($"{nameof(FName)} global pool is not set, defaulting to base {nameof(base.ToString)}");
             return base.ToString();
@@ -40,7 +40,7 @@ public unsafe struct FName
         return (FNameEntry*)((ComparisonIndex.Value & 0xFFFF) * 2 + poolIdx);
     }
     
-    private static nint GetPool(uint poolIdx) => *((nint*)(UnrealService.GFNamePool + 1) + poolIdx);
+    private static nint GetPool(uint poolIdx) => *((nint*)(UnrealNames.GFNamePool + 1) + poolIdx);
 }
 
 [StructLayout(LayoutKind.Sequential, Size = 0x4)]

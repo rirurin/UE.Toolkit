@@ -4,14 +4,14 @@ using System.Runtime.InteropServices;
 using UE.Toolkit.Reloaded.Common;
 using UE.Toolkit.Reloaded.Common.Types.Unreal;
 
-namespace UE.Toolkit.Reloaded.Globals;
+namespace UE.Toolkit.Reloaded.Unreal;
 
-public unsafe class UnrealService
+public unsafe class UnrealNames
 {
     private delegate FName FNameHelper_MakeWithNumber(FName* fname, FWideStringViewWithWidth* view, EFindName findType, int internalNumber);
     private readonly SHFunction<FNameHelper_MakeWithNumber>? _FNameHelper_MakeWithNumber;
     
-    public UnrealService()
+    public UnrealNames()
     {
         ScanHooks.Add(nameof(GFNamePool), "48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 4C 8B C0 C6 05 ?? ?? ?? ?? 01 8B D3 0F B7 C3 89 44 24", (_, result) => GFNamePool = (FNamePool*)ToolkitUtils.GetGlobalAddress(result + 3));
         

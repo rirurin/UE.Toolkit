@@ -8,6 +8,9 @@ public class Config : Configurable<Config>
     [DisplayName("Log Level")]
     [DefaultValue(LogLevel.Information)]
     public LogLevel LogLevel { get; set; } = LogLevel.Information;
+
+    [DisplayName("Log DataTables")]
+    public bool LogTablesEnabled { get; set; } = false;
 }
 
 /// <summary>

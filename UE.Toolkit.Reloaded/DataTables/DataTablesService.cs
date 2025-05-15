@@ -10,31 +10,47 @@ public unsafe class DataTablesService
     private delegate void HandleDataTableChanged(UDataTable<UObjectBase>* self, FName changedRowName);
     private readonly SHFunction<HandleDataTableChanged>? _HandleDataTableChanged;
     
+    private Action<DataTable<UObjectBase>>? _onDataTableChanged;
+    
     public DataTablesService()
     {
         _HandleDataTableChanged = new(HandleDataTableChangedImpl, "40 55 53 57 48 8D 6C 24 ?? 48 81 EC C0 00 00 00 8B 41");
+    }
+
+    public void OnDataTableChanged<TRow>(string name, Action<DataTable<TRow>> callback)
+        where TRow : unmanaged
+    {
+        _onDataTableChanged += table =>
+        {
+            if (table.Name == name) callback(new((UDataTable<TRow>*)table.Instance));
+        };
     }
     
     private void HandleDataTableChangedImpl(UDataTable<UObjectBase>* self, FName changedRowName)
     {
         _HandleDataTableChanged!.Hook!.OriginalFunction(self, changedRowName);
+        if (self->BaseObj.NamePrivate.ToString() == "None") return;
 
         var table = new DataTable<UObjectBase>(self);
         
-        Log.Information($"{nameof(HandleDataTableChanged)} || Table: {table.Name}");
-        for (int i = 0; i < table.Count; i++)
+        if (Mod.Config.LogTablesEnabled)
         {
-            var row = table[i];
-
-            switch (i)
+            Log.Information($"{nameof(HandleDataTableChanged)} || Table: {table.Name} || Struct: {table.RowStructName}");
+            for (var i = 0; i < table.Count; i++)
             {
-                case < 5:
-                    Log.Information($"\t{row.Name}");
-                    break;
-                case 5:
-                    Log.Information($"\t...with {table.Count - i} more.");
-                    break;
+                var row = table[i];
+                switch (i)
+                {
+                    case < 5:
+                        Log.Information($"\t{row.Name}");
+                        break;
+                    case 5:
+                        Log.Information($"\t...with {table.Count - i} more.");
+                        break;
+                }
             }
         }
+        
+        _onDataTableChanged?.Invoke(table);
     }
 }

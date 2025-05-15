@@ -1,0 +1,21 @@
+{
+  "ModId": "UE.Toolkit.TestMod",
+  "ModName": "UE Toolkit Test Mod",
+  "ModAuthor": "RyoTune",
+  "ModVersion": "1.0.0",
+  "ModDescription": "Description",
+  "ModDll": "UE.Toolkit.TestMod.dll",
+  "ModIcon": "Preview.png",
+  "ModR2RManagedDll32": "x86/UE.Toolkit.TestMod.dll",
+  "ModR2RManagedDll64": "x64/UE.Toolkit.TestMod.dll",
+  "ModNativeDll32": "",
+  "ModNativeDll64": "",
+  "IsLibrary": false,
+  "ReleaseMetadataFileName": "UE.Toolkit.TestMod.ReleaseMetadata.json",
+  "PluginData": {},
+  "IsUniversalMod": true,
+  "ModDependencies": [ "reloaded.sharedlib.hooks", "Reloaded.Memory.SigScan.ReloadedII", "UE.Toolkit.Reloaded" ],
+  "OptionalDependencies": [],
+  "SupportedAppId": [],
+  "ProjectUrl": ""
+}

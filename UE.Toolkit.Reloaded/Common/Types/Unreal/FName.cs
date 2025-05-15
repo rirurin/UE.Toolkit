@@ -8,11 +8,11 @@ using UE.Toolkit.Reloaded.Globals;
 
 namespace UE.Toolkit.Reloaded.Common.Types.Unreal;
 
-[StructLayout(LayoutKind.Sequential)]
+[StructLayout(LayoutKind.Sequential, Size = 8)]
 public unsafe struct FName
 {
     public FNameEntryId ComparisonIndex;
-    //public int Number; // #if !UE_FNAME_OUTLINE_NUMBER
+    // public int Number; // #if !UE_FNAME_OUTLINE_NUMBER
 
     /// <summary>
     /// Set a new value to this <see cref="FName"/>. (Experimental)

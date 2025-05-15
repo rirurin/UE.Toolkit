@@ -1,8 +1,10 @@
 // ReSharper disable InconsistentNaming
 
+using UE.Toolkit.Interfaces;
+
 namespace UE.Toolkit.Reloaded.Unreal;
 
-public class UnrealMemory
+public class UnrealMemory : IUnrealMemory
 {
     internal delegate nint FMemory_Malloc(nint count, int alignment = 0);
     internal static SHFunction<FMemory_Malloc>? _FMemory_Malloc;

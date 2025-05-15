@@ -51,6 +51,7 @@ public class Mod : ModBase, IExports
         _tables = new();
         _memory = new();
         
+        _modLoader.AddOrReplaceController<IUnrealMemory>(_owner, _memory);
         _modLoader.AddOrReplaceController<IDataTables>(_owner, _tables);
         _modLoader.AddOrReplaceController<IUnrealObjects>(_owner, _objects);
     }

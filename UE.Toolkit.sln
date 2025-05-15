@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UE.Toolkit.Reloaded", "UE.Toolkit.Reloaded\UE.Toolkit.Reloaded.csproj", "{BFBFEA56-F6B8-4AE3-9A39-C400CDBDB282}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UE.Toolkit.Interfaces", "UE.Toolkit.Interfaces\UE.Toolkit.Interfaces.csproj", "{125C835D-A892-4064-A081-5DDDD10AD434}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{BFBFEA56-F6B8-4AE3-9A39-C400CDBDB282}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BFBFEA56-F6B8-4AE3-9A39-C400CDBDB282}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BFBFEA56-F6B8-4AE3-9A39-C400CDBDB282}.Release|Any CPU.Build.0 = Release|Any CPU
+		{125C835D-A892-4064-A081-5DDDD10AD434}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{125C835D-A892-4064-A081-5DDDD10AD434}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{125C835D-A892-4064-A081-5DDDD10AD434}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{125C835D-A892-4064-A081-5DDDD10AD434}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

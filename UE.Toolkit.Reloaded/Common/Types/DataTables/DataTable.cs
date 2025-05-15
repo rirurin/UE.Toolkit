@@ -18,6 +18,8 @@ public unsafe class DataTable<TRow>(UDataTable<TRow>* table)
 
     public string Name { get; } = table->BaseObj.NamePrivate.ToString()!;
 
+    public string RowStructName => Instance->RowStruct->Super.Super.Obj.NamePrivate.ToString()!;
+
     #region INTERFACES
     public int Count => Instance->RowMap.MapNum;
     

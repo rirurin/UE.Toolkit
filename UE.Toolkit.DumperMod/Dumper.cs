@@ -229,6 +229,12 @@ public unsafe class Dumper
 
     private static void AddHeader(StringBuilder sb)
     {
+        sb.AppendLine("/* Generated with UE Toolkit: Dumper (1.0.0)     */");
+        sb.AppendLine("/* GitHub: https://github.com/RyoTune/UE.Toolkit */");
+        sb.AppendLine("/* Author: RyoTune                               */");
+        sb.AppendLine("/* Special thanks to UE4SS team and Rirurin      */");
+        sb.AppendLine("/* whose code was used for reference.            */");
+        
         sb.AppendLine("using System.Runtime.InteropServices;");
             
         if (!string.IsNullOrEmpty(Mod.Config.FileUsings))
@@ -239,9 +245,11 @@ public unsafe class Dumper
             foreach (var use in usings) sb.AppendLine($"using {use};");
         }
 
+        sb.AppendLine();
         if (!string.IsNullOrEmpty(Mod.Config.FileNamespace))
         {
             sb.AppendLine($"namespace {Mod.Config.FileNamespace.TrimEnd(';').Replace("namespace ", string.Empty)};");
+            sb.AppendLine();
         }
     }
 
@@ -547,7 +555,7 @@ public unsafe class Dumper
     /// </summary>
     /// <param name="prop"></param>
     /// <returns></returns>
-    private string GetPropertyTypeName(FProperty* prop)
+    private static string GetPropertyTypeName(FProperty* prop)
     {
         var className = prop->Super.ClassPrivate->Name.ToString();
         switch (className)
@@ -657,11 +665,11 @@ public unsafe class Dumper
 
         return name;
     }
-}
 
-public interface ICsharpText
-{
-    string Name { get; }
+    private interface ICsharpText
+    {
+        string Name { get; }
     
-    string GetCsharpText();
+        string GetCsharpText();
+    }
 }

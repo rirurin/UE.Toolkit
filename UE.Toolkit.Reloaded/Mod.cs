@@ -3,6 +3,7 @@ using System.Diagnostics;
 #endif
 using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
+using UE.Toolkit.Core.Types.Unreal;
 using UE.Toolkit.Interfaces;
 using UE.Toolkit.Reloaded.Template;
 using UE.Toolkit.Reloaded.DataTables;
@@ -75,5 +76,5 @@ public class Mod : ModBase, IExports
 
     #endregion
 
-    public Type[] GetTypes() => [typeof(IDataTables), typeof(IUnrealObjects)];
+    public Type[] GetTypes() => [typeof(IDataTables), typeof(IUnrealObjects), typeof(UObjectBase)];
 }

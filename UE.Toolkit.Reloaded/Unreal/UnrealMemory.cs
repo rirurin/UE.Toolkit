@@ -1,6 +1,6 @@
-// ReSharper disable InconsistentNaming
-
 using UE.Toolkit.Interfaces;
+
+// ReSharper disable InconsistentNaming
 
 namespace UE.Toolkit.Reloaded.Unreal;
 
@@ -18,7 +18,7 @@ public class UnrealMemory : IUnrealMemory
         _FMemory_Free = new("48 85 C9 74 ?? 53 48 83 EC 20 48 8B D9 48 8B 0D");
     }
     
-    public nint FMemoryMalloc(nint count, int alignment = 0) => _FMemory_Malloc!.Wrapper(count, alignment);
+    public nint Malloc(nint count, int alignment = 0) => _FMemory_Malloc!.Wrapper(count, alignment);
     
-    public void FMemoryFree(nint original) => _FMemory_Free!.Wrapper(original);
+    public void Free(nint original) => _FMemory_Free!.Wrapper(original);
 }

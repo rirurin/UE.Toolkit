@@ -1,17 +1,15 @@
 ﻿#if DEBUG
 using System.Diagnostics;
 #endif
-using System.Runtime.InteropServices;
 using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using UE.Toolkit.Interfaces;
-using UE.Toolkit.Interfaces.Common.Types.Unreal;
 using UE.Toolkit.TestMod.Template;
 using UE.Toolkit.TestMod.Configuration;
 
 namespace UE.Toolkit.TestMod;
 
-public unsafe class Mod : ModBase
+public class Mod : ModBase
 {
     private readonly IModLoader _modLoader;
     private readonly IReloadedHooks? _hooks;
@@ -36,20 +34,7 @@ public unsafe class Mod : ModBase
         Log.LogLevel = _config.LogLevel;
 
         _modLoader.GetController<IDataTables>().TryGetTarget(out var dt);
-        _modLoader.GetController<IUnrealObjects>().TryGetTarget(out var objects);
-        dt.OnDataTableChanged<S_LoadingScreenTips>("DT_LoadingScreenTips", table =>
-        {
-            foreach (var row in table)
-            {
-                var tips = row.Instance->Value;
-                for (int i = 0; i < tips->Tips.ArrayNum; i++)
-                {
-                    tips->Tips.AllocatorInstance[i] = *objects.CreateFText("Brother may i have some oats?\nno.\nI am starving, brother.\nAs am i, brother. The tall skinny figure has thrown the oats at me. ME, BROTHER. i believe they have taken a liking to me.\nNo brother, I have seen this before. I have observed many things. From the roaring beasts that the tall skinny figures crawl inside of to travel far beyond the horizon, to how the figure weeped when the other had fallen into a deep sleep. And from my experiences I have learned that they will give extra oats to one of us before taking them into the shed of no return.. They will do terrible things in that shed, brother.");
-                }
-            }
-            
-            Log.Information(table.Instance->BaseObj.NamePrivate.ToString());
-        });
+        _modLoader.GetController<IUnrealObjects>().TryGetTarget(out var objs);
     }
 
     #region Standard Overrides
@@ -74,12 +59,4 @@ public unsafe class Mod : ModBase
 #pragma warning restore CS8618
 
     #endregion
-}
-
-[StructLayout(LayoutKind.Sequential)]
-public struct S_LoadingScreenTips
-{
-    private byte GoldenPathMin;
-    private byte GoldenPathMax;
-    public TArray<FText> Tips;
 }

@@ -2,6 +2,19 @@ namespace UE.Toolkit.Interfaces;
 
 public interface IUnrealMemory
 {
-    nint FMemoryMalloc(nint count, int alignment = 0);
-    void FMemoryFree(nint original);
+    /// <summary>
+    /// Allocates a block of memory with the global <c>FMemory</c>.
+    /// </summary>
+    /// <param name="count">Number of bytes to allocate.</param>
+    /// <param name="alignment">Alignment of allocation.</param>
+    /// <returns>Pointer to the allocated memory.</returns>
+    /// <remarks>Should only be used after Unreal has finished loading.</remarks>
+    nint Malloc(nint count, int alignment = 0);
+    
+    /// <summary>
+    /// Deallocates a block of memory allocated with the global <c>FMemory</c>.
+    /// </summary>
+    /// <param name="original">Pointer to the memory block to free.</param>
+    /// <remarks>Should only be used after Unreal has finished loading.</remarks>
+    void Free(nint original);
 }

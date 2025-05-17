@@ -1,9 +1,48 @@
 using UE.Toolkit.Interfaces.Common.Types.Unreal;
+using UE.Toolkit.Interfaces.Common.Types.Wrappers;
+
+// ReSharper disable InconsistentNaming
 
 namespace UE.Toolkit.Interfaces;
 
-public interface IUnrealObjects
+public unsafe interface IUnrealObjects
 {
-    unsafe FText* CreateFText(string str);
-    unsafe FString* CreateFString(string str);
+    /// <summary>
+    /// Creates an instance of <see cref="FText"/> with the given content.
+    /// </summary>
+    /// <param name="content">String content.</param>
+    /// <returns><see cref="FText"/> instance.</returns>
+    FText* CreateFText(string content);
+    
+    /// <summary>
+    /// Creates an instance of <see cref="FString"/> with the given content.
+    /// </summary>
+    /// <param name="content">String content.</param>
+    /// <returns><see cref="FString"/> instance.</returns>
+    FString* CreateFString(string content);
+
+    /// <summary>
+    /// Listen for an object's creation of the given name.
+    /// </summary>
+    /// <param name="objName">Object name.</param>
+    /// <param name="callback">Callback given each object instance.</param>
+    /// <typeparam name="TObject">Object type.</typeparam>
+    /// <remarks>Implemented as a hook on <c>UObject::PostLoadSubobjects</c>, allowing for editing object data before use.</remarks>
+    void OnObjectLoadedByName<TObject>(string objName, Action<UObjectWrapper<TObject>> callback)
+        where TObject : unmanaged;
+    
+    /// <summary>
+    /// Listen for an object's creation of the given class.
+    /// </summary>
+    /// <param name="objClass">Object class. NOTE: No type prefix; use <c>Object</c> instead of <c>UObject</c> for example.</param>
+    /// <param name="callback">Callback given each object instance.</param>
+    /// <typeparam name="TObject">Object type.</typeparam>
+    /// <remarks>Implemented as a post-hook on <c>UObject::PostLoadSubobjects</c>, allowing for editing object data before use.</remarks>
+    void OnObjectLoadedByClass<TObject>(string objClass, Action<UObjectWrapper<TObject>> callback)
+        where TObject : unmanaged;
+
+    /// <summary>
+    /// Gets the global UObject array.
+    /// </summary>
+    FUObjectArray* GUObjectArray { get; }
 }

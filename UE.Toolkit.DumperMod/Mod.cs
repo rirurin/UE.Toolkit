@@ -4,7 +4,6 @@ using System.Diagnostics;
 using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using UE.Toolkit.DumperMod.Template;
-using UE.Toolkit.DumperMod.Configuration;
 using UE.Toolkit.Interfaces;
 
 namespace UE.Toolkit.DumperMod;

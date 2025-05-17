@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
-using UE.Toolkit.Interfaces.Common;
-using UE.Toolkit.Interfaces.Common.Types.Unreal;
+using UE.Toolkit.Core.Common;
+using UE.Toolkit.Core.Types.Unreal;
 
 // ReSharper disable InconsistentNaming
 

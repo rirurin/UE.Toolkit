@@ -1,8 +1,8 @@
-﻿using UE.Toolkit.DumperMod.Template.Configuration;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using UE.Toolkit.DumperMod.Template.Configuration;
 
-namespace UE.Toolkit.DumperMod.Configuration;
+namespace UE.Toolkit.DumperMod;
 
 public class Config : Configurable<Config>
 {

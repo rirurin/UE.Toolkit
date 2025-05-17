@@ -5,7 +5,6 @@ using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using UE.Toolkit.Interfaces;
 using UE.Toolkit.Reloaded.Template;
-using UE.Toolkit.Reloaded.Configuration;
 using UE.Toolkit.Reloaded.DataTables;
 using UE.Toolkit.Reloaded.Unreal;
 

@@ -1,11 +1,11 @@
-// ReSharper disable InconsistentNaming
-
 using System.Runtime.InteropServices;
 using System.Text;
+using UE.Toolkit.Core.Common;
+using UE.Toolkit.Core.Types.Unreal;
+using UE.Toolkit.Core.Types.Wrappers;
 using UE.Toolkit.Interfaces;
-using UE.Toolkit.Interfaces.Common;
-using UE.Toolkit.Interfaces.Common.Types.Unreal;
-using UE.Toolkit.Interfaces.Common.Types.Wrappers;
+
+// ReSharper disable InconsistentNaming
 
 namespace UE.Toolkit.Reloaded.Unreal;
 

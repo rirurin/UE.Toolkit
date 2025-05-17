@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UE.Toolkit.TestMod", "UE.To
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UE.Toolkit.DumperMod", "UE.Toolkit.DumperMod\UE.Toolkit.DumperMod.csproj", "{36696169-4F03-4488-81A9-2B9ED26B364F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UE.Toolkit.Core", "UE.Toolkit.Core\UE.Toolkit.Core.csproj", "{90482665-F6AA-4352-B074-12C75B8A2D4A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{36696169-4F03-4488-81A9-2B9ED26B364F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{36696169-4F03-4488-81A9-2B9ED26B364F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{36696169-4F03-4488-81A9-2B9ED26B364F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90482665-F6AA-4352-B074-12C75B8A2D4A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90482665-F6AA-4352-B074-12C75B8A2D4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90482665-F6AA-4352-B074-12C75B8A2D4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90482665-F6AA-4352-B074-12C75B8A2D4A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

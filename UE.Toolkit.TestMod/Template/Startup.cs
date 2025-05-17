@@ -7,7 +7,6 @@ using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using Reloaded.Mod.Interfaces.Internal;
 using UE.Toolkit.TestMod.Template.Configuration;
-using UE.Toolkit.TestMod.Configuration;
 
 namespace UE.Toolkit.TestMod.Template;
 

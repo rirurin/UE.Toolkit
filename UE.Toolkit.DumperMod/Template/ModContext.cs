@@ -1,6 +1,5 @@
 ﻿using Reloaded.Mod.Interfaces;
 using IReloadedHooks = Reloaded.Hooks.ReloadedII.Interfaces.IReloadedHooks;
-using UE.Toolkit.DumperMod.Configuration;
 
 namespace UE.Toolkit.DumperMod.Template;
 

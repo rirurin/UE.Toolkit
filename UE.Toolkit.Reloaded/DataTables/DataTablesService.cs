@@ -1,8 +1,9 @@
+using UE.Toolkit.Core.Types.Unreal;
+using UE.Toolkit.Core.Types.Wrappers;
+using UE.Toolkit.Interfaces;
+
 // ReSharper disable InconsistentNaming
 
-using UE.Toolkit.Interfaces;
-using UE.Toolkit.Interfaces.Common.Types.Unreal;
-using UE.Toolkit.Interfaces.Common.Types.Wrappers;
 
 namespace UE.Toolkit.Reloaded.DataTables;
 

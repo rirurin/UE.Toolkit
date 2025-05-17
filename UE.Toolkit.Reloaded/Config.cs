@@ -1,7 +1,7 @@
-﻿using UE.Toolkit.Reloaded.Template.Configuration;
-using System.ComponentModel;
+﻿using System.ComponentModel;
+using UE.Toolkit.Reloaded.Template.Configuration;
 
-namespace UE.Toolkit.Reloaded.Configuration;
+namespace UE.Toolkit.Reloaded;
 
 public class Config : Configurable<Config>
 {

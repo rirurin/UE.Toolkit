@@ -1,5 +1,5 @@
-using UE.Toolkit.Interfaces.Common.Types.Unreal;
-using UE.Toolkit.Interfaces.Common.Types.Wrappers;
+using UE.Toolkit.Core.Types.Unreal;
+using UE.Toolkit.Core.Types.Wrappers;
 
 // ReSharper disable InconsistentNaming
 

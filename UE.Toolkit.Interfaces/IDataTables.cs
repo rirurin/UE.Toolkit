@@ -1,4 +1,4 @@
-using UE.Toolkit.Interfaces.Common.Types.Wrappers;
+using UE.Toolkit.Core.Types.Wrappers;
 
 namespace UE.Toolkit.Interfaces;
 

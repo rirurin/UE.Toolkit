@@ -1,5 +1,4 @@
 ﻿using Reloaded.Mod.Interfaces;
-using UE.Toolkit.Reloaded.Configuration;
 
 namespace UE.Toolkit.Reloaded.Template.Configuration;
 

@@ -1,6 +1,5 @@
 ﻿using Reloaded.Mod.Interfaces;
 using IReloadedHooks = Reloaded.Hooks.ReloadedII.Interfaces.IReloadedHooks;
-using UE.Toolkit.TestMod.Configuration;
 
 namespace UE.Toolkit.TestMod.Template;
 

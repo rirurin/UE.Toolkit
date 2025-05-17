@@ -1,6 +1,4 @@
-﻿using UE.Toolkit.TestMod.Configuration;
-
-namespace UE.Toolkit.TestMod.Template;
+﻿namespace UE.Toolkit.TestMod.Template;
 
 /// <summary>
 /// Base class for implementing mod functionality.

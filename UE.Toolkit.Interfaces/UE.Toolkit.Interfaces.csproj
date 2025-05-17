@@ -7,4 +7,8 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\UE.Toolkit.Core\UE.Toolkit.Core.csproj" />
+    </ItemGroup>
+
 </Project>

@@ -7,7 +7,6 @@ using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using Reloaded.Mod.Interfaces.Internal;
 using UE.Toolkit.DumperMod.Template.Configuration;
-using UE.Toolkit.DumperMod.Configuration;
 
 namespace UE.Toolkit.DumperMod.Template;
 

@@ -1,5 +1,4 @@
 ﻿using Reloaded.Mod.Interfaces;
-using UE.Toolkit.DumperMod.Configuration;
 
 namespace UE.Toolkit.DumperMod.Template.Configuration;
 

@@ -1,6 +1,4 @@
-﻿using UE.Toolkit.DumperMod.Configuration;
-
-namespace UE.Toolkit.DumperMod.Template;
+﻿namespace UE.Toolkit.DumperMod.Template;
 
 /// <summary>
 /// Base class for implementing mod functionality.

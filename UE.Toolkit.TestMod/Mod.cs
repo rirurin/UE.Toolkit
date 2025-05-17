@@ -5,7 +5,6 @@ using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using UE.Toolkit.Interfaces;
 using UE.Toolkit.TestMod.Template;
-using UE.Toolkit.TestMod.Configuration;
 
 namespace UE.Toolkit.TestMod;
 

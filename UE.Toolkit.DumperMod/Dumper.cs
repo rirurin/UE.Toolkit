@@ -1,8 +1,7 @@
 using System.Text;
-using UE.Toolkit.DumperMod.Configuration;
+using UE.Toolkit.Core.Common;
+using UE.Toolkit.Core.Types.Unreal;
 using UE.Toolkit.Interfaces;
-using UE.Toolkit.Interfaces.Common;
-using UE.Toolkit.Interfaces.Common.Types.Unreal;
 
 // ReSharper disable InconsistentNaming
 

@@ -1,7 +1,7 @@
-﻿using UE.Toolkit.TestMod.Template.Configuration;
-using System.ComponentModel;
+﻿using System.ComponentModel;
+using UE.Toolkit.TestMod.Template.Configuration;
 
-namespace UE.Toolkit.TestMod.Configuration;
+namespace UE.Toolkit.TestMod;
 
 public class Config : Configurable<Config>
 {

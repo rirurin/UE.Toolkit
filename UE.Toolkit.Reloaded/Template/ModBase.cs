@@ -1,6 +1,4 @@
-﻿using UE.Toolkit.Reloaded.Configuration;
-
-namespace UE.Toolkit.Reloaded.Template;
+﻿namespace UE.Toolkit.Reloaded.Template;
 
 /// <summary>
 /// Base class for implementing mod functionality.

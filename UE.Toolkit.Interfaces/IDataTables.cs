@@ -1,9 +1,9 @@
-using UE.Toolkit.Interfaces.Common.Types.DataTables;
+using UE.Toolkit.Interfaces.Common.Types.Wrappers;
 
 namespace UE.Toolkit.Interfaces;
 
 public interface IDataTables
 {
-    void OnDataTableChanged<TRow>(string name, Action<DataTable<TRow>> callback)
+    void OnDataTableChanged<TRow>(string name, Action<UDataTableWrapper<TRow>> callback)
         where TRow : unmanaged;
 }

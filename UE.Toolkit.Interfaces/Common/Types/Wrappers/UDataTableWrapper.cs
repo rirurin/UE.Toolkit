@@ -1,14 +1,14 @@
 using System.Collections;
 using UE.Toolkit.Interfaces.Common.Types.Unreal;
 
-namespace UE.Toolkit.Interfaces.Common.Types.DataTables;
+namespace UE.Toolkit.Interfaces.Common.Types.Wrappers;
 
 /// <summary>
 /// <see cref="UDataTable{TRow}"/> wrapper for simpler use.
 /// </summary>
 /// <param name="table">The <see cref="UDataTable{TRow}"/> instance.</param>
 /// <typeparam name="TRow">Row type.</typeparam>
-public unsafe class DataTable<TRow>(UDataTable<TRow>* table)
+public unsafe class UDataTableWrapper<TRow>(UDataTable<TRow>* table)
     : IEnumerator<DataTableRow<TRow>>, IEnumerable<DataTableRow<TRow>>
     where TRow : unmanaged
 {
@@ -16,9 +16,9 @@ public unsafe class DataTable<TRow>(UDataTable<TRow>* table)
 
     public UDataTable<TRow>* Instance { get; } = table;
 
-    public string Name { get; } = table->BaseObj.NamePrivate.ToString()!;
+    public string Name { get; } = table->BaseObj.NamePrivate.ToString();
 
-    public string RowStructName => Instance->RowStruct->Super.Super.Obj.NamePrivate.ToString()!;
+    public string RowStructName => Instance->RowStruct->Super.Super.Super.NamePrivate.ToString();
 
     #region INTERFACES
     public int Count => Instance->RowMap.MapNum;
@@ -39,4 +39,17 @@ public unsafe class DataTable<TRow>(UDataTable<TRow>* table)
     
     public void Dispose() { }
     #endregion
+}
+
+/// <summary>
+/// <see cref="UDataTableWrapper{TRow}"/> row wrapper for simpler use.
+/// </summary>
+/// <param name="row">Row instance.</param>
+/// <typeparam name="TRow">Row type.</typeparam>
+public unsafe class DataTableRow<TRow>(TMapElement<FName, TRow>* row)
+    where TRow : unmanaged
+{
+    public TMapElement<FName, TRow>* Instance { get; } = row;
+
+    public string Name { get; } = row->Key.ToString();
 }

@@ -22,4 +22,10 @@ public unsafe struct UClass
     public TArray<FRepRecord> ClassReps;
     public TArray<UField> NetFields;
     public UObjectBase* ClassDefaultObject;
+
+    public readonly UClass* GetSuperClass() => (UClass*)Super.SuperStruct;
+    
+    public readonly bool IsA(string type) => Super.IsChildOf(type);
+    
+    public readonly bool IsChildOf(string type) => Super.IsChildOf(type);
 }

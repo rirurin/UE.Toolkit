@@ -21,12 +21,12 @@ public unsafe struct FName
     /// <param name="newValue">The new value. Must be less than 1024 characters.</param>
     public void SetValue(string newValue) => GetFNameEntry()->SetValue(newValue);
 
-    public override string? ToString()
+    public override string ToString()
     {
         if (GFNamePool == null)
         {
             //Log.Warning($"{nameof(FName)} global pool is not set, defaulting to base {nameof(base.ToString)}");
-            return base.ToString();
+            return base.ToString()!;
         }
 
         return GetFNameEntry()->ToString();

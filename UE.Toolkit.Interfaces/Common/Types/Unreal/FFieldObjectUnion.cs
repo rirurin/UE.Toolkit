@@ -2,9 +2,9 @@ using System.Runtime.InteropServices;
 
 namespace UE.Toolkit.Interfaces.Common.Types.Unreal;
 
-[StructLayout(LayoutKind.Sequential)]
+[StructLayout(LayoutKind.Explicit)]
 public unsafe struct FFieldObjectUnion
 {
-    public FField* Field;
-    public UObjectBase* Object;
+    [FieldOffset(0x0)] public FField* Field;
+    [FieldOffset(0x0)] public UObjectBase* Object;
 }

@@ -18,6 +18,9 @@ public unsafe struct TMap<InKeyType, InValueType>
     // public TBitArray AllocationFlags;
     // public int FirstFreeIndex;
     // public int NumFreeIndices;
+    
+    // From TSet (probably)
+    
 }
 
 [StructLayout(LayoutKind.Sequential)]

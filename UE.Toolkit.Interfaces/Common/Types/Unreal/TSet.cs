@@ -5,6 +5,15 @@ using System.Runtime.InteropServices;
 namespace UE.Toolkit.Interfaces.Common.Types.Unreal;
 
 [StructLayout(LayoutKind.Sequential)]
+public struct TSet<InElementType>
+    where InElementType : unmanaged
+{
+    public TSparseArray<TSetElementBase<InElementType>> Elements;
+    public THashTable Hash;
+    public int HashSize;
+}
+
+[StructLayout(LayoutKind.Sequential)]
 public struct TSetElementBase<InElementType>
     where InElementType : unmanaged
 {

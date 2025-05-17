@@ -9,7 +9,10 @@ public class Config : Configurable<Config>
     [DefaultValue(LogLevel.Information)]
     public LogLevel LogLevel { get; set; } = LogLevel.Information;
 
-    [DisplayName("Log DataTables")]
+    [DisplayName("Log UObjects")]
+    public bool LogObjectsEnabled { get; set; } = false;
+
+    [DisplayName("Log UDataTables")]
     public bool LogTablesEnabled { get; set; } = false;
 }
 

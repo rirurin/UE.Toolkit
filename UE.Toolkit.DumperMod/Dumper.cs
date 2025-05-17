@@ -93,6 +93,65 @@ public unsafe class Dumper
         Directory.CreateDirectory(dumpDir);
     }
 
+    public void DumpObjects()
+    {
+        Log.Information("Dumping objects...");
+        
+        RegisterObjects();
+
+        StringBuilder? sb = null;
+        if (Mod.Config.Mode == DumpFileMode.SingleFile)
+        {
+            sb = new();
+            AddHeader(sb);
+        }
+
+        var numDumped = 0;
+        foreach (var item in _UStructDefinitions)
+        {
+            if (Mod.Config.Mode == DumpFileMode.FilePerType)
+            {
+                var outputFile = Path.Join(_dumpDir, $"{item.Value.DisplayName}.cs");
+                File.WriteAllText(outputFile, item.Value.GetCsharpText());
+            }
+            else
+            {
+                sb?.AppendLine(item.Value.GetCsharpText());
+            }
+            
+            numDumped++;
+        }
+        
+        foreach (var item in _UEnumDefinitions)
+        {
+            if (Mod.Config.Mode == DumpFileMode.FilePerType)
+            {
+                var outputFile = Path.Join(_dumpDir, $"{item.Key}");
+                File.WriteAllText(outputFile, item.Value.GetCsharpText());
+            }
+            else
+            {
+                sb?.AppendLine(item.Value.GetCsharpText());
+            }
+            
+            numDumped++;
+        }
+
+        if (Mod.Config.Mode == DumpFileMode.SingleFile)
+        {
+            var singleFileOutput = string.IsNullOrEmpty(Mod.Config.SingleFileOutputName)
+                ? Path.Join(_dumpDir, "Types.cs")
+                : Path.Join(_dumpDir, $"{Mod.Config.SingleFileOutputName.Replace(".cs", string.Empty)}.cs");
+            
+            File.WriteAllText(singleFileOutput, sb!.ToString());
+            Log.Information($"Total Objects: {numDumped}\nOutput File: {singleFileOutput}");
+        }
+        else
+        {
+            Log.Information($"Total Objects: {numDumped}\nOutput Folder: {_dumpDir}");
+        }
+    }
+
     private void RegisterObjects()
     {
         for (int i = 0; i < _uobjs.GUObjectArray->ObjObjects.NumElements; i++)
@@ -168,65 +227,6 @@ public unsafe class Dumper
         return headerName;
     }
 
-    public void DumpObjects()
-    {
-        Log.Information("Dumping Objects...");
-        
-        RegisterObjects();
-
-        StringBuilder? sb = null;
-        if (Mod.Config.Mode == DumpFileMode.SingleFile)
-        {
-            sb = new();
-            AddHeader(sb);
-        }
-
-        var numDumped = 0;
-        foreach (var item in _UStructDefinitions)
-        {
-            if (Mod.Config.Mode == DumpFileMode.FilePerType)
-            {
-                var outputFile = Path.Join(_dumpDir, $"{item.Value.DisplayName}.cs");
-                File.WriteAllText(outputFile, item.Value.GetCsharpText());
-            }
-            else
-            {
-                sb?.AppendLine(item.Value.GetCsharpText());
-            }
-            
-            numDumped++;
-        }
-        
-        foreach (var item in _UEnumDefinitions)
-        {
-            if (Mod.Config.Mode == DumpFileMode.FilePerType)
-            {
-                var outputFile = Path.Join(_dumpDir, $"{item.Key}");
-                File.WriteAllText(outputFile, item.Value.GetCsharpText());
-            }
-            else
-            {
-                sb?.AppendLine(item.Value.GetCsharpText());
-            }
-            
-            numDumped++;
-        }
-
-        if (Mod.Config.Mode == DumpFileMode.SingleFile)
-        {
-            var singleFileOutput = string.IsNullOrEmpty(Mod.Config.SingleFileOutputName)
-                ? Path.Join(_dumpDir, "Types.cs")
-                : Path.Join(_dumpDir, $"{Mod.Config.SingleFileOutputName.Replace(".cs", string.Empty)}.cs");
-            
-            File.WriteAllText(singleFileOutput, sb!.ToString());
-            Log.Information($"Total Objects: {numDumped}\nOutput File: {singleFileOutput}");
-        }
-        else
-        {
-            Log.Information($"Total Objects: {numDumped}\nOutput Folder: {_dumpDir}");
-        }
-    }
-
     private static void AddHeader(StringBuilder sb)
     {
         sb.AppendLine("/* Generated with UE Toolkit: Dumper (1.0.0)     */");
@@ -234,6 +234,7 @@ public unsafe class Dumper
         sb.AppendLine("/* Author: RyoTune                               */");
         sb.AppendLine("/* Special thanks to UE4SS team and Rirurin      */");
         sb.AppendLine("/* whose code was used for reference.            */");
+        sb.AppendLine();
         
         sb.AppendLine("using System.Runtime.InteropServices;");
             

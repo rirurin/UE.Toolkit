@@ -8,7 +8,6 @@ using UE.Toolkit.Reloaded.Template;
 using UE.Toolkit.Reloaded.Configuration;
 using UE.Toolkit.Reloaded.DataTables;
 using UE.Toolkit.Reloaded.Unreal;
-using UE.Toolkit.Reloaded.UObjects;
 
 namespace UE.Toolkit.Reloaded;
 
@@ -25,7 +24,6 @@ public class Mod : ModBase, IExports
 
     private readonly IModConfig _modConfig;
 
-    private readonly UObjectsService _uobjs;
     private readonly UnrealNames _globals;
     private readonly UnrealMemory _memory;
     private readonly UnrealObjects _objects;
@@ -46,7 +44,6 @@ public class Mod : ModBase, IExports
         Log.LogLevel = Config.LogLevel;
 
         _globals = new();
-        _uobjs = new();
         _objects = new();
         _tables = new();
         _memory = new();

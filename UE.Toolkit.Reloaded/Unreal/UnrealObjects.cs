@@ -57,11 +57,13 @@ public unsafe class UnrealObjects : IUnrealObjects
 
     public FString* CreateFString(string content)
     {
-        var strBytes = Encoding.Unicode.GetBytes(content);
-        var fstring = (FString*)UnrealMemory._FMemory_Malloc!.Wrapper(strBytes.Length);
+        content += '\0';
         
+        var fstring = (FString*)UnrealMemory._FMemory_Malloc!.Wrapper(sizeof(FString));
         fstring->Data.ArrayNum = content.Length;
         fstring->Data.ArrayMax = content.Length;
+        
+        var strBytes = Encoding.Unicode.GetBytes(content);
         fstring->Data.AllocatorInstance = (char*)UnrealMemory._FMemory_Malloc.Wrapper(strBytes.Length);
         Marshal.Copy(strBytes, 0, (nint)fstring->Data.AllocatorInstance, strBytes.Length);
         

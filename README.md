@@ -17,4 +17,5 @@ Supported: UE5/Clair Obscur
 4. Generated files will be located in the mod folder: right-click `UE Toolkit: Dumper` and select `Open Folder`.
 
 Some Unreal types may not be generated and need to be supplied. `UE.Toolkit.Core` includes any types
-that were missing in my testing. You can add to your project through **NuGet**.
+that were missing in my testing. Add it to your project using **NuGet** and add `UE.Toolkit.Core.Types.Unreal;`
+in the `File Usings` config before dumping.

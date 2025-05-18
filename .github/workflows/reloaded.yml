@@ -22,7 +22,7 @@ on:
   workflow_dispatch:
 
 env:
-  PUBLISH_PATH: ./PublishAll
+  PUBLISH_PATH: ./Publish
   PUBLISH_CHANGELOG_PATH: ./Publish/Changelog.md
   
   PUBLISH_TOOLKIT_PATH: ./Publish/ToUpload/Toolkit/Generic

@@ -116,4 +116,6 @@ jobs:
           # Path to load note-worthy description of changes in release from
           body_path: ${{ env.PUBLISH_CHANGELOG_PATH }}
           # Newline-delimited list of path globs for asset files to upload
-          files: ./Publish/ToUpload/**/*
+          files: |
+            ${{ env.PUBLISH_TOOLKIT_PATH }}/*
+            ${{ env.PUBLISH_DUMPER_PATH }}/*

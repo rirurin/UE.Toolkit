@@ -3,19 +3,68 @@
   "ModName": "UE Toolkit: Dumper",
   "ModAuthor": "RyoTune",
   "ModVersion": "1.0.0",
-  "ModDescription": "Description",
+  "ModDescription": "Unreal Engine object dumper to C# types.",
   "ModDll": "UE.Toolkit.DumperMod.dll",
   "ModIcon": "Preview.png",
   "ModR2RManagedDll32": "x86/UE.Toolkit.DumperMod.dll",
   "ModR2RManagedDll64": "x64/UE.Toolkit.DumperMod.dll",
   "ModNativeDll32": "",
   "ModNativeDll64": "",
+  "Tags": [],
+  "CanUnload": false,
+  "HasExports": false,
   "IsLibrary": false,
   "ReleaseMetadataFileName": "UE.Toolkit.DumperMod.ReleaseMetadata.json",
-  "PluginData": {},
+  "PluginData": {
+    "GitHubDependencies": {
+      "IdToConfigMap": {
+        "reloaded.sharedlib.hooks": {
+          "Config": {
+            "UserName": "Sewer56",
+            "RepositoryName": "Reloaded.SharedLib.Hooks.ReloadedII",
+            "UseReleaseTag": true,
+            "AssetFileName": "reloaded.sharedlib.hooks.zip"
+          },
+          "ReleaseMetadataName": "Sewer56.Update.ReleaseMetadata.json"
+        },
+        "Reloaded.Memory.SigScan.ReloadedII": {
+          "Config": {
+            "UserName": "Reloaded-Project",
+            "RepositoryName": "Reloaded.Memory.SigScan",
+            "UseReleaseTag": false,
+            "AssetFileName": "Mod.zip"
+          },
+          "ReleaseMetadataName": "Reloaded.Memory.SigScan.ReloadedII.ReleaseMetadata.json"
+        },
+        "UE.Toolkit.Reloaded": {
+          "Config": {
+            "UserName": "RyoTune",
+            "RepositoryName": "UE.Toolkit",
+            "UseReleaseTag": false,
+            "AssetFileName": "Mod.zip"
+          },
+          "ReleaseMetadataName": "UE.Toolkit.Reloaded.ReleaseMetadata.json"
+        }
+      }
+    },
+    "GitHubRelease": {
+      "UserName": "RyoTune",
+      "RepositoryName": "UE.Toolkit",
+      "UseReleaseTag": false,
+      "AssetFileName": "Mod.zip"
+    }
+  },
   "IsUniversalMod": true,
-  "ModDependencies": [ "reloaded.sharedlib.hooks", "Reloaded.Memory.SigScan.ReloadedII", "UE.Toolkit.Reloaded" ],
+  "ModDependencies": [
+    "reloaded.sharedlib.hooks",
+    "Reloaded.Memory.SigScan.ReloadedII",
+    "UE.Toolkit.Reloaded"
+  ],
   "OptionalDependencies": [],
-  "SupportedAppId": [],
-  "ProjectUrl": ""
+  "SupportedAppId": [
+    "sandfall-wingdk-shipping.exe"
+  ],
+  "ProjectUrl": "",
+  "CreatorUrl": "",
+  "IsSeparator": false
 }

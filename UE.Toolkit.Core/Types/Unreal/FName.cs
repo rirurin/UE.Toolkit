@@ -10,10 +10,42 @@ namespace UE.Toolkit.Core.Types.Unreal;
 [StructLayout(LayoutKind.Sequential, Size = 8)]
 public unsafe struct FName
 {
+    /// <summary>
+    /// INTERNAL USE ONLY, DO NOT TOUCH!!!<br/>
+    /// Holds a pointer to the global name pool, allowing for
+    /// FNames to be properly viewed as strings.
+    /// </summary>
     public static FNamePool* GFNamePool = null;
+
+    /// <summary>
+    /// INTERNAL USE ONLY, DO NOT TOUCH!!!<br/>
+    /// Holds function wrapper for creating FNames, allowing it
+    /// to be done with constructor.
+    /// </summary>
+    public static FNameHelper_FindOrStoreString? FNameHelper_FindOrStoreString;
     
     public FNameEntryId ComparisonIndex;
-    // public int Number; // #if !UE_FNAME_OUTLINE_NUMBER
+    public FNameEntryId Number; // #if !UE_FNAME_OUTLINE_NUMBER
+
+    public FName(string content, EFindName findType = EFindName.FNAME_Add)
+    {
+        if (FNameHelper_FindOrStoreString == null)
+        {
+            throw new($"{nameof(FNameHelper_FindOrStoreString)} wrapper is null.");
+        }
+        
+        var view = (FNameStringView*)Marshal.AllocHGlobal(sizeof(FNameStringView));
+        view->Len = (uint)content.Length;
+        view->bIsWide = true;
+        view->Union.Wide = (char*)Marshal.StringToHGlobalUni(content);
+        
+        var fname = FNameHelper_FindOrStoreString(view, findType);
+        ComparisonIndex = fname.ComparisonIndex;
+        Number = fname.Number;
+        
+        Marshal.FreeHGlobal((nint)view->Union.Wide);
+        Marshal.FreeHGlobal((nint)view);
+    }
 
     /// <summary>
     /// Set a new value to this <see cref="FName"/>. (Experimental)
@@ -42,6 +74,16 @@ public unsafe struct FName
     }
     
     private static nint GetPool(uint poolIdx) => *((nint*)(GFNamePool + 1) + poolIdx);
+}
+
+public unsafe delegate FName FNameHelper_FindOrStoreString(FNameStringView* view, EFindName findType);
+
+public enum EFindName
+{
+    FNAME_Find,
+        
+    /** Find a name or add it if it doesn't exist. */
+    FNAME_Add
 }
 
 [StructLayout(LayoutKind.Sequential, Size = 0x4)]
@@ -131,4 +173,20 @@ public unsafe struct FNameEntry
             return Encoding.Default.GetString(str, _header.Len);
         }
     }
+}
+
+[StructLayout(LayoutKind.Sequential)] // Might be Size = 8
+public struct FNameStringView
+{
+    [StructLayout(LayoutKind.Explicit)]
+    public unsafe struct FNameStringViewUnion
+    {
+        [FieldOffset(0x0)] public void* Data;
+        [FieldOffset(0x0)] public byte* Ansi;
+        [FieldOffset(0x0)] public char* Wide;
+    }
+
+    public FNameStringViewUnion Union;
+    public uint Len;
+    public bool bIsWide;
 }

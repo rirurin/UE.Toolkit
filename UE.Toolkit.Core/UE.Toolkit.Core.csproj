@@ -6,15 +6,12 @@
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <PackageProjectUrl>https://github.com/RyoTune/UE.Toolkit</PackageProjectUrl>
+        <Version>1.1.0</Version>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
       <DocumentationFile>bin\Release\UE.Toolkit.Core.xml</DocumentationFile>
       <WarningLevel>2</WarningLevel>
     </PropertyGroup>
-
-    <ItemGroup>
-      <Folder Include="Types\" />
-    </ItemGroup>
 
 </Project>

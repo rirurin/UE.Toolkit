@@ -24,7 +24,7 @@ public class Mod : ModBase, IExports
 
     private readonly IModConfig _modConfig;
 
-    private readonly UnrealNames _globals;
+    private readonly UnrealNames _names;
     private readonly UnrealMemory _memory;
     private readonly UnrealObjects _objects;
     private readonly DataTablesService _tables;
@@ -43,7 +43,7 @@ public class Mod : ModBase, IExports
         Project.Initialize(_modConfig, _modLoader, _log, true);
         Log.LogLevel = Config.LogLevel;
 
-        _globals = new();
+        _names = new();
         _objects = new();
         _tables = new();
         _memory = new();

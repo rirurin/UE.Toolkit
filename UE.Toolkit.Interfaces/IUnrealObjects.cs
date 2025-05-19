@@ -45,4 +45,9 @@ public unsafe interface IUnrealObjects
     /// Gets the global UObject array.
     /// </summary>
     FUObjectArray* GUObjectArray { get; }
+
+    /// <summary>
+    /// Get the string value of an <see cref="FText"/>.
+    /// </summary>
+    string FTextToString(FText* text);
 }

@@ -8,7 +8,7 @@ public unsafe class UObjectWrapper<TObject>(TObject* instance)
 {
     public TObject* Instance { get; } = instance;
 
-    public string Name { get; } = ((UObjectBase*)instance)->NamePrivate.ToString();
+    public string Name { get; } = ToolkitUtils.GetNativeName(instance);
 
-    public string ClassName { get; } = ToolkitUtils.GetUObjectName(((UObjectBase*)instance)->ClassPrivate);
+    public string ClassName { get; } = ToolkitUtils.GetNativeName(((UObjectBase*)instance)->ClassPrivate);
 }

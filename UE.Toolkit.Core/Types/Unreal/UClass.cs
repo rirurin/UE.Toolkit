@@ -28,4 +28,8 @@ public unsafe struct UClass
     public readonly bool IsA(string type) => Super.IsChildOf(type);
     
     public readonly bool IsChildOf(string type) => Super.IsChildOf(type);
+    
+    public readonly bool IsChildOf<T>() => IsChildOf(typeof(T).Name);
+
+    public readonly bool IsA<T>() => IsChildOf(typeof(T).Name);
 }

@@ -6,6 +6,8 @@ namespace UE.Toolkit.Core.Types.Unreal;
 [StructLayout(LayoutKind.Sequential, Size = 0xB0, Pack = 8)]
 public unsafe struct UStruct
 {
+    private static readonly string[] BaseTypes = ["UClass", "UInterface", "AActor", "UScriptStruct"];
+        
     public UField Super;
     private fixed byte Unknown[0x10]; // Z_Construct_UClass_UStruct_Statics?
     public UStruct* SuperStruct;
@@ -35,10 +37,24 @@ public unsafe struct UStruct
         {
             for (var tempStruct = self; tempStruct != null; tempStruct = tempStruct->SuperStruct)
             {
-                if (ToolkitUtils.GetUObjectName(tempStruct) == type) return true;
+                // ToolkitUtils.GetUObjectName calls IsChildOf to resolve name prefixes
+                // and IsChildOf calls GetUObjectName to compare types, leading to a stack overflow.
+                // Fix: Check types used in GetUObjectName by their private name.
+                if (BaseTypes.Any(x => x == type))
+                {
+                    if (((UObjectBase*)tempStruct)->NamePrivate.ToString() == type[1..]) return true;
+                }
+                else
+                {
+                    if (ToolkitUtils.GetNativeName(tempStruct) == type) return true;
+                }
             }
         }
 
         return false;
     }
+
+    public readonly bool IsChildOf<T>() => IsChildOf(typeof(T).Name);
+
+    public readonly bool IsA<T>() => IsChildOf(typeof(T).Name);
 }

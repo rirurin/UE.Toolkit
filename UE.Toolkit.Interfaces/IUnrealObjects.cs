@@ -34,7 +34,17 @@ public unsafe interface IUnrealObjects
     /// <summary>
     /// Listen for an object's creation of the given class.
     /// </summary>
-    /// <param name="objClass">Object class. NOTE: No type prefix; use <c>Object</c> instead of <c>UObject</c> for example.</param>
+    /// <param name="callback">Callback given each object instance.</param>
+    /// <typeparam name="TObject">Object class type.</typeparam>
+    /// <remarks>Implemented as a post-hook on <c>UObject::PostLoadSubobjects</c>, allowing for editing object data before use.</remarks>
+    void OnObjectLoadedByClass<TObject>(Action<UObjectWrapper<TObject>> callback)
+        where TObject : unmanaged;
+    
+    /// <summary>
+    /// Listen for an object's creation of the given class.<br/>
+    /// Class name should include the expected type prefix: UObjects = U,  AActors = A, Structs = F
+    /// </summary>
+    /// <param name="objClass">Class name.</param>
     /// <param name="callback">Callback given each object instance.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     /// <remarks>Implemented as a post-hook on <c>UObject::PostLoadSubobjects</c>, allowing for editing object data before use.</remarks>

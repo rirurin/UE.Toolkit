@@ -1,3 +1,4 @@
+using UE.Toolkit.Core.Interfaces;
 using UE.Toolkit.Core.Types.Unreal;
 using UE.Toolkit.Core.Types.Wrappers;
 
@@ -5,7 +6,7 @@ using UE.Toolkit.Core.Types.Wrappers;
 
 namespace UE.Toolkit.Interfaces;
 
-public unsafe interface IUnrealObjects
+public unsafe interface IUnrealObjects : ICreateObjects
 {
     /// <summary>
     /// Creates an instance of <see cref="FText"/> with the given content.
@@ -29,6 +30,15 @@ public unsafe interface IUnrealObjects
     /// <typeparam name="TObject">Object type.</typeparam>
     /// <remarks>Implemented as a hook on <c>UObject::PostLoadSubobjects</c>, allowing for editing object data before use.</remarks>
     void OnObjectLoadedByName<TObject>(string objName, Action<UObjectWrapper<TObject>> callback)
+        where TObject : unmanaged;
+
+    /// <summary>
+    /// Listen for an object's creation of the given name.
+    /// </summary>
+    /// <param name="callback">Callback given each object instance.</param>
+    /// <typeparam name="TObject">Object name and type.</typeparam>
+    /// <remarks>Implemented as a hook on <c>UObject::PostLoadSubobjects</c>, allowing for editing object data before use.</remarks>
+    void OnObjectLoadedByName<TObject>(Action<UObjectWrapper<TObject>> callback)
         where TObject : unmanaged;
     
     /// <summary>

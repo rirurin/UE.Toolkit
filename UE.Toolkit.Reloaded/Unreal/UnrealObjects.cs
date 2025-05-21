@@ -23,7 +23,7 @@ public unsafe class UnrealObjects : IUnrealObjects
         new("40 53 48 83 EC 20 48 8B D9 E8 ?? ?? ?? ?? 48 8B 0B 48 8B 01 48 83 C4 20");
     
     private static IHook<PostLoadSubobjectsFunction>? _UObject_PostLoadSubobjects;
-    private static Action<UObjectWrapper<UObjectBase>>? _onObjectLoaded;
+    private static Action<nint>? _onObjectLoaded;
     
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
     public static void UObject_PostLoadSubobjects(nint self, nint outerInstanceGraph)
@@ -32,7 +32,7 @@ public unsafe class UnrealObjects : IUnrealObjects
             Log.Information($"{nameof(UObject_PostLoadSubobjects)} || {ToolkitUtils.GetNativeName(self)} || {ToolkitUtils.GetNativeName((nint)((UObjectBase*)self)->ClassPrivate)}");
         
         _UObject_PostLoadSubobjects!.OriginalFunction.Value.Invoke(self, outerInstanceGraph);
-        _onObjectLoaded?.Invoke(new((UObjectBase*)self));
+        _onObjectLoaded?.Invoke(self);
     }
 
     public UnrealObjects()
@@ -50,11 +50,11 @@ public unsafe class UnrealObjects : IUnrealObjects
         where TObject : unmanaged
     {
         var ansiNameBytes = Marshal.StringToHGlobalAnsi(objName);
-        _onObjectLoaded += obj =>
+        _onObjectLoaded += objPtr =>
         {
-            if (obj.Instance->NamePrivate.ToSpanAnsi().SequenceEqual(new((void*)ansiNameBytes, objName.Length)))
+            if (((UObjectBase*)objPtr)->NamePrivate.ToSpanAnsi().SequenceEqual(new((void*)ansiNameBytes, objName.Length)))
             {
-                callback(new((TObject*)obj.Instance));
+                callback(new((TObject*)objPtr));
             }
         };
     }
@@ -62,9 +62,9 @@ public unsafe class UnrealObjects : IUnrealObjects
     public void OnObjectLoadedByClass<TObject>(string objClass, Action<UObjectWrapper<TObject>> callback)
         where TObject : unmanaged
     {
-        _onObjectLoaded += obj =>
+        _onObjectLoaded += objPtr =>
         {
-            if (obj.Instance->IsChildOf(objClass)) callback(new((TObject*)obj.Instance));
+            if (((UObjectBase*)objPtr)->IsChildOf(objClass)) callback(new((TObject*)objPtr));
         };
     }
 

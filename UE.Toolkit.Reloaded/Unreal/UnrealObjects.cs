@@ -59,6 +59,9 @@ public unsafe class UnrealObjects : IUnrealObjects
         };
     }
 
+    public void OnObjectLoadedByName<TObject>(Action<UObjectWrapper<TObject>> callback)
+        where TObject : unmanaged => OnObjectLoadedByName(typeof(TObject).Name, callback);
+
     public void OnObjectLoadedByClass<TObject>(string objClass, Action<UObjectWrapper<TObject>> callback)
         where TObject : unmanaged
     {

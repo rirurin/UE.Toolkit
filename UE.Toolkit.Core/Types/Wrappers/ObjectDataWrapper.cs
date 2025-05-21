@@ -1,4 +1,6 @@
 using System.Runtime.InteropServices;
+using UE.Toolkit.Core.Interfaces;
+using UE.Toolkit.Core.Types.Unreal;
 
 namespace UE.Toolkit.Core.Types.Wrappers;
 
@@ -6,11 +8,13 @@ public unsafe class ObjectDataWrapper<TObject> where TObject : unmanaged
 {
     private readonly Dictionary<string, (Type Type, nint Offset)> _fields = [];
     private readonly TObject* _obj;
+    private readonly ICreateObjects _objCreator;
 
-    public ObjectDataWrapper(TObject* obj)
+    public ObjectDataWrapper(TObject* obj, ICreateObjects objCreator)
     {
         _obj = obj;
-        
+        _objCreator = objCreator;
+
         var type = typeof(TObject);
         foreach (var field in type.GetFields())
         {
@@ -20,6 +24,13 @@ public unsafe class ObjectDataWrapper<TObject> where TObject : unmanaged
             var fieldOffset = Marshal.OffsetOf<TObject>(fieldName);
             _fields[fieldName] = (field.FieldType, fieldOffset);
         }
+    }
+
+    public void SetField(string field, string str)
+    {
+        var strPtr = Marshal.StringToHGlobalUni(str);
+        SetField(field, strPtr);
+        Marshal.FreeHGlobal(strPtr);
     }
 
     public void SetField<TValue>(string field, TValue value)
@@ -51,6 +62,14 @@ public unsafe class ObjectDataWrapper<TObject> where TObject : unmanaged
                     break;
                 case "Double":
                     *(double*)fieldPtr = Convert.ToDouble(value);
+                    break;
+                case nameof(FText):
+                    var ftext = _objCreator.CreateFText(Marshal.PtrToStringUni(*(nint*)&value)!);
+                    *(FText*)fieldPtr = *ftext;
+                    break;
+                case nameof(FString):
+                    var fstring = _objCreator.CreateFString(Marshal.PtrToStringUni(*(nint*)&value)!);
+                    *(FString*)fieldPtr = *fstring;
                     break;
                 default:
                     *(byte*)fieldPtr = *(byte*)&value;

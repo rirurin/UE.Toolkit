@@ -179,7 +179,7 @@ public unsafe class Dumper
                 if (uclass->IsChildOf<UInterface>())
                 {
                     // TODO:
-                    var interfaceName = ToolkitUtils.GetPrivateName(uclass);
+                    var interfaceName = ToolkitUtils.GetPrivateName((nint)uclass).ToString();
                     _UStructDefinitions[interfaceName] = new(interfaceName, interfaceName, 0, 0, [], null);
                     Log.Debug($"Interface: {interfaceName}");
                 }
@@ -266,15 +266,15 @@ public unsafe class Dumper
 
     private void GenerateObjectDefinition(UClass* uclass)
     {
-        var className = ToolkitUtils.GetPrivateName(uclass);
-        var classNativeName = ToolkitUtils.GetNativeName(uclass);
+        var className = ToolkitUtils.GetPrivateName((nint)uclass);
+        var classNativeName = ToolkitUtils.GetNativeName((nint)uclass);
         var size = uclass->Super.PropertiesSize;
         var alignment = uclass->Super.MinAlignment;
         
         // TODO: Flag stuff?
 
         var super = uclass->GetSuperClass();
-        var superName = super != null ? ToolkitUtils.GetPrivateName(super) : null;
+        var superName = super != null ? ToolkitUtils.GetPrivateName((nint)super) : null;
         //var superNativeName = super != null ? GetNativeClassName(super) : "UObjectBaseUtility";
         
         // TODO: Add super header data.
@@ -293,12 +293,12 @@ public unsafe class Dumper
 
     private void GenerateStructDefinition(UScriptStruct* scriptStruct)
     {
-        var structName = ToolkitUtils.GetPrivateName(scriptStruct);
-        var structNativeName = ToolkitUtils.GetNativeName(scriptStruct);
+        var structName = ToolkitUtils.GetPrivateName((nint)scriptStruct);
+        var structNativeName = ToolkitUtils.GetNativeName((nint)scriptStruct);
         var size = scriptStruct->Super.PropertiesSize;
         var alignment = scriptStruct->Super.MinAlignment;
         var super = scriptStruct->Super.SuperStruct;
-        var superName = super != null ? ToolkitUtils.GetPrivateName(super) : null;
+        var superName = super != null ? ToolkitUtils.GetPrivateName((nint)super) : null;
         //var superNativeName = super != null ? GetNativeStructName((UScriptStruct*)super) : null;
         
         var props = ResolveProperties(scriptStruct->Super.PropertyLink);
@@ -309,7 +309,7 @@ public unsafe class Dumper
     
     private void GenerateEnumDefinition(UEnum* uenum, string? knownType = null)
     {
-        var name = ToolkitUtils.GetPrivateName(uenum);
+        var name = ToolkitUtils.GetPrivateName((nint)uenum);
         if (_UEnumDefinitions.ContainsKey(name) && knownType == null) return;
         
         var entries = new Dictionary<string, long>();
@@ -420,7 +420,7 @@ public unsafe class Dumper
                 var byteProp = (FByteProperty*)prop;
                 if (byteProp->Enum != null)
                 {
-                    var byteEnumName = ToolkitUtils.GetPrivateName(byteProp->Enum);
+                    var byteEnumName = ToolkitUtils.GetPrivateName((nint)byteProp->Enum);
                     GenerateEnumDefinition(byteProp->Enum, "byte");
                     return () => byteEnumName;
                 }
@@ -473,11 +473,11 @@ public unsafe class Dumper
                 return () => SanitizeName(_UStructDefinitions.TryGetValue(structPropType, out var knownStruct) ? knownStruct.DisplayName : structPropType);
             case "ClassProperty":
                 var classPropClass = ((FClassProperty*)prop)->MetaClass;
-                var classPropType = classPropClass != null ? ToolkitUtils.GetPrivateName(classPropClass) : "UClass*";
+                var classPropType = classPropClass != null ? ToolkitUtils.GetPrivateName((nint)classPropClass) : "UClass*";
                 return () => SanitizeName(_UStructDefinitions.TryGetValue(classPropType, out var knownStruct) ? $"{knownStruct.DisplayName}*" : classPropType);
             case "EnumProperty":
                 var enumProp = (FEnumProperty*)prop;
-                var enumPropName = ToolkitUtils.GetPrivateName(enumProp->Enum);
+                var enumPropName = ToolkitUtils.GetPrivateName((nint)enumProp->Enum);
                 GenerateEnumDefinition(enumProp->Enum, GetPropertyTypeName(enumProp->UnderlyingProp));
                 return () => SanitizeName(enumPropName);
             case "MapProperty":
@@ -537,7 +537,7 @@ public unsafe class Dumper
             case "FieldPathProperty":
                 return () => "FFieldPath";
             case "LazyObjectProperty":
-                var lazyObjType = ToolkitUtils.GetPrivateName(((FLazyObjectProperty*)prop)->Super.PropertyClass);
+                var lazyObjType = ToolkitUtils.GetPrivateName((nint)((FLazyObjectProperty*)prop)->Super.PropertyClass);
                 return () =>
                 {
                     if (_UStructDefinitions.TryGetValue(lazyObjType, out var knownLazyType))

@@ -36,14 +36,14 @@ public unsafe struct FName
         
         var view = (FNameStringView*)Marshal.AllocHGlobal(sizeof(FNameStringView));
         view->Len = (uint)content.Length;
-        view->bIsWide = true;
-        view->Union.Wide = (char*)Marshal.StringToHGlobalUni(content);
+        view->bIsWide = false;
+        view->Union.Data = (byte*)Marshal.StringToHGlobalAnsi(content);
         
         var fname = FNameHelper_FindOrStoreString(view, findType);
         ComparisonIndex = fname.ComparisonIndex;
         Number = fname.Number;
         
-        Marshal.FreeHGlobal((nint)view->Union.Wide);
+        Marshal.FreeHGlobal((nint)view->Union.Data);
         Marshal.FreeHGlobal((nint)view);
     }
 
@@ -52,6 +52,28 @@ public unsafe struct FName
     /// </summary>
     /// <param name="newValue">The new value. Must be less than 1024 characters.</param>
     public void SetValue(string newValue) => GetFNameEntry()->SetValue(newValue);
+
+    public ReadOnlySpan<byte> ToSpanAnsi()
+    {
+        if (GFNamePool == null)
+        {
+            //Log.Warning($"{nameof(FName)} global pool is not set, defaulting to base {nameof(base.ToString)}");
+            return new();
+        }
+
+        return GetFNameEntry()->ToSpanAnsi();
+    }
+    
+    public ReadOnlySpan<char> ToSpanWide()
+    {
+        if (GFNamePool == null)
+        {
+            //Log.Warning($"{nameof(FName)} global pool is not set, defaulting to base {nameof(base.ToString)}");
+            return new();
+        }
+
+        return GetFNameEntry()->ToSpanWide();
+    }
 
     public override string ToString()
     {
@@ -155,6 +177,22 @@ public unsafe struct FNameEntry
                 var strBytes = Encoding.Default.GetBytes(newValue + '\0');
                 Marshal.Copy(strBytes, 0, (nint)str, strBytes.Length);
             }
+        }
+    }
+
+    public Span<char> ToSpanWide()
+    {
+        fixed (FNameEntry* self = &this)
+        {
+            return new(self->_wideName, _header.Len);
+        }
+    }
+    
+    public Span<byte> ToSpanAnsi()
+    {
+        fixed (FNameEntry* self = &this)
+        {
+            return new(self->_ansiName, _header.Len);
         }
     }
 

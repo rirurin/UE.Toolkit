@@ -69,15 +69,8 @@ public unsafe class UnrealObjects : IUnrealObjects
     }
 
     public void OnObjectLoadedByClass<TObject>(Action<UObjectWrapper<TObject>> callback)
-        where TObject : unmanaged
-    {
-        var objClass = typeof(TObject).Name;
-        _onObjectLoaded += obj =>
-        {
-            if (obj.Instance->IsChildOf(objClass)) callback(new((TObject*)obj.Instance));
-        };
-    }
-    
+        where TObject : unmanaged => OnObjectLoadedByClass(typeof(TObject).Name, callback);
+
     public FText* CreateFText(string content)
     {
         var fstring = CreateFString(content);

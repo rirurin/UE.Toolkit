@@ -1,4 +1,3 @@
-using System.Text;
 using UE.Toolkit.Core.Types.Unreal;
 
 namespace UE.Toolkit.Core.Common;
@@ -8,18 +7,18 @@ public static unsafe class ToolkitUtils
     private static readonly Dictionary<FName, string> PrivateToNativeNameMap = [];
 
     public static nint GetGlobalAddress(nint address) => *(int*)address + address + 4;
-
-    public static string GetPrivateName<T>(T* objPtr) where T : unmanaged
-        => ((UObjectBase*)objPtr)->NamePrivate.ToString();
+    
+    public static string GetPrivateName(nint objPtr) => ((UObjectBase*)objPtr)->NamePrivate.ToString();
 
     /// <summary>
     /// Gets the <c>UObject</c>'s (expected) native name.<br/>
     /// This is different from its private name, which has no type prefix (the <c>U</c> in <c>UObject</c> for example),
-    /// typically...
+    /// typically...<br/>
+    /// VERY SLOW!!!
     /// </summary>
     /// <param name="objPtr">UObject instance</param>
     /// <returns><c>UObject</c> native name.</returns>
-    public static string GetNativeName<T>(T* objPtr) where T : unmanaged
+    public static string GetNativeName(nint objPtr)
     {
         var uobj = (UObjectBase*)objPtr;
         if (PrivateToNativeNameMap.TryGetValue(uobj->NamePrivate, out var nameNative)) return nameNative;

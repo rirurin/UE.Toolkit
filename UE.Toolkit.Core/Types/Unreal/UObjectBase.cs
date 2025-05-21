@@ -23,12 +23,12 @@ public unsafe struct UObjectBase
             return currObj;
         }
     }
-
-    public readonly bool IsA(string type) => ClassPrivate->Super.IsChildOf(type);
     
-    public readonly bool IsChildOf(string type) => ClassPrivate->Super.IsChildOf(type);
+    public readonly bool IsChildOf(string type) => ClassPrivate->IsChildOf(type);
 
     public readonly bool IsChildOf<T>() => IsChildOf(typeof(T).Name);
+
+    public readonly bool IsA(string type) => IsChildOf(type);
 
     public readonly bool IsA<T>() => IsChildOf(typeof(T).Name);
 }

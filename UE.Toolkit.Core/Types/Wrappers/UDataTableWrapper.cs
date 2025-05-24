@@ -9,11 +9,9 @@ namespace UE.Toolkit.Core.Types.Wrappers;
 /// <param name="table">The <see cref="UDataTable{TRow}"/> instance.</param>
 /// <typeparam name="TRow">Row type.</typeparam>
 public unsafe class UDataTableWrapper<TRow>(UDataTable<TRow>* table)
-    : IEnumerator<DataTableRow<TRow>>, IEnumerable<DataTableRow<TRow>>
+    : IEnumerable<DataTableRow<TRow>>
     where TRow : unmanaged
 {
-    private int _position;
-
     public UDataTable<TRow>* Instance { get; } = table;
 
     public string Name { get; } = table->BaseObj.NamePrivate.ToString();
@@ -25,20 +23,28 @@ public unsafe class UDataTableWrapper<TRow>(UDataTable<TRow>* table)
     
     public DataTableRow<TRow> this[int index] => new(&Instance->RowMap.Elements[index]);
 
-    public bool MoveNext() => ++_position < Instance->RowMap.MapNum;
-
-    public void Reset() => _position = -1;
-    
-    object IEnumerator.Current => Current;
-    
-    public DataTableRow<TRow> Current => new(&Instance->RowMap.Elements[_position]);
-
-    public IEnumerator<DataTableRow<TRow>> GetEnumerator() => this;
+    public IEnumerator<DataTableRow<TRow>> GetEnumerator() => new UDataTableWrapperEnumerator<TRow>(this);
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     
     public void Dispose() { }
     #endregion
+}
+
+public unsafe class UDataTableWrapperEnumerator<TRow>(UDataTableWrapper<TRow> table) : IEnumerator<DataTableRow<TRow>>
+    where TRow : unmanaged
+{
+    private int _position;
+    
+    public bool MoveNext() => ++_position < table.Instance->RowMap.MapNum;
+
+    public void Reset() => _position = -1;
+
+    public DataTableRow<TRow> Current => new(&table.Instance->RowMap.Elements[_position]);
+
+    object? IEnumerator.Current => Current;
+
+    public void Dispose() { }
 }
 
 /// <summary>

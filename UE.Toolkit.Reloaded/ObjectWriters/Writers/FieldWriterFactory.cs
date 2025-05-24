@@ -5,7 +5,7 @@ namespace UE.Toolkit.Reloaded.ObjectWriters.Writers;
 
 public static class FieldWriterFactory
 {
-    public static IFieldWriter? Create(string fieldName, nint fieldPtr, Type fieldType, ICreateObjects objCreator)
+    public static IFieldWriter? Create(string fieldName, nint fieldPtr, Type fieldType, IObjectCreator objCreator)
     {
         if (fieldType.IsPrimitive || fieldType.Name == nameof(String))
             return new PrimitiveFieldWriter(fieldName, fieldPtr, fieldType);

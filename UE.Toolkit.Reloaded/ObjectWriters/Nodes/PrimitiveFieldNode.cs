@@ -4,7 +4,7 @@ using UE.Toolkit.Reloaded.ObjectWriters.Writers;
 
 namespace UE.Toolkit.Reloaded.ObjectWriters.Nodes;
 
-public class PrimitiveFieldNode(string fieldName, nint fieldPtr, Type fieldType, ICreateObjects objCreator, string? baseObjsDir = null) : IFieldNode
+public class PrimitiveFieldNode(string fieldName, nint fieldPtr, Type fieldType, IObjectCreator objCreator, string? baseObjsDir = null) : IFieldNode
 {
     private readonly IFieldWriter? _writer = FieldWriterFactory.Create(fieldName, fieldPtr, fieldType, objCreator);
         

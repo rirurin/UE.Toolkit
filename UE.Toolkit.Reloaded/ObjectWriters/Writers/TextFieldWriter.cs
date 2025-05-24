@@ -4,7 +4,7 @@ using UE.Toolkit.Core.Types.Unreal;
 
 namespace UE.Toolkit.Reloaded.ObjectWriters.Writers;
 
-public unsafe class TextFieldWriter(string fieldName, nint fieldPtr, Type fieldType, ICreateObjects objCreator) : IFieldWriter
+public unsafe class TextFieldWriter(string fieldName, nint fieldPtr, Type fieldType, IObjectCreator objCreator) : IFieldWriter
 {
     private byte[]? _ogData;
     

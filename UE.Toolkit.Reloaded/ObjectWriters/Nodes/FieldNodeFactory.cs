@@ -5,7 +5,7 @@ using UE.Toolkit.Interfaces.ObjectWriters;
 
 namespace UE.Toolkit.Reloaded.ObjectWriters.Nodes;
 
-public class FieldNodeFactory(ITypeRegistry typeReg, ICreateObjects objCreator)
+public class FieldNodeFactory(ITypeRegistry typeReg, IObjectCreator objCreator)
 {
     public ITypeRegistry TypeRegistry { get; } = typeReg;
     

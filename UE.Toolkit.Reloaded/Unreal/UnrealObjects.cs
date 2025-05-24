@@ -26,10 +26,10 @@ public unsafe class UnrealObjects : IUnrealObjects
     private static Action<nint>? _onObjectLoaded;
     
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
-    public static void UObject_PostLoadSubobjects(nint self, nint outerInstanceGraph)
+    private static void UObject_PostLoadSubobjects(nint self, nint outerInstanceGraph)
     {
         if (Mod.Config.LogObjectsEnabled)
-            Log.Information($"{nameof(UObject_PostLoadSubobjects)} || {ToolkitUtils.GetNativeName(self)} || {ToolkitUtils.GetNativeName((nint)((UObjectBase*)self)->ClassPrivate)}");
+            Log.Information($"{nameof(UObject_PostLoadSubobjects)} || {ToolkitUtils.GetPrivateName(self)} || {ToolkitUtils.GetPrivateName((nint)((UObjectBase*)self)->ClassPrivate)}");
         
         _UObject_PostLoadSubobjects!.OriginalFunction.Value.Invoke(self, outerInstanceGraph);
         _onObjectLoaded?.Invoke(self);
@@ -40,8 +40,12 @@ public unsafe class UnrealObjects : IUnrealObjects
         ScanHooks.Add(nameof(UObject_PostLoadSubobjects),
             "40 55 53 41 56 48 8D AC 24 ?? ?? ?? ?? 48 81 EC 10 02 00 00 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 85 ?? ?? ?? ?? 48 8B 41",
             (hooks, result) => _UObject_PostLoadSubobjects = hooks.CreateHook<PostLoadSubobjectsFunction>((delegate* unmanaged[Stdcall]<nint, nint, void>)&UObject_PostLoadSubobjects, result).Activate());
-        ScanHooks.Add("GUObjectArray", "2B 05 ?? ?? ?? ?? 44 89 05", (_, result) => GUObjectArray = (FUObjectArray*)ToolkitUtils.GetGlobalAddress(result + 2));
-        ScanHooks.Add(nameof(UStruct_IsChildOf), "48 85 D2 74 ?? 48 63 42 ?? 4C 8D 42", (hooks, result) => UStruct.UStruct_IsChildOf = hooks.CreateWrapper<UStruct_IsChildOf>(result, out _));
+        
+        ScanHooks.Add(nameof(GUObjectArray), "2B 05 ?? ?? ?? ?? 44 89 05",
+            (_, result) => GUObjectArray = (FUObjectArray*)ToolkitUtils.GetGlobalAddress(result + 2));
+        
+        ScanHooks.Add(nameof(UStruct_IsChildOf), "48 85 D2 74 ?? 48 63 42 ?? 4C 8D 42",
+            (hooks, result) => UStruct.UStruct_IsChildOf = hooks.CreateWrapper<UStruct_IsChildOf>(result, out _));
     }
 
     public FUObjectArray* GUObjectArray { get; private set; }

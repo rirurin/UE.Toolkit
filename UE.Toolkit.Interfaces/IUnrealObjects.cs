@@ -1,4 +1,4 @@
-using UE.Toolkit.Core.Interfaces;
+using UE.Toolkit.Core.Types.Interfaces;
 using UE.Toolkit.Core.Types.Unreal;
 using UE.Toolkit.Core.Types.Wrappers;
 
@@ -6,22 +6,11 @@ using UE.Toolkit.Core.Types.Wrappers;
 
 namespace UE.Toolkit.Interfaces;
 
-public unsafe interface IUnrealObjects : ICreateObjects
+/// <summary>
+/// API for functionality related to Unreal objects.
+/// </summary>
+public unsafe interface IUnrealObjects : IObjectCreator
 {
-    /// <summary>
-    /// Creates an instance of <see cref="FText"/> with the given content.
-    /// </summary>
-    /// <param name="content">String content.</param>
-    /// <returns><see cref="FText"/> instance.</returns>
-    FText* CreateFText(string content);
-    
-    /// <summary>
-    /// Creates an instance of <see cref="FString"/> with the given content.
-    /// </summary>
-    /// <param name="content">String content.</param>
-    /// <returns><see cref="FString"/> instance.</returns>
-    FString* CreateFString(string content);
-
     /// <summary>
     /// Listen for an object's creation of the given name.
     /// </summary>

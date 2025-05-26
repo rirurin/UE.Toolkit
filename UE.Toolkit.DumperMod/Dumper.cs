@@ -650,6 +650,9 @@ public unsafe class Dumper
         name = name.Replace("&", string.Empty);
         name = name.Replace('(', '_');
         name = name.Replace(')', '_');
+        name = name.Replace('[', '_');
+        name = name.Replace(']', '_');
+        if (name == "object") name = "_object";
         
         if (char.IsDigit(name[0]))
         {

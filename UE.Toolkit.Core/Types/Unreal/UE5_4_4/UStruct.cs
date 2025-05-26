@@ -49,7 +49,7 @@ public unsafe struct UStruct
             // a reference to the class we're testing for.
             if (KnownStructs.TryGetValue(uclass, out var structPtr) && UStruct_IsChildOf != null)
             {
-                return UStruct_IsChildOf(self, structPtr.Value) == 1;
+                return UStruct_IsChildOf((nint)self, (nint)structPtr.Value) == 1;
             }
             
             // Manually search every parent struct for a match.
@@ -66,4 +66,4 @@ public unsafe struct UStruct
     }
 }
 
-public unsafe delegate byte UStruct_IsChildOf(UStruct* self, UStruct* other);
+public delegate byte UStruct_IsChildOf(nint self, nint other);

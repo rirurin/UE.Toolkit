@@ -5,6 +5,11 @@ namespace UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 [StructLayout(LayoutKind.Sequential, Size = 0x28)]
 public unsafe struct UObjectBase
 {
+    private static readonly Dictionary<string, EClassCastFlags> CastFlagsMap
+        = Enum.GetValues<EClassCastFlags>().ToDictionary(x => x.ToString(), x => x);
+    
+    private static readonly Dictionary<FName, HashSet<string>> StructChainMappings = [];
+    
     public nint VTable;
     public EObjectFlags ObjectFlags;
     public int InternalIndex;
@@ -24,11 +29,51 @@ public unsafe struct UObjectBase
         }
     }
     
-    public readonly bool IsChildOf(string type) => ClassPrivate->IsChildOf(type);
+    public bool IsChildOf(string type)
+    {
+        // TODO: Optimize (again) by caching the result between types.
+        
+        var hasCastFlag = CastFlagsMap.TryGetValue(type, out var ofClassFlag);
+        
+        // If self is a UClass, first check own cast flags and
+        // struct chain.
+        if (ClassPrivate->ClassCastFlags.HasFlag(EClassCastFlags.UClass))
+        {
+            fixed (UObjectBase* self = &this)
+            {
+                var selfClass = (UClass*)self;
+                if (hasCastFlag)
+                {
+                    if ((selfClass->ClassCastFlags & ofClassFlag) == ofClassFlag) return true;
+                }
+                
+                // Populate struct chain data.
+                // TODO: Possibly optimize it using NamePrivate to Struct* mappings but idc rn!
+                InitStructChain((UStruct*)selfClass);
+                
+                var hasPrefix = (type[0] == 'U' || type[0] == 'A' || type[0] == 'F') && char.IsUpper(type[1]); 
+                if (hasPrefix) type = type[1..];
 
-    public readonly bool IsChildOf<T>() => IsChildOf(typeof(T).Name);
+                if (StructChainMappings[NamePrivate].Contains(type)) return true;
+            }
+        }
 
-    public readonly bool IsA(string type) => IsChildOf(type);
+        // Check object's private class cast flags.
+        return hasCastFlag && (ClassPrivate->ClassCastFlags & ofClassFlag) == ofClassFlag;
+    }
 
-    public readonly bool IsA<T>() => IsChildOf(typeof(T).Name);
+    public bool IsChildOf<T>() => IsChildOf(typeof(T).Name);
+
+    private static void InitStructChain(UStruct* baseStruct)
+    {
+        if (StructChainMappings.ContainsKey(baseStruct->Super.Super.NamePrivate)) return;
+
+        var names = new HashSet<string>();
+        for (var tempStruct = baseStruct; tempStruct != null; tempStruct = tempStruct->SuperStruct)
+        {
+            names.Add(tempStruct->Super.Super.NamePrivate.ToString());
+        }
+
+        StructChainMappings[baseStruct->Super.Super.NamePrivate] = names;
+    }
 }

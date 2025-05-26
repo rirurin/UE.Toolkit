@@ -1,4 +1,5 @@
-using UE.Toolkit.Core.Types.Unreal;
+using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
+using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 
 namespace UE.Toolkit.Core.Common;
 
@@ -28,17 +29,13 @@ public static unsafe class ToolkitUtils
         
         if (uobj->IsChildOf<UClass>())
         {
-            var uclass = (UClass*)objPtr;
-            var classPrefix = 'U';
-            
-            if (uclass->IsChildOf<AActor>())
-            {
-                classPrefix = 'A';
-            }
-
-            nameNative = $"{classPrefix}{namePrivate}";
+            nameNative = $"U{namePrivate}";
         }
-        else if (uobj->IsChildOf<UScriptStruct>())
+        if (uobj->IsChildOf<AActor>())
+        {
+            nameNative = $"A{namePrivate}";
+        }
+        if (uobj->IsChildOf<UScriptStruct>())
         {
             // Already has the F struct prefix, UserDefinedStructs usually I think.
             var hasStructPrefix = namePrivate[0] == 'F' && char.IsUpper(namePrivate[1]);
@@ -49,6 +46,35 @@ public static unsafe class ToolkitUtils
         }
 
         PrivateToNativeNameMap[uobj->NamePrivate] = nameNative;
+        return nameNative;
+    }
+    
+    public static string GetNativeName(IUObject uobj)
+    {
+        if (PrivateToNativeNameMap.TryGetValue(uobj.NamePrivate, out var nameNative)) return nameNative;
+        
+        var namePrivate = uobj.NamePrivate.ToString();
+        nameNative = namePrivate;
+        
+        if (uobj.IsChildOf<UClass>())
+        {
+            nameNative = $"U{namePrivate}";
+        }
+        if (uobj.IsChildOf<AActor>())
+        {
+            nameNative = $"A{namePrivate}";
+        }
+        if (uobj.IsChildOf<UScriptStruct>())
+        {
+            // Already has the F struct prefix, UserDefinedStructs usually I think.
+            var hasStructPrefix = namePrivate[0] == 'F' && char.IsUpper(namePrivate[1]);
+            if (!hasStructPrefix)
+            {
+                nameNative = $"F{namePrivate}";
+            }
+        }
+
+        PrivateToNativeNameMap[uobj.NamePrivate] = nameNative;
         return nameNative;
     }
 }

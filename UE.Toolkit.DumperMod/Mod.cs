@@ -3,6 +3,7 @@ using System.Diagnostics;
 #endif
 using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
+using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.DumperMod.Template;
 using UE.Toolkit.Interfaces;
 
@@ -34,7 +35,8 @@ public class Mod : ModBase
         Log.LogLevel = Config.LogLevel;
 
         _modLoader.GetController<IUnrealObjects>().TryGetTarget(out var objs);
-        _dumper = new(objs!, Path.Join(_modLoader.GetDirectoryForModId(_modConfig.ModId), "dump"));
+        _modLoader.GetController<IUnrealFactory>().TryGetTarget(out var factory);
+        _dumper = new(factory!, objs!, Path.Join(_modLoader.GetDirectoryForModId(_modConfig.ModId), "dump"));
     }
 
     #region Standard Overrides

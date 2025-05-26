@@ -1,8 +1,8 @@
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Text;
-using UE.Toolkit.Core.Common;
-using UE.Toolkit.Core.Types.Unreal;
+using UE.Toolkit.Core.Types.Unreal.Factories;
+using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
+using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Interfaces;
 
 // ReSharper disable InconsistentNaming
@@ -79,21 +79,18 @@ public unsafe class Dumper
 
         private static string SanitizeEntryName(string name) => SanitizeName(name.Split("::").Last());
     }
-
-    private delegate FText* UEnum_GetDisplayNameTextByIndex(UUserDefinedEnum* userEnum, FText* outName, int index);
-
-    private readonly SHFunction<UEnum_GetDisplayNameTextByIndex> _GetDisplayNameTextByIndex =
-        new("48 89 5C 24 ?? 55 56 57 48 83 EC 30 48 8B FA");
     
     private static readonly Dictionary<string, UStructDefinition> _UStructDefinitions = [];
     private readonly Dictionary<string, UEnumDefinition> _UEnumDefinitions = [];
     private readonly string _dumpDir;
     private readonly IUnrealObjects _uobjs;
+    private readonly IUnrealFactory _factory;
 
-    public Dumper(IUnrealObjects uobjs, string dumpDir)
+    public Dumper(IUnrealFactory factory, IUnrealObjects uobjs, string dumpDir)
     {
         _uobjs = uobjs;
         _dumpDir = dumpDir;
+        _factory = factory;
         
         if (Directory.Exists(dumpDir)) Directory.Delete(dumpDir, true);
         Directory.CreateDirectory(dumpDir);
@@ -164,22 +161,26 @@ public unsafe class Dumper
 
     private void RegisterObjects()
     {
-        for (int i = 0; i < _uobjs.GUObjectArray->ObjObjects.NumElements; i++)
+        var objArray = _uobjs.GUObjectArray;
+        for (int i = 0; i < _uobjs.GUObjectArray.NumElements; i++)
         {
-            var objItem = _uobjs.GUObjectArray->ObjObjects.GetItem(i);
-            var obj = objItem->Object;
+            //if (i > _uobjs.GUObjectArray.ObjLastNonGCIndex) break;
+            
+            var obj = _uobjs.GUObjectArray.IndexToObject(i);
             if (obj == null) continue;
 
-            var moduleName = GetModuleNameForPackage(obj->GetOutermost());
+            // var uclass = (Core.Types.Unreal.UE4_27_2.UClass*)obj.Ptr;
+            // continue;
+            var moduleName = GetModuleNameForPackage(obj.GetOutermost());
             var fileBaseName = GetHeaderNameForObject(obj);
-
-            if (obj->IsChildOf<UClass>())
+            
+            if (obj.IsChildOf<UClass>())
             {
-                var uclass = (UClass*)obj;
-                if (uclass->IsChildOf<UInterface>())
+                var uclass = _factory.Cast<IUClass>(obj);
+                if (obj.IsChildOf<UInterface>())
                 {
                     // TODO:
-                    var interfaceName = ToolkitUtils.GetPrivateName((nint)uclass).ToString();
+                    var interfaceName = obj.NamePrivate.ToString();
                     _UStructDefinitions[interfaceName] = new(interfaceName, interfaceName, 0, 0, [], null);
                     Log.Debug($"Interface: {interfaceName}");
                 }
@@ -188,25 +189,25 @@ public unsafe class Dumper
                     GenerateObjectDefinition(uclass);
                 }
             }
-            else if (obj->IsChildOf<UScriptStruct>())
+            else if (obj.IsChildOf<UScriptStruct>())
             {
-                GenerateStructDefinition((UScriptStruct*)obj);
+                GenerateStructDefinition(_factory.Cast<IUScriptStruct>(obj));
             }
-            else if (obj->IsChildOf<UEnum>())
+            else if (obj.IsChildOf<UEnum>())
             {
-                GenerateEnumDefinition((UEnum*)obj);
+                GenerateEnumDefinition(_factory.Cast<IUEnum>(obj));
             }
         }
     }
 
-    private static string GetModuleNameForPackage(UObjectBase* package)
+    private static string GetModuleNameForPackage(IUObject package)
     {
-        if (package->OuterPrivate != null)
+        if (package.OuterPrivate != null)
         {
             throw new("Encountered a package with an outer object set");
         }
 
-        var packageName = package->NamePrivate.ToString();
+        var packageName = package.NamePrivate.ToString();
         if (!packageName.StartsWith("/Script/"))
         {
             return string.Empty;
@@ -215,18 +216,18 @@ public unsafe class Dumper
         return packageName["/Script/".Length..];
     }
     
-    private static string GetHeaderNameForObject(UObjectBase* obj)
+    private static string GetHeaderNameForObject(IUObject obj)
     {
         string? headerName = null;
         UObjectBase* finalObj;
         
-        if (obj->IsA<UClass>() || obj->IsA<UScriptStruct>())
+        if (obj.IsA<UClass>() || obj.IsA<UScriptStruct>())
         {
-            headerName = obj->NamePrivate.ToString();
+            headerName = obj.NamePrivate.ToString();
         }
-        else if (obj->IsA<UEnum>())
+        else if (obj.IsA<UEnum>())
         {
-            headerName = obj->NamePrivate.ToString();
+            headerName = obj.NamePrivate.ToString();
         }
         else
         {
@@ -239,7 +240,7 @@ public unsafe class Dumper
 
     private static void AddHeader(StringBuilder sb)
     {
-        sb.AppendLine("/* Generated with UE Toolkit: Dumper (1.1.0)     */");
+        sb.AppendLine("/* Generated with UE Toolkit: Dumper (1.3.0)     */");
         sb.AppendLine("/* GitHub: https://github.com/RyoTune/UE.Toolkit */");
         sb.AppendLine("/* Author: RyoTune                               */");
         sb.AppendLine("/* Special thanks to UE4SS team and Rirurin      */");
@@ -264,24 +265,24 @@ public unsafe class Dumper
         }
     }
 
-    private void GenerateObjectDefinition(UClass* uclass)
+    private void GenerateObjectDefinition(IUClass uclass)
     {
-        var className = ToolkitUtils.GetPrivateName((nint)uclass);
-        var classNativeName = ToolkitUtils.GetNativeName((nint)uclass);
-        var size = uclass->Super.PropertiesSize;
-        var alignment = uclass->Super.MinAlignment;
+        var className = uclass.NamePrivate.ToString();
+        var classNativeName = uclass.GetNativeName();
+        var size = uclass.PropertiesSize;
+        var alignment = uclass.MinAlignment;
         
         // TODO: Flag stuff?
 
-        var super = uclass->GetSuperClass();
-        var superName = super != null ? ToolkitUtils.GetPrivateName((nint)super) : null;
+        var super = uclass.GetSuperClass();
+        var superName = super?.NamePrivate.ToString();
         //var superNativeName = super != null ? GetNativeClassName(super) : "UObjectBaseUtility";
         
         // TODO: Add super header data.
         
         // TODO: Generate delegates.
 
-        var properties = ResolveProperties(uclass->Super.PropertyLink);
+        var properties = ResolveProperties(uclass.PropertyLink);
 
         // TODO: Generate functions.
 
@@ -291,47 +292,45 @@ public unsafe class Dumper
         Log.Debug($"UObject: {classNativeName}");
     }
 
-    private void GenerateStructDefinition(UScriptStruct* scriptStruct)
+    private void GenerateStructDefinition(IUScriptStruct scriptStruct)
     {
-        var structName = ToolkitUtils.GetPrivateName((nint)scriptStruct);
-        var structNativeName = ToolkitUtils.GetNativeName((nint)scriptStruct);
-        var size = scriptStruct->Super.PropertiesSize;
-        var alignment = scriptStruct->Super.MinAlignment;
-        var super = scriptStruct->Super.SuperStruct;
-        var superName = super != null ? ToolkitUtils.GetPrivateName((nint)super) : null;
+        var structName = scriptStruct.NamePrivate.ToString();
+        var structNativeName = scriptStruct.GetNativeName();
+        var size = scriptStruct.PropertiesSize;
+        var alignment = scriptStruct.MinAlignment;
+        var super = scriptStruct.SuperStruct;
+        var superName = super?.NamePrivate.ToString();
         //var superNativeName = super != null ? GetNativeStructName((UScriptStruct*)super) : null;
         
-        var props = ResolveProperties(scriptStruct->Super.PropertyLink);
+        var props = ResolveProperties(scriptStruct.PropertyLink);
 
         _UStructDefinitions[structName] = new(structName, structNativeName, size, alignment, props, superName);
         Log.Debug($"UScriptStruct: {structNativeName}");
     }
     
-    private void GenerateEnumDefinition(UEnum* uenum, string? knownType = null)
+    private void GenerateEnumDefinition(IUEnum uenum, string? knownType = null)
     {
-        var name = ToolkitUtils.GetPrivateName((nint)uenum);
+        var name = uenum.NamePrivate.ToString();
         if (_UEnumDefinitions.ContainsKey(name) && knownType == null) return;
         
         var entries = new Dictionary<string, long>();
         
         var dispNames = new Dictionary<int, string>();
-        if (((UObjectBase*)uenum)->IsChildOf<UUserDefinedEnum>())
+        if (uenum.IsChildOf<UUserDefinedEnum>())
         {
-            var userEnum = (UUserDefinedEnum*)uenum;
-            for (int i = 0; i < uenum->Names.ArrayNum; i++)
+            var userEnum = _factory.Cast<IUUserDefinedEnum>(uenum);
+            for (int i = 0; i < uenum.Names.ArrayNum; i++)
             {
-                var dispNameFText =
-                    _GetDisplayNameTextByIndex.Wrapper(userEnum, (FText*)Marshal.AllocHGlobal(sizeof(FText)), i);
-                var dispName = _uobjs.FTextToString(dispNameFText);
+                var dispName = _uobjs.UEnumGetDisplayNameTextByIndex(userEnum.Ptr, i);
                 dispNames[i] = $"{name}::{dispName}";
             }
         }
 
         long bigEntryValue = 0;
         string bigEntryName = string.Empty;
-        for (int i = 0; i < uenum->Names.ArrayNum; i++)
+        for (int i = 0; i < uenum.Names.ArrayNum; i++)
         {
-            var entry = &uenum->Names.AllocatorInstance[i];
+            var entry = &uenum.Names.AllocatorInstance[i];
 
             if (!dispNames.TryGetValue(i, out var entryName))
             {
@@ -371,12 +370,12 @@ public unsafe class Dumper
         _UEnumDefinitions[name] = new(name, underlyingType, entries);
     }
 
-    private PropertyDefinition[] ResolveProperties(FProperty* propLink)
+    private PropertyDefinition[] ResolveProperties(IEnumerable<IFProperty> propLink)
     {
         var props = new List<PropertyDefinition>();
-        for (; propLink != null; propLink = propLink->PropertyLinkNext)
+        foreach (var prop in propLink)
         {
-            var newProp = ResolveProperty(propLink);
+            var newProp = ResolveProperty(prop);
             var numSameName = props.Count(x => x.Name.StartsWith(newProp.Name)); // Compare against sanitized name, since that's what props are using.
             
             // Handle multiple properties with the same name.
@@ -393,7 +392,7 @@ public unsafe class Dumper
         return props.ToArray();
     }
 
-    private PropertyDefinition ResolveProperty(FProperty* prop)
+    private PropertyDefinition ResolveProperty(IFProperty prop)
     {
         var (name, size, offset, _) = GetBaseInfo(prop);
         if (name == "bool" || name == "float") name += '_';
@@ -409,19 +408,19 @@ public unsafe class Dumper
     /// </summary>
     /// <param name="prop"></param>
     /// <returns>C++/C# property type name.</returns>
-    private Func<string> GetPropertyTypeNameLazy(FProperty* prop)
+    private Func<string> GetPropertyTypeNameLazy(IFProperty prop)
     {
-        var className = prop->Super.ClassPrivate->Name.ToString();
+        var className = prop.ClassPrivate.Name;
         switch (className)
         {
             case "BoolProperty":
                 return () => "bool";
             case "ByteProperty":
-                var byteProp = (FByteProperty*)prop;
-                if (byteProp->Enum != null)
+                var byteProp = _factory.Cast<IFByteProperty>(prop);
+                if (byteProp.Enum != null)
                 {
-                    var byteEnumName = ToolkitUtils.GetPrivateName((nint)byteProp->Enum);
-                    GenerateEnumDefinition(byteProp->Enum, "byte");
+                    var byteEnumName = byteProp.Enum.NamePrivate.ToString();
+                    GenerateEnumDefinition(_factory.Cast<IUEnum>(byteProp.Enum), "byte");
                     return () => byteEnumName;
                 }
                 
@@ -460,30 +459,30 @@ public unsafe class Dumper
             case "WeakObjectProperty":
                 return () => "FWeakObjectPtr";
             case "ObjectProperty":
-                var objPropType = GetObjectName((nint)((FObjectProperty*)prop)->PropertyClass);
+                var objPropType = _factory.Cast<IFObjectProperty>(prop).PropertyClass.NamePrivate.ToString();
                 return () => SanitizeName(_UStructDefinitions.TryGetValue(objPropType, out var knownStruct) ? $"{knownStruct.DisplayName}*" : $"{objPropType}*");
             case "SoftObjectProperty":
-                var softObjPropType = GetObjectName((nint)((FObjectProperty*)prop)->PropertyClass);
+                var softObjPropType = _factory.Cast<IFObjectProperty>(prop).PropertyClass.NamePrivate.ToString();
                 return () => SanitizeName(_UStructDefinitions.TryGetValue(softObjPropType, out var knownStruct) ? $"TSoftObjectPtr<{knownStruct.DisplayName}>" : $"TSoftObjectPtr<{softObjPropType}>");
             case "SoftClassProperty":
-                var softClassPropType = GetObjectName((nint)((FSoftClassProperty*)prop)->MetaClass);
+                var softClassPropType = _factory.Cast<IFSoftClassProperty>(prop).MetaClass.NamePrivate.ToString();
                 return () => SanitizeName(_UStructDefinitions.TryGetValue(softClassPropType, out var knownStruct) ? $"TSoftClassPtr<{knownStruct.DisplayName}>" : $"TSoftClassPtr<{softClassPropType}>");
             case "StructProperty":
-                var structPropType = GetObjectName((nint)((FStructProperty*)prop)->Struct);
+                var structPropType = _factory.Cast<IFStructProperty>(prop).Struct.NamePrivate.ToString();
                 return () => SanitizeName(_UStructDefinitions.TryGetValue(structPropType, out var knownStruct) ? knownStruct.DisplayName : structPropType);
             case "ClassProperty":
-                var classPropClass = ((FClassProperty*)prop)->MetaClass;
-                var classPropType = classPropClass != null ? ToolkitUtils.GetPrivateName((nint)classPropClass) : "UClass*";
+                var classPropClass = _factory.Cast<IFClassProperty>(prop).MetaClass;
+                var classPropType = classPropClass != null ? classPropClass.NamePrivate.ToString() : "UClass*";
                 return () => SanitizeName(_UStructDefinitions.TryGetValue(classPropType, out var knownStruct) ? $"{knownStruct.DisplayName}*" : classPropType);
             case "EnumProperty":
-                var enumProp = (FEnumProperty*)prop;
-                var enumPropName = ToolkitUtils.GetPrivateName((nint)enumProp->Enum);
-                GenerateEnumDefinition(enumProp->Enum, GetPropertyTypeName(enumProp->UnderlyingProp));
+                var enumProp = _factory.Cast<IFEnumProperty>(prop);
+                var enumPropName = enumProp.Enum.NamePrivate.ToString();
+                GenerateEnumDefinition(enumProp.Enum, GetPropertyTypeName(enumProp.UnderlyingProp));
                 return () => SanitizeName(enumPropName);
             case "MapProperty":
-                var mapProp = (FMapProperty*)prop;
-                var mapPropKeyType = GetPropertyTypeName(mapProp->KeyProp);
-                var mapPropValueType = GetPropertyTypeName(mapProp->ValueProp);
+                var mapProp = _factory.Cast<IFMapProperty>(prop);
+                var mapPropKeyType = GetPropertyTypeName(mapProp.KeyProp);
+                var mapPropValueType = GetPropertyTypeName(mapProp.ValueProp);
                 return () =>
                 {
                     var isKeyPtr = mapPropKeyType.EndsWith('*') || mapPropKeyType.Contains('<'); // Use nint for pointers and generic types.
@@ -503,10 +502,10 @@ public unsafe class Dumper
                     return $"TMap<{keyType}, {valueType}>";
                 };
             case "InterfaceProperty":
-                var intPropType = GetObjectName((nint)((FInterfaceProperty*)prop)->InterfaceClass);
+                var intPropType = _factory.Cast<IFInterfaceProperty>(prop).InterfaceClass.NamePrivate.ToString();
                 return () => SanitizeName(_UStructDefinitions.TryGetValue(intPropType, out var knownStruct) ? $"TScriptInterface<{knownStruct.DisplayName}>" : $"TScriptInterface<{intPropType}>");
             case "ArrayProperty":
-                var arrayPropType = GetPropertyTypeName(((FArrayProperty*)prop)->Inner);
+                var arrayPropType = GetPropertyTypeName(_factory.Cast<IFArrayProperty>(prop).Inner);
                 return () =>
                 {
                     var isPtrType = arrayPropType.EndsWith('*') || arrayPropType.Contains('<'); // Use nint for pointers and generic types.
@@ -516,7 +515,7 @@ public unsafe class Dumper
                         $"TArray<{SanitizeName(knownStruct?.DisplayName ?? arrayPropType)}>";
                 };
             case "SetProperty":
-                var setPropType = GetPropertyTypeName(((FSetProperty*)prop)->ElementProp);
+                var setPropType = GetPropertyTypeName(_factory.Cast<IFSetProperty>(prop).ElementProp);
                 return () =>
                 {
                     var isPtrType = setPropType.EndsWith('*') || setPropType.Contains('<'); // Use nint for pointers and generic types.;
@@ -526,7 +525,7 @@ public unsafe class Dumper
                         : $"TSet<{SanitizeName(knownStruct?.DisplayName ?? setPropType)}>";
                 };
             case "OptionalProperty":
-                var optionalType = GetPropertyTypeName(((FOptionalProperty*)prop)->ValueProperty);
+                var optionalType = GetPropertyTypeName(_factory.Cast<IFOptionalProperty>(prop).ValueProperty);
                 return () =>
                 {
                     if (_UStructDefinitions.TryGetValue(optionalType, out var knownOptType))
@@ -537,7 +536,7 @@ public unsafe class Dumper
             case "FieldPathProperty":
                 return () => "FFieldPath";
             case "LazyObjectProperty":
-                var lazyObjType = ToolkitUtils.GetPrivateName((nint)((FLazyObjectProperty*)prop)->Super.PropertyClass);
+                var lazyObjType = _factory.Cast<IFObjectProperty>(prop).PropertyClass.NamePrivate.ToString();
                 return () =>
                 {
                     if (_UStructDefinitions.TryGetValue(lazyObjType, out var knownLazyType))
@@ -556,9 +555,9 @@ public unsafe class Dumper
     /// </summary>
     /// <param name="prop"></param>
     /// <returns></returns>
-    private static string GetPropertyTypeName(FProperty* prop)
+    private string GetPropertyTypeName(IFProperty prop)
     {
-        var className = prop->Super.ClassPrivate->Name.ToString();
+        var className = prop.ClassPrivate.Name;
         switch (className)
         {
             case "BoolProperty":
@@ -590,28 +589,28 @@ public unsafe class Dumper
             case "DataTableRowHandle":
                 return "FDataTableRowHandle";
             case "ObjectProperty":
-                return $"{GetObjectName((nint)((FObjectProperty*)prop)->PropertyClass)}*";
+                return $"{_factory.Cast<IFObjectProperty>(prop).PropertyClass.NamePrivate}*";
             case "SoftObjectProperty":
-                return $"TSoftObjectPtr<{GetObjectName((nint)((FObjectProperty*)prop)->PropertyClass)}>";
+                return $"TSoftObjectPtr<{_factory.Cast<IFObjectProperty>(prop).PropertyClass.NamePrivate}>";
             case "SoftClassProperty":
-                return $"TSoftClassPtr<{GetObjectName((nint)((FSoftClassProperty*)prop)->MetaClass)}>";
+                return $"TSoftClassPtr<{_factory.Cast<IFSoftClassProperty>(prop).MetaClass.NamePrivate}>";
             case "StructProperty":
-                return GetObjectName((nint)((FStructProperty*)prop)->Struct);
+                return _factory.Cast<IFStructProperty>(prop).Struct.NamePrivate.ToString();
             case "ClassProperty":
-                return GetObjectName((nint)((FClassProperty*)prop)->MetaClass);
+                return _factory.Cast<IFClassProperty>(prop).MetaClass!.NamePrivate.ToString();
             case "EnumProperty":
-                return GetObjectName((nint)((FEnumProperty*)prop)->Enum);
+                return _factory.Cast<IFEnumProperty>(prop).Enum.NamePrivate.ToString();
             case "MapProperty":
-                var mapProp = (FMapProperty*)prop;
-                var mapPropKeyType = GetPropertyTypeName(mapProp->KeyProp);
-                var mapPropValueType = GetPropertyTypeName(mapProp->ValueProp);
+                var mapProp = _factory.Cast<IFMapProperty>(prop);
+                var mapPropKeyType = GetPropertyTypeName(mapProp.KeyProp);
+                var mapPropValueType = GetPropertyTypeName(mapProp.ValueProp);
                 return $"TMap<{mapPropKeyType}, {mapPropValueType}>";
             case "InterfaceProperty":
-                return $"TScriptInterface<{GetObjectName((nint)((FInterfaceProperty*)prop)->InterfaceClass)}>";
+                return $"TScriptInterface<{_factory.Cast<IFInterfaceProperty>(prop).NamePrivate}>";
             case "ArrayProperty":
-                return $"TArray<{GetPropertyTypeName(((FArrayProperty*)prop)->Inner)}>";
+                return $"TArray<{GetPropertyTypeName(_factory.Cast<IFArrayProperty>(prop).Inner)}>";
             case "SetProperty":
-                return $"TSet<{GetPropertyTypeName(((FSetProperty*)prop)->ElementProp)}>";
+                return $"TSet<{GetPropertyTypeName(_factory.Cast<IFSetProperty>(prop).ElementProp)}>";
             case "DelegateProperty":
                 return "FScriptDelegate";
             case "MulticastInlineDelegateProperty":
@@ -626,21 +625,13 @@ public unsafe class Dumper
                 return className;
         }
     }
-    
-    /// <summary>
-    /// Gets the object name from a given object pointer.
-    /// Mostly just a shortcut to base <see cref="UObjectBase"/> name property.
-    /// </summary>
-    /// <param name="objPtr">Object pointer.</param>
-    /// <returns>The object name.</returns>
-    private static string GetObjectName(nint objPtr) => ((UObjectBase*)objPtr)->NamePrivate.ToString();
 
-    private (string Name, int Size, int Offset, string ClassName) GetBaseInfo(FProperty* prop)
+    private (string Name, int Size, int Offset, string ClassName) GetBaseInfo(IFProperty prop)
     {
-        var name = SanitizeName(prop->Super.NamePrivate.ToString());
-        var size = prop->ElementSize;
-        var offset = prop->Offset_Internal;
-        var className = prop->Super.ClassPrivate->Name.ToString();
+        var name = SanitizeName(prop.NamePrivate);
+        var size = prop.ElementSize;
+        var offset = prop.Offset_Internal;
+        var className = prop.ClassPrivate.Name;
         return (name, size, offset, className);
     }
 

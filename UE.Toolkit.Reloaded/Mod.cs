@@ -4,9 +4,11 @@ using System.Diagnostics;
 using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using Reloaded.Mod.Interfaces.Internal;
-using UE.Toolkit.Core.Types.Unreal;
+using UE.Toolkit.Core.Types.Unreal.Factories;
+using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Interfaces;
 using UE.Toolkit.Interfaces.ObjectWriters;
+using UE.Toolkit.Reloaded.Common.GameConfigs;
 using UE.Toolkit.Reloaded.Template;
 using UE.Toolkit.Reloaded.DataTables;
 using UE.Toolkit.Reloaded.ObjectWriters;
@@ -28,6 +30,7 @@ public class Mod : ModBase, IExports
 
     private readonly IModConfig _modConfig;
 
+    private readonly IUnrealFactory _factory;
     private readonly UnrealNames _names;
     private readonly UnrealMemory _memory;
     private readonly UnrealObjects _objects;
@@ -49,9 +52,13 @@ public class Mod : ModBase, IExports
 #endif
         Project.Initialize(_modConfig, _modLoader, _log, true);
         Log.LogLevel = Config.LogLevel;
+        
+        // Setup game patterns and Unreal factory.
+        GameConfig.SetGame(_modLoader.GetAppConfig().AppId);
 
+        _factory = GameConfig.Instance.Factory;
         _names = new();
-        _objects = new();
+        _objects = new(_factory);
         _tables = new();
         _memory = new();
         _typeRegistry = new();
@@ -63,6 +70,7 @@ public class Mod : ModBase, IExports
         _modLoader.AddOrReplaceController<IUnrealObjects>(_owner, _objects);
         _modLoader.AddOrReplaceController<ITypeRegistry>(_owner, _typeRegistry);
         _modLoader.AddOrReplaceController<IToolkit>(_owner, _toolkit);
+        _modLoader.AddOrReplaceController(_owner, _factory);
         
         _modLoader.ModLoaded += OnModLoaded;
     }
@@ -71,10 +79,7 @@ public class Mod : ModBase, IExports
     {
         var modDir = _modLoader.GetDirectoryForModId(modConfig.ModId);
         var toolkitDir = Path.Join(modDir, "ue-toolkit");
-        if (!Directory.Exists(toolkitDir)) return;
-
-        var objsDir = Path.Join(toolkitDir, "objects");
-        if (Directory.Exists(objsDir)) _writer.AddPath(objsDir);
+        if (Directory.Exists(toolkitDir)) _toolkit.AddToolkitFolder(toolkitDir);
     }
 
     #region Standard Overrides
@@ -100,5 +105,5 @@ public class Mod : ModBase, IExports
 
     #endregion
 
-    public Type[] GetTypes() => [typeof(IDataTables), typeof(IUnrealObjects), typeof(IToolkit), typeof(ITypeRegistry), typeof(UObjectBase)];
+    public Type[] GetTypes() => [typeof(IDataTables), typeof(IUnrealObjects), typeof(IToolkit), typeof(ITypeRegistry), typeof(UObjectBase), typeof(IUnrealFactory)];
 }

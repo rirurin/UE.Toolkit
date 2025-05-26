@@ -17,5 +17,7 @@ public static class GameConfig
             "p3r.exe" => new UE4_27_2_P3R(),
             _ => new UE5_4_4_ClairObscur()
         };
+        
+        Log.Information($"Game config set to: {Instance.Id} (App ID: {appId})");
     }
 }

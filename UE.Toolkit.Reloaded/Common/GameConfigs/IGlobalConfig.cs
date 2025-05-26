@@ -6,6 +6,7 @@ namespace UE.Toolkit.Reloaded.Common.GameConfigs;
 
 public interface IGameConfig
 {
+    string Id { get; }
     string UObject_PostLoadSubobjects { get; }
     string GUObjectArray { get; }
     Func<nint, nint> GUObjectArray_Result { get; }
@@ -15,5 +16,6 @@ public interface IGameConfig
     string FMemory_Malloc { get; }
     string FMemory_Free { get; }
     string UDataTable_HandleDataTableChanged { get; }
+    string UEnum_GetDisplayNameTextByIndex { get; }
     IUnrealFactory Factory { get; }
 }

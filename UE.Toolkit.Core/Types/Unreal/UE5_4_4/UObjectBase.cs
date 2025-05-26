@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using UE.Toolkit.Core.Common;
 
 namespace UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 
@@ -31,8 +32,13 @@ public unsafe struct UObjectBase
     
     public bool IsChildOf(string type)
     {
+        var ofClassName = type;
+        var hasPrefix = (ofClassName[0] == 'U' || ofClassName[0] == 'A' || ofClassName[0] == 'F') && char.IsUpper(ofClassName[1]); 
+        if (hasPrefix) ofClassName = ofClassName[1..];
+
+        if (ofClassName == ToolkitUtils.GetPrivateName((nint)ClassPrivate)) return true;
+
         // TODO: Optimize (again) by caching the result between types.
-        
         var hasCastFlag = CastFlagsMap.TryGetValue(type, out var ofClassFlag);
         
         // If self is a UClass, first check own cast flags and
@@ -50,11 +56,7 @@ public unsafe struct UObjectBase
                 // Populate struct chain data.
                 // TODO: Possibly optimize it using NamePrivate to Struct* mappings but idc rn!
                 InitStructChain((UStruct*)selfClass);
-                
-                var hasPrefix = (type[0] == 'U' || type[0] == 'A' || type[0] == 'F') && char.IsUpper(type[1]); 
-                if (hasPrefix) type = type[1..];
-
-                if (StructChainMappings[NamePrivate].Contains(type)) return true;
+                if (StructChainMappings[NamePrivate].Contains(ofClassName)) return true;
             }
         }
 

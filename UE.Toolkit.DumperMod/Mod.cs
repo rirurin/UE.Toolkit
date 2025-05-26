@@ -36,7 +36,10 @@ public class Mod : ModBase
 
         _modLoader.GetController<IUnrealObjects>().TryGetTarget(out var objs);
         _modLoader.GetController<IUnrealFactory>().TryGetTarget(out var factory);
-        _dumper = new(factory!, objs!, Path.Join(_modLoader.GetDirectoryForModId(_modConfig.ModId), "dump"));
+
+        var dumpDir = Path.Join(_modLoader.GetDirectoryForModId(_modConfig.ModId), "dump",
+            _modLoader.GetAppConfig().AppId);
+        _dumper = new(factory!, objs!, dumpDir);
     }
 
     #region Standard Overrides

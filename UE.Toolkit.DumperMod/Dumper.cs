@@ -421,7 +421,7 @@ public unsafe class Dumper
                 {
                     var byteEnumName = byteProp.Enum.NamePrivate.ToString();
                     GenerateEnumDefinition(_factory.Cast<IUEnum>(byteProp.Enum), "byte");
-                    return () => byteEnumName;
+                    return () => SanitizeName(byteEnumName);
                 }
                 
                 return () => "byte";
@@ -647,6 +647,7 @@ public unsafe class Dumper
         name = name.Replace('-', '_');
         name = name.Replace('/', '_');
         name = name.Replace("?", string.Empty);
+        name = name.Replace("&", string.Empty);
         name = name.Replace('(', '_');
         name = name.Replace(')', '_');
         

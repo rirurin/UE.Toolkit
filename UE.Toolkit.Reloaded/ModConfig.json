@@ -3,7 +3,7 @@
   "ModName": "UE Toolkit",
   "ModAuthor": "RyoTune",
   "ModVersion": "1.3.0",
-  "ModDescription": "Modding toolkit for Unreal Engine games.\r\n\r\nSupported: UE5/Clair Obscure",
+  "ModDescription": "Modding toolkit for Unreal Engine games.\r\n\r\nSupported:\r\n- UE 5.4.4 (Clair Obscur)\r\n- UE 4.27.2 (P3R)",
   "ModDll": "UE.Toolkit.Reloaded.dll",
   "ModIcon": "Preview.png",
   "ModR2RManagedDll32": "x86/UE.Toolkit.Reloaded.dll",
@@ -52,7 +52,8 @@
   ],
   "OptionalDependencies": [],
   "SupportedAppId": [
-    "sandfall-wingdk-shipping.exe"
+    "sandfall-wingdk-shipping.exe",
+    "p3r.exe"
   ],
   "ProjectUrl": "",
   "CreatorUrl": "",

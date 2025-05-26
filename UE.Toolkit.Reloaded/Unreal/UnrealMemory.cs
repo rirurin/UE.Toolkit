@@ -1,4 +1,5 @@
 using UE.Toolkit.Interfaces;
+using UE.Toolkit.Reloaded.Common.GameConfigs;
 
 // ReSharper disable InconsistentNaming
 
@@ -14,8 +15,8 @@ public class UnrealMemory : IUnrealMemory
 
     public UnrealMemory()
     {       
-        _FMemory_Malloc = new("48 89 5C 24 ?? 57 48 83 EC 20 48 8B F9 8B DA 48 8B 0D ?? ?? ?? ?? 48 85 C9 75 ?? E8");
-        _FMemory_Free = new("48 85 C9 74 ?? 53 48 83 EC 20 48 8B D9 48 8B 0D");
+        _FMemory_Malloc = new(GameConfig.Instance.FMemory_Malloc);
+        _FMemory_Free = new(GameConfig.Instance.FMemory_Free);
     }
     
     public nint Malloc(nint count, int alignment = 0) => _FMemory_Malloc!.Wrapper(count, alignment);

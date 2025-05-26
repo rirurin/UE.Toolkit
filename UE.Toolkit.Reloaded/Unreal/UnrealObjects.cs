@@ -4,9 +4,12 @@ using System.Text;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.Structs;
 using UE.Toolkit.Core.Common;
-using UE.Toolkit.Core.Types.Unreal;
+using UE.Toolkit.Core.Types.Unreal.Factories;
+using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
+using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Core.Types.Wrappers;
 using UE.Toolkit.Interfaces;
+using UE.Toolkit.Reloaded.Common.GameConfigs;
 using Void = Reloaded.Hooks.Definitions.Structs.Void;
 
 // ReSharper disable InconsistentNaming
@@ -35,20 +38,20 @@ public unsafe class UnrealObjects : IUnrealObjects
         _onObjectLoaded?.Invoke(self);
     }
 
-    public UnrealObjects()
+    public UnrealObjects(IUnrealFactory factory)
     {
         ScanHooks.Add(nameof(UObject_PostLoadSubobjects),
-            "40 55 53 41 56 48 8D AC 24 ?? ?? ?? ?? 48 81 EC 10 02 00 00 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 85 ?? ?? ?? ?? 48 8B 41",
+            GameConfig.Instance.UObject_PostLoadSubobjects,
             (hooks, result) => _UObject_PostLoadSubobjects = hooks.CreateHook<PostLoadSubobjectsFunction>((delegate* unmanaged[Stdcall]<nint, nint, void>)&UObject_PostLoadSubobjects, result).Activate());
         
-        ScanHooks.Add(nameof(GUObjectArray), "2B 05 ?? ?? ?? ?? 44 89 05",
-            (_, result) => GUObjectArray = (FUObjectArray*)ToolkitUtils.GetGlobalAddress(result + 2));
+        ScanHooks.Add(nameof(GUObjectArray), GameConfig.Instance.GUObjectArray,
+            (_, result) => GUObjectArray = factory.CreateUObjectArray(GameConfig.Instance.GUObjectArray_Result(result)));
         
-        ScanHooks.Add(nameof(UStruct_IsChildOf), "48 85 D2 74 ?? 48 63 42 ?? 4C 8D 42",
+        ScanHooks.Add(nameof(UStruct_IsChildOf), GameConfig.Instance.UStruct_IsChildOf,
             (hooks, result) => UStruct.UStruct_IsChildOf = hooks.CreateWrapper<UStruct_IsChildOf>(result, out _));
     }
 
-    public FUObjectArray* GUObjectArray { get; private set; }
+    public IUObjectArray GUObjectArray { get; private set; } = null!;
 
     public void OnObjectLoadedByName<TObject>(string objName, Action<UObjectWrapper<TObject>> callback)
         where TObject : unmanaged

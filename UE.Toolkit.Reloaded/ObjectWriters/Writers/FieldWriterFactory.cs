@@ -1,5 +1,5 @@
 using UE.Toolkit.Core.Types.Interfaces;
-using UE.Toolkit.Core.Types.Unreal;
+using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 
 namespace UE.Toolkit.Reloaded.ObjectWriters.Writers;
 

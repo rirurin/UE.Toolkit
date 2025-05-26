@@ -1,5 +1,5 @@
 using System.Xml;
-using UE.Toolkit.Core.Types.Unreal;
+using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Interfaces;
 using UE.Toolkit.Interfaces.ObjectWriters;
 using UE.Toolkit.Reloaded.ObjectWriters.Nodes;

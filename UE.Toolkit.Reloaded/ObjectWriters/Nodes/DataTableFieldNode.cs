@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Xml;
-using UE.Toolkit.Core.Types.Unreal;
+using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Core.Types.Wrappers;
 
 namespace UE.Toolkit.Reloaded.ObjectWriters.Nodes;

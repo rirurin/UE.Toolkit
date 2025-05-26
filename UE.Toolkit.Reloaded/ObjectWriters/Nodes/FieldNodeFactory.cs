@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using UE.Toolkit.Core.Types.Interfaces;
-using UE.Toolkit.Core.Types.Unreal;
+using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Interfaces.ObjectWriters;
 
 namespace UE.Toolkit.Reloaded.ObjectWriters.Nodes;

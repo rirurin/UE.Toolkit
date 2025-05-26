@@ -1,22 +1,22 @@
-using UE.Toolkit.Core.Types.Unreal;
+using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Core.Types.Wrappers;
 using UE.Toolkit.Interfaces;
+using UE.Toolkit.Reloaded.Common.GameConfigs;
 
 // ReSharper disable InconsistentNaming
-
 
 namespace UE.Toolkit.Reloaded.DataTables;
 
 public unsafe class DataTablesService : IDataTables
 {
-    private delegate void HandleDataTableChanged(UDataTable<UObjectBase>* self, FName changedRowName);
-    private readonly SHFunction<HandleDataTableChanged>? _HandleDataTableChanged;
+    private delegate void UDataTable_HandleDataTableChanged(UDataTable<UObjectBase>* self, FName changedRowName);
+    private readonly SHFunction<UDataTable_HandleDataTableChanged>? _HandleDataTableChanged;
     
     private Action<UDataTableWrapper<UObjectBase>>? _onDataTableChanged;
     
     public DataTablesService()
     {
-        _HandleDataTableChanged = new(HandleDataTableChangedImpl, "40 55 53 57 48 8D 6C 24 ?? 48 81 EC C0 00 00 00 8B 41");
+        _HandleDataTableChanged = new(HandleDataTableChangedImpl, GameConfig.Instance.UDataTable_HandleDataTableChanged);
     }
 
     public void OnDataTableChanged<TRow>(string name, Action<UDataTableWrapper<TRow>> callback)
@@ -37,7 +37,7 @@ public unsafe class DataTablesService : IDataTables
         
         if (Mod.Config.LogTablesEnabled)
         {
-            Log.Information($"{nameof(HandleDataTableChanged)} || Table: {table.Name} || Struct: {table.RowStructName}");
+            Log.Information($"{nameof(UDataTable_HandleDataTableChanged)} || Table: {table.Name} || Struct: {table.RowStructName}");
             for (var i = 0; i < table.Count; i++)
             {
                 var row = table[i];

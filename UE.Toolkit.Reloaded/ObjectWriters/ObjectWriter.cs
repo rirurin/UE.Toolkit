@@ -13,8 +13,14 @@ public class ObjectWriter(string objName, Type objType, string objFile, FieldNod
     {
         using var reader = XmlReader.Create(new MemoryStream(_xmlContent));
         reader.MoveToContent();
-        
-        var rootStruct = nodeFactory.Create(ObjectName, objPtr, objType);
-        rootStruct.ConsumeNode(reader);
+
+        if (nodeFactory.TryCreate(ObjectName, objPtr, objType, out var rootNode))
+        {
+            rootNode.ConsumeNode(reader);
+        }
+        else
+        {
+            Log.Error($"Failed to create root node from object XML file.\nFile: {objFile}");
+        }
     }
 }

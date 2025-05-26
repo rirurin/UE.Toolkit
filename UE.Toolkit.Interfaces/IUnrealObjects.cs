@@ -1,5 +1,6 @@
 using UE.Toolkit.Core.Types.Interfaces;
-using UE.Toolkit.Core.Types.Unreal;
+using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
+using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Core.Types.Wrappers;
 
 // ReSharper disable InconsistentNaming
@@ -53,7 +54,7 @@ public unsafe interface IUnrealObjects : IObjectCreator
     /// <summary>
     /// Gets the global UObject array.
     /// </summary>
-    FUObjectArray* GUObjectArray { get; }
+    IUObjectArray GUObjectArray { get; }
 
     /// <summary>
     /// Get the string value of an <see cref="FText"/>.

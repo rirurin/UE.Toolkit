@@ -25,6 +25,9 @@ public unsafe class UnrealObjects : IUnrealObjects
     private readonly SHFunction<FText_ToString> _FText_ToString =
         new("40 53 48 83 EC 20 48 8B D9 E8 ?? ?? ?? ?? 48 8B 0B 48 8B 01 48 83 C4 20");
     
+    private delegate FText* UEnum_GetDisplayNameTextByIndex(UUserDefinedEnum* userEnum, FText* outName, int index);
+    private readonly SHFunction<UEnum_GetDisplayNameTextByIndex> _getDispNameTextByIdx;
+    
     private static IHook<PostLoadSubobjectsFunction>? _UObject_PostLoadSubobjects;
     private static Action<nint>? _onObjectLoaded;
     
@@ -49,6 +52,8 @@ public unsafe class UnrealObjects : IUnrealObjects
         
         ScanHooks.Add(nameof(UStruct_IsChildOf), GameConfig.Instance.UStruct_IsChildOf,
             (hooks, result) => UStruct.UStruct_IsChildOf = hooks.CreateWrapper<UStruct_IsChildOf>(result, out _));
+        
+        _getDispNameTextByIdx = new(GameConfig.Instance.UEnum_GetDisplayNameTextByIndex);
     }
 
     public IUObjectArray GUObjectArray { get; private set; } = null!;
@@ -108,10 +113,21 @@ public unsafe class UnrealObjects : IUnrealObjects
         return fstring;
     }
 
+    public string UEnumGetDisplayNameTextByIndex(nint userEnum, int index)
+    {
+        var outText = (FText*)Marshal.AllocHGlobal(sizeof(FText));
+        
+        var dispNameFText =
+            _getDispNameTextByIdx.Wrapper((UUserDefinedEnum*)userEnum, outText, index);
+        var dispName = FTextToString(dispNameFText);
+        
+        Marshal.FreeHGlobal((nint)outText);
+        return dispName;
+    }
+
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
     private struct PostLoadSubobjectsFunction
     {
-#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
         public FuncPtr<nint, nint, Void> Value;
-#pragma warning restore CS0649 // Field is never assigned to, and will always have its default value
     }
 }

@@ -12,12 +12,12 @@ public class ConfiguratorMixinBase
     /// Defines the configuration items to create.
     /// </summary>
     /// <param name="configFolder">Folder storing the configuration.</param>
-    public virtual IUpdatableConfigurable[] MakeConfigurations(string configFolder)
+    public virtual IUpdatableConfigurable[] MakeConfigurations(string configFolder, string appId, string appName)
     {
         // You can add any Configurable here.
         return new IUpdatableConfigurable[]
         {
-            Configurable<Config>.FromFile(Path.Combine(configFolder, "Config.json"), "Default Config")
+            Configurable<Config>.FromFile(Path.Combine(configFolder, $"Config_{appId}.json"), appName)
         };
     }
 

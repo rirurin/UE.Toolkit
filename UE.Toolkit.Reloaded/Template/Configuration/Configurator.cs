@@ -30,7 +30,7 @@ public class Configurator : IConfiguratorV3
 
     private IUpdatableConfigurable[] MakeConfigurations()
     {
-        _configurations = _configuratorMixin.MakeConfigurations(ConfigFolder!);
+        _configurations = _configuratorMixin.MakeConfigurations(ConfigFolder!, Context.Application.AppId, Context.Application.AppName);
 
         // Add self-updating to configurations.
         for (int x = 0; x < Configurations.Length; x++)

@@ -1,9 +1,10 @@
-# UE Toolkit
-General modding toolkit for Unreal Engine games using Reloaded II.
-
-__Supported__
-- UE 5.4.4 (Clair Obscur)
-- UE 4.27.2 (P3R)
+<div align="center">
+	<img src="/UE.Toolkit.Reloaded/Preview.png" height="256"/>
+	<h1>Unreal Toolkit</h1>
+	<p>
+		General modding toolkit for Unreal Engine games using Reloaded II.
+	</p>
+</div>
 
 ## Features
 - `UObject` and `UDataTable` logging.
@@ -11,21 +12,25 @@ __Supported__
 - Access to `FMemory` functions (currently just `Malloc` and `Free`).
 - Mod for dumping game types to C# types.
 - Methods for creating `FString` and `FText`.
-- Edit object data (numbers and text) with just XML text files. 
+- Edit object data (numbers and text) with just XML text files.
 
-### Installation
-#### Setup Reloaded and Add Your Game
+## Supported
+- UE 5.4.4 (Clair Obscur)
+- UE 4.27.2 (P3R)
+
+## Installation
+### Setup Reloaded and Add Your Game
 I recommend the P3R guides, since they're the newest and cover GamePass. __You only really need to add your game to Reloaded, you can ignore anything past that.__
 
 [__Beginner's Guide to Modding Persona 3 Reload__](https://gamebanana.com/tuts/17156)
 
 [__Beginner's Guide to Modding P3R (Xbox / Game Pass)__](https://gamebanana.com/tuts/17171)
 
-#### Installing UE Toolkit
+### Installing UE Toolkit
 1. Go to [Releases](https://github.com/RyoTune/UE.Toolkit/releases) and download the latest version of `UE.Toolkit.Reloaded.7z`
 2. Drag and drop the `7z` file into Reloaded to install.
 
-#### Installing the UE Toolkit Extension Mod
+### Installing the UE Toolkit Extension Mod
 Install the extension mod for your game to be able to use all features (Object XML Editing).
 - __Clair Obscur__ - https://github.com/RyoTune/E33.UEToolkit/releases
 - __Persona 3 Reload__ - https://github.com/RyoTune/P3R.UEToolkit/releases
@@ -34,8 +39,6 @@ Install the extension mod for your game to be able to use all features (Object X
 In supported games, you're able to edit any object with just a simple text file (XML). No Unreal Engine, no file unpacking/repacking/cooking, and no hex 🤮 editing. Just _Notepad++_ and a dream ✨! ~~Or Notepad if you hate yourself...~~
 
 On top of that, your edits __only__ edit what you're editing! Or put non-stupidly, __mod merging__ is built in 🎉! Mods only conflict if they edit the exact same thing, like the price of the same item for example.
-
-#### Install UE Toolkit
 
 ### Requirements
 - UE Toolkit (Main Mod)

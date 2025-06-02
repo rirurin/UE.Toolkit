@@ -292,12 +292,12 @@ public unsafe class TBitArrayList : IDisposable, IList<bool>
         {
             if (disposing) { } // Dispose managed resources
             // Disposed unmanaged resources (for Unreal)
-            if (Allocation != null)
-            {
-                Allocator.Free((nint)Allocation);
-            }
             if (OwnsInstance)
             {
+                if (Allocation != null)
+                {
+                    Allocator.Free((nint)Allocation);
+                }
                 Allocator.Free((nint)Self);
             }
             Disposed = true;

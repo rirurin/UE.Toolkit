@@ -7,6 +7,7 @@ namespace UE.Toolkit.Core.Types.Unreal.UE5_4_4;
  * Flags describing an object instance
  * When modifying this enum, update the LexToString implementation! 
  */
+[Flags]
 public enum EObjectFlags : uint
 {
 	// Do not add new flags unless they truly belong here. There are alternatives.

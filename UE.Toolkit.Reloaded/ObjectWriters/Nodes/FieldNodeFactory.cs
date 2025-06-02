@@ -14,8 +14,8 @@ public class FieldNodeFactory(ITypeRegistry typeReg, IObjectCreator objCreator)
         node = Create(fieldName, fieldPtr, fieldType);
         return node != null;
     }
-    
-    public IFieldNode? Create(string fieldName, nint fieldPtr, Type fieldType)
+
+    private IFieldNode? Create(string fieldName, nint fieldPtr, Type fieldType)
     {
         if (fieldType.IsPrimitive
             || fieldType.IsEnum

@@ -76,7 +76,7 @@ public class ObjectWriterService(ITypeRegistry typeReg, IUnrealObjects uobjs, ID
             uobjs.OnObjectLoadedByName<UObjectBase>(objWriter.ObjectName, obj => objWriter.WriteToObject((nint)obj.Instance));
         }
         
-        Log.Information($"{nameof(ObjectWriterService)} || Object XML '{objWriter.ObjectName}' registered.\nFile: {objFile}");
+        Log.Information($"{nameof(ObjectWriterService)} || Object XML registered: {objWriter.ObjectName}\nFile: {objFile}");
     }
 
     private readonly record struct TypeKey(string TypeName, string? TypeProvider);

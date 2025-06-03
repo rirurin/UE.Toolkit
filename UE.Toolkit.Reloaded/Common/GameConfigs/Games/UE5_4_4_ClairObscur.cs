@@ -21,5 +21,6 @@ public class UE5_4_4_ClairObscur : IGameConfig
     public virtual string GMalloc => "48 8B 0D ?? ?? ?? ?? 48 85 C9 75 ?? E8 ?? ?? ?? ?? 48 8B 0D ?? ?? ?? ?? 48 8B 01 48 8B D3 FF 50 ?? 48 83 C4 20";
     public virtual string UDataTable_HandleDataTableChanged => "40 55 53 57 48 8D 6C 24 ?? 48 81 EC C0 00 00 00 8B 41";
     public virtual string UEnum_GetDisplayNameTextByIndex => "48 89 5C 24 ?? 55 56 57 48 83 EC 30 48 8B FA";
+    public virtual string FName_Ctor_Wide => "48 89 5C 24 ?? 57 48 83 EC 30 48 8B D9 48 89 54 24 ?? 33 C9 41 8B F8 4C 8B DA";
     public virtual IUnrealFactory Factory { get; } = new UnrealFactory();
 }

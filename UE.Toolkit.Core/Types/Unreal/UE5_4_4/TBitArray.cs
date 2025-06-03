@@ -49,6 +49,7 @@ public unsafe class TBitArrayList : IDisposable, IList<bool>
     public unsafe TBitArrayList(byte* _Self, IUnrealMemoryInternal _Allocator, int _InlineAllocatorSize = TBitArrayConstants.DEFAULT_ALLOCATOR_SIZE)
     {
         Allocator = _Allocator;
+        InlineAllocatorSize = _InlineAllocatorSize;
         Self = _Self;
         OwnsInstance = false;
     }
@@ -66,23 +67,23 @@ public unsafe class TBitArrayList : IDisposable, IList<bool>
         OwnsInstance = true;
     }
 
-    public unsafe byte* Inline
+    protected unsafe byte* Inline
     {
         get => Self;
     }
 
-    public int InlineBits => InlineAllocatorSize * TBitArrayConstants.BITS_PER_BYTE;
+    internal int InlineBits => InlineAllocatorSize * TBitArrayConstants.BITS_PER_BYTE;
 
-    public unsafe byte* Allocation
+    protected unsafe byte* Allocation
     {
         get => *(byte**)(Self + InlineAllocatorSize);
-        protected set => *(byte**)(Self + InlineAllocatorSize) = value;
+        set => *(byte**)(Self + InlineAllocatorSize) = value;
     }
 
-    public unsafe byte* Data
+    protected unsafe byte* Data
     {
         get => (Allocation != null) ? Allocation : Inline;
-        protected set
+        set
         {
             if (Allocation != null)
             {

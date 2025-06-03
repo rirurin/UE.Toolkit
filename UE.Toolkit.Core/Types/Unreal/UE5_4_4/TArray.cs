@@ -27,8 +27,8 @@ public unsafe struct TArray<T> where T : unmanaged
 /// </para>
 /// </summary>
 /// <typeparam name="TType">The type to store instances of </typeparam>
-public unsafe class TArrayList<TType> : IDisposable, IList<TType> where TType : unmanaged
-// TArrayListBase<TType, TStrategy = HeapAllocator<TType, int32>, TSize = int32>
+public unsafe class TArrayList<TType> : IDisposable, IList<Ptr<TType>> where TType : unmanaged
+    // TArrayListBase<TType, TStrategy = HeapAllocator<TType, int32>, TSize = int32>
 {
     protected TArray<TType>* Self;
     protected IUnrealMemoryInternal Allocator;
@@ -105,7 +105,7 @@ public unsafe class TArrayList<TType> : IDisposable, IList<TType> where TType : 
 
     public void Resize() => ResizeTo(CalculateNewArraySize());
 
-    void InsertInner(int index, TType item, bool add)
+    void InsertInner(int index, Ptr<TType> item, bool add)
     {
         if (add)
         {
@@ -124,7 +124,8 @@ public unsafe class TArrayList<TType> : IDisposable, IList<TType> where TType : 
                 Allocation[i] = Allocation[i - 1];
             }
             ArrayNum++;
-        } else
+        }
+        else
         {
             // We're only replacing existing entries, so this[ArrayNum] is out of bounds
             if (!InBounds(index))
@@ -132,19 +133,63 @@ public unsafe class TArrayList<TType> : IDisposable, IList<TType> where TType : 
                 return;
             }
         }
-        Allocation[index] = item;
+        Allocation[index] = *item.Value;
     }
+
+    #region BY-VALUE METHODS
+
+    public void AddValue(TType item) => Add(new(&item));
+    public bool ContainsValue(TType item)
+    {
+        foreach (var el in this)
+        {
+            if ((*el.Value).Equals(item))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    public TType GetValue(int Index) => *this[Index].Value;
+
+    public int IndexOfValue(TType item)
+    {
+        int index = 0;
+        foreach (var el in this)
+        {
+            if ((*el.Value).Equals(item))
+            {
+                return index;
+            }
+            index++;
+        }
+        return -1;
+    }
+
+    public bool RemoveValue(TType item)
+    {
+        int ItemIndex = IndexOfValue(item);
+        if (ItemIndex != -1)
+        {
+            RemoveAt(ItemIndex);
+            return true;
+        }
+        return false;
+    }
+
+    #endregion
 
     #region LIST INTERFACE
 
-    public TType this[int index] 
-    { 
-        get 
+    public Ptr<TType> this[int index]
+    {
+        get
         {
             if (InBounds(index))
             {
-                return Allocation[index];
-            } else
+                return new(&Allocation[index]);
+            }
+            else
             {
                 throw new IndexOutOfRangeException();
             }
@@ -156,11 +201,11 @@ public unsafe class TArrayList<TType> : IDisposable, IList<TType> where TType : 
 
     public bool IsReadOnly => false;
 
-    public void Add(TType item) => Insert(Count, item);
+    public void Add(Ptr<TType> item) => Insert(Count, item);
 
     public void Clear() => ArrayNum = 0;
 
-    public bool Contains(TType item)
+    public bool Contains(Ptr<TType> item)
     {
         foreach (var el in this)
         {
@@ -172,7 +217,7 @@ public unsafe class TArrayList<TType> : IDisposable, IList<TType> where TType : 
         return false;
     }
 
-    public void CopyTo(TType[] array, int arrayIndex)
+    public void CopyTo(Ptr<TType>[] array, int arrayIndex)
     {
         if (!InBounds(arrayIndex))
         {
@@ -180,13 +225,13 @@ public unsafe class TArrayList<TType> : IDisposable, IList<TType> where TType : 
         }
         for (int i = 0; i < ArrayNum - arrayIndex; i++)
         {
-            array[i] = Allocation[i + arrayIndex];
+            array[i] = new(&Allocation[i + arrayIndex]);
         }
     }
 
-    public IEnumerator<TType> GetEnumerator() => new TArrayEnumerator<TType>(this);
+    public IEnumerator<Ptr<TType>> GetEnumerator() => new TArrayEnumerator<TType>(this);
 
-    public int IndexOf(TType item)
+    public int IndexOf(Ptr<TType> item)
     {
         int index = 0;
         foreach (var el in this)
@@ -200,8 +245,8 @@ public unsafe class TArrayList<TType> : IDisposable, IList<TType> where TType : 
         return -1;
     }
 
-    public void Insert(int index, TType item) => InsertInner(index, item, true);
-    public bool Remove(TType item)
+    public void Insert(int index, Ptr<TType> item) => InsertInner(index, item, true);
+    public bool Remove(Ptr<TType> item)
     {
         int ItemIndex = IndexOf(item);
         if (ItemIndex != -1)
@@ -261,7 +306,7 @@ public unsafe class TArrayList<TType> : IDisposable, IList<TType> where TType : 
     #endregion
 }
 
-public class TArrayEnumerator<T> : IEnumerator<T> where T : unmanaged
+public class TArrayEnumerator<T> : IEnumerator<Ptr<T>> where T : unmanaged
 {
     protected TArrayList<T> Self;
     private int position = -1;
@@ -272,7 +317,7 @@ public class TArrayEnumerator<T> : IEnumerator<T> where T : unmanaged
     }
     public unsafe TArrayEnumerator(TArrayList<T> _Self) => Self = _Self;
     public unsafe bool MoveNext() => ++position < Self.ArrayNum;
-    T IEnumerator<T>.Current => (T)Current;
+    Ptr<T> IEnumerator<Ptr<T>>.Current => (Ptr<T>)Current;
     public void Reset() => position = -1;
     public void Dispose() { }
 }

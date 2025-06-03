@@ -22,5 +22,10 @@ public unsafe class UnrealNames
                 FName.FNameHelper_FindOrStoreString =
                     hooks.CreateWrapper<FNameHelper_FindOrStoreString>(result, out _);
             });
+        ScanHooks.Add(nameof(FName_Ctor_Wide), GameConfig.Instance.FName_Ctor_Wide,
+            (hooks, result) =>
+            {
+                FName.FName_Constructor = hooks.CreateWrapper<FName_Ctor_Wide>(result, out _);
+            });
     }
 }

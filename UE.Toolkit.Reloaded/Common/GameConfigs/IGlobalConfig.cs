@@ -18,5 +18,6 @@ public interface IGameConfig
     string GMalloc { get; }
     string UDataTable_HandleDataTableChanged { get; }
     string UEnum_GetDisplayNameTextByIndex { get; }
+    string FName_Ctor_Wide { get; }
     IUnrealFactory Factory { get; }
 }

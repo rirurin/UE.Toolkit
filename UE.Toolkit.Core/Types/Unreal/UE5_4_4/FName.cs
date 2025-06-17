@@ -4,11 +4,12 @@
 
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Xml.Linq;
 
 namespace UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 
 [StructLayout(LayoutKind.Sequential, Size = 8)]
-public unsafe struct FName
+public unsafe struct FName : IMapHashable, IEquatable<FName>
 {
     /// <summary>
     /// INTERNAL USE ONLY, DO NOT TOUCH!!!<br/>
@@ -23,28 +24,57 @@ public unsafe struct FName
     /// to be done with constructor.
     /// </summary>
     public static FNameHelper_FindOrStoreString? FNameHelper_FindOrStoreString;
-    
+
+    /// <summary>
+    /// INTERNAL USE ONLY, DO NOT TOUCH!!!<br/>
+    /// Holds function wrapper for creating FNames, allowing it
+    /// to be done with constructor.
+    /// </summary>
+    public static FName_Ctor_Wide? FName_Constructor;
+
     public FNameEntryId ComparisonIndex;
     public FNameEntryId Number; // #if !UE_FNAME_OUTLINE_NUMBER
 
     public FName(string content, EFindName findType = EFindName.FNAME_Add)
     {
-        if (FNameHelper_FindOrStoreString == null)
+        if (FNameHelper_FindOrStoreString != null) // Get or add a new FName, Unreal Engine 5.1+
         {
-            throw new($"{nameof(FNameHelper_FindOrStoreString)} wrapper is null.");
+            var view = (FNameStringView*)Marshal.AllocHGlobal(sizeof(FNameStringView));
+            view->Len = (uint)content.Length;
+            view->bIsWide = false;
+            view->Union.Data = (byte*)Marshal.StringToHGlobalAnsi(content);
+
+            var fname = FNameHelper_FindOrStoreString(view, findType);
+            ComparisonIndex = fname.ComparisonIndex;
+            Number = fname.Number;
+
+            Marshal.FreeHGlobal((nint)view->Union.Data);
+            Marshal.FreeHGlobal((nint)view);
         }
-        
-        var view = (FNameStringView*)Marshal.AllocHGlobal(sizeof(FNameStringView));
-        view->Len = (uint)content.Length;
-        view->bIsWide = false;
-        view->Union.Data = (byte*)Marshal.StringToHGlobalAnsi(content);
-        
-        var fname = FNameHelper_FindOrStoreString(view, findType);
-        ComparisonIndex = fname.ComparisonIndex;
-        Number = fname.Number;
-        
-        Marshal.FreeHGlobal((nint)view->Union.Data);
-        Marshal.FreeHGlobal((nint)view);
+        else if (FName_Constructor != null) // Get or add a new FName, Unreal Engine 5.0 or earlier
+        {
+            FName* newFname = (FName*)Marshal.AllocHGlobal(sizeof(FName));
+            nint wideName = Marshal.StringToHGlobalUni(content);
+
+            newFname = FName_Constructor(newFname, wideName, findType);
+            ComparisonIndex = newFname->ComparisonIndex;
+            Number = newFname->Number;
+
+            Marshal.FreeHGlobal(wideName);
+            Marshal.FreeHGlobal((nint)newFname);
+        }
+        else
+        {
+            throw new($"Wrappers for {nameof(FNameHelper_FindOrStoreString)} and {nameof(FName_Constructor)} are null.");
+        }
+    }
+
+
+    // NAME_NONE
+    public FName()
+    {
+        ComparisonIndex = new();
+        Number = new();
     }
 
     /// <summary>
@@ -96,9 +126,15 @@ public unsafe struct FName
     }
     
     private static nint GetPool(uint poolIdx) => *((nint*)(GFNamePool + 1) + poolIdx);
+
+    public uint GetTypeHash() => ComparisonIndex.GetTypeHash();
+
+    public bool Equals(FName other) => ComparisonIndex.Equals(other.ComparisonIndex);
 }
 
 public unsafe delegate FName FNameHelper_FindOrStoreString(FNameStringView* view, EFindName findType);
+
+public unsafe delegate FName* FName_Ctor_Wide(FName* self, nint name, EFindName findType);
 
 public enum EFindName
 {
@@ -109,9 +145,17 @@ public enum EFindName
 }
 
 [StructLayout(LayoutKind.Sequential, Size = 0x4)]
-public struct FNameEntryId
+public struct FNameEntryId : IMapHashable, IEquatable<FNameEntryId>
 {
     public uint Value;
+
+    public bool Equals(FNameEntryId other) => Value == other.Value;
+    public uint GetTypeHash() => ((Value & 0xffff) >> 4) + (Value >> 0x10) * 0x80001 + (Value & 0xfff) * 0x10001;
+    public override string ToString() => $"0x{Value:X}";
+
+    // NAME_NONE
+    public FNameEntryId() => Value = 0;
+
 }
 
 [StructLayout(LayoutKind.Sequential, Size = 0x2)]

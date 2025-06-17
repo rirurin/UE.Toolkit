@@ -77,6 +77,8 @@ public class Mod : ModBase, IExports
 
     private void OnModLoaded(IModV1 mod, IModConfigV1 modConfig)
     {
+        if (!Project.IsModDependent(modConfig)) return;
+        
         var modDir = _modLoader.GetDirectoryForModId(modConfig.ModId);
         var toolkitDir = Path.Join(modDir, "ue-toolkit");
         if (Directory.Exists(toolkitDir)) _toolkit.AddToolkitFolder(toolkitDir);

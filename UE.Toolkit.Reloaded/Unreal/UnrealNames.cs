@@ -1,6 +1,4 @@
-using UE.Toolkit.Core.Common;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
-using UE.Toolkit.Reloaded.Common.GameConfigs;
 
 // ReSharper disable InconsistentNaming
 
@@ -8,22 +6,19 @@ namespace UE.Toolkit.Reloaded.Unreal;
 
 public unsafe class UnrealNames
 {
-    //private readonly SHFunction<FNameHelper_FindOrStoreString> _FNameHelper_FindOrStoreString;
-    
     public UnrealNames()
     {
-        ScanHooks.Add(nameof(FName.GFNamePool),
-            GameConfig.Instance.GFNamePool,
-            (_, result) => FName.GFNamePool = (FNamePool*)ToolkitUtils.GetGlobalAddress(result + 3));
+        Project.Scans.AddScan(nameof(FName.GFNamePool), result => FName.GFNamePool = (FNamePool*)result);
         
-        ScanHooks.Add(nameof(FNameHelper_FindOrStoreString), GameConfig.Instance.FNameHelper_FindOrStoreString,
-            (hooks, result) =>
+        Project.Scans.AddScanHook(nameof(FNameHelper_FindOrStoreString),
+            (result, hooks) =>
             {
                 FName.FNameHelper_FindOrStoreString =
                     hooks.CreateWrapper<FNameHelper_FindOrStoreString>(result, out _);
             });
-        ScanHooks.Add(nameof(FName_Ctor_Wide), GameConfig.Instance.FName_Ctor_Wide,
-            (hooks, result) =>
+        
+        Project.Scans.AddScanHook(nameof(FName_Ctor_Wide),
+            (result, hooks) =>
             {
                 FName.FName_Constructor = hooks.CreateWrapper<FName_Ctor_Wide>(result, out _);
             });

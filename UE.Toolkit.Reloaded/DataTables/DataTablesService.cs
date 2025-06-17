@@ -1,7 +1,6 @@
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Core.Types.Wrappers;
 using UE.Toolkit.Interfaces;
-using UE.Toolkit.Reloaded.Common.GameConfigs;
 
 // ReSharper disable InconsistentNaming
 
@@ -16,7 +15,7 @@ public unsafe class DataTablesService : IDataTables
     
     public DataTablesService()
     {
-        _HandleDataTableChanged = new(HandleDataTableChangedImpl, GameConfig.Instance.UDataTable_HandleDataTableChanged);
+        _HandleDataTableChanged = new(HandleDataTableChangedImpl);
     }
 
     public void OnDataTableChanged<TRow>(string name, Action<UDataTableWrapper<TRow>> callback)

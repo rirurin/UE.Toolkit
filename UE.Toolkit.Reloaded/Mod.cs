@@ -70,6 +70,7 @@ public class Mod : ModBase, IExports
         _modLoader.AddOrReplaceController<IUnrealObjects>(_owner, _objects);
         _modLoader.AddOrReplaceController<ITypeRegistry>(_owner, _typeRegistry);
         _modLoader.AddOrReplaceController<IToolkit>(_owner, _toolkit);
+        _modLoader.AddOrReplaceController<IUnrealNames>(_owner, _names);
         _modLoader.AddOrReplaceController(_owner, _factory);
         
         _modLoader.ModLoaded += OnModLoaded;
@@ -107,5 +108,9 @@ public class Mod : ModBase, IExports
 
     #endregion
 
-    public Type[] GetTypes() => [typeof(IDataTables), typeof(IUnrealObjects), typeof(IToolkit), typeof(ITypeRegistry), typeof(UObjectBase), typeof(IUnrealFactory)];
+    public Type[] GetTypes() =>
+    [
+        typeof(IDataTables), typeof(IUnrealObjects), typeof(IToolkit),typeof(ITypeRegistry), typeof(UObjectBase),
+        typeof(IUnrealFactory), typeof(IUnrealNames)
+    ];
 }

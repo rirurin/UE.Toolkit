@@ -13,6 +13,16 @@ namespace UE.Toolkit.Interfaces;
 public unsafe interface IUnrealObjects : IObjectCreator
 {
     /// <summary>
+    /// Notify on the creation of any object.
+    /// </summary>
+    Action<UObjectWrapper<UObjectBase>>? OnObjectLoaded { get; set; }
+    
+    /// <summary>
+    /// Gets the global UObject array.
+    /// </summary>
+    IUObjectArray GUObjectArray { get; }
+    
+    /// <summary>
     /// Listen for an object's creation of the given name.
     /// </summary>
     /// <param name="objName">Object name.</param>
@@ -50,11 +60,6 @@ public unsafe interface IUnrealObjects : IObjectCreator
     /// <remarks>Implemented as a post-hook on <c>UObject::PostLoadSubobjects</c>, allowing for editing object data before use.</remarks>
     void OnObjectLoadedByClass<TObject>(string objClass, Action<UObjectWrapper<TObject>> callback)
         where TObject : unmanaged;
-
-    /// <summary>
-    /// Gets the global UObject array.
-    /// </summary>
-    IUObjectArray GUObjectArray { get; }
 
     /// <summary>
     /// Get the string value of an <see cref="FText"/>.

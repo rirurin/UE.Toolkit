@@ -20,18 +20,18 @@ public interface ContainerAllocationPolicy<TType, TSize>
 /// Implemented in Unreal Engine using TAlignedHeapAllocator and TSizedHeapAllocator, which other than
 /// differences in how they assign alignments for allocations act identically.
 /// </summary>
-public unsafe abstract class HeapAllocator<TType, TSize> : ContainerAllocationPolicy<TType, TSize>
+public abstract unsafe class HeapAllocator<TType, TSize> : ContainerAllocationPolicy<TType, TSize>
     where TType : unmanaged where TSize : INumber<TSize>
 {
     protected TType* Data;
     public abstract TSize GetInitialCapacity();
     public abstract nint GetAllocatedSize(TSize NumAllocatedElements, nint NumBytesPerElement);
     public bool HasAllocation() => Data != null;
-    public unsafe TType* GetAllocation() => Data;
-    public unsafe void SetAllocation(TType* Alloc) => Data = Alloc;
+    public TType* GetAllocation() => Data;
+    public void SetAllocation(TType* Alloc) => Data = Alloc;
 }
 
-public unsafe class HeapAllocatorInt32<TType> : HeapAllocator<TType, int>
+public class HeapAllocatorInt32<TType> : HeapAllocator<TType, int>
     where TType : unmanaged
 {
     public override int GetInitialCapacity() => 0;
@@ -52,11 +52,11 @@ public unsafe abstract class InlineAllocator<TType, TSize> : ContainerAllocation
     public bool HasAllocation() => Heap != null;
     public TSize GetInitialCapacity() => NumInlineElements;
     public abstract nint GetAllocatedSize(TSize NumAllocatedElements, nint NumBytesPerElement);
-    public unsafe TType* GetAllocation() => null;
-    public unsafe void SetAllocation(TType* Alloc) { }
+    public TType* GetAllocation() => null;
+    public void SetAllocation(TType* Alloc) { }
 }
 
-public unsafe class InlineAllocatorInt32<TType> : InlineAllocator<TType, int>
+public class InlineAllocatorInt32<TType> : InlineAllocator<TType, int>
     where TType : unmanaged
 {
     public override nint GetAllocatedSize(int NumAllocatedElements, nint NumBytesPerElement)
@@ -84,6 +84,6 @@ public unsafe class FixedAllocator<TType, TSize> : ContainerAllocationPolicy<TTy
 
     public bool HasAllocation() => false;
     public nint GetAllocatedSize(TSize NumAllocatedElements, nint NumBytesPerElement) => 0;
-    public unsafe TType* GetAllocation() => null;
-    public unsafe void SetAllocation(TType* Alloc) { }
+    public TType* GetAllocation() => null;
+    public void SetAllocation(TType* Alloc) { }
 }

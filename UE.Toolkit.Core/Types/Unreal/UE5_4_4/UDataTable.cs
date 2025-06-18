@@ -64,7 +64,7 @@ public class UDataTableManaged<TRow> : IDictionary<FName, Ptr<TRow>>, IDisposabl
 
     public bool Remove(FName key) => RowMap.Remove(key);
 
-    public bool TryGetValue(FName key, [MaybeNullWhen(false)] out Ptr<TRow> value) => RowMap.TryGetValue(key, out value);
+    public bool TryGetValue(FName key, out Ptr<TRow> value) => RowMap.TryGetValue(key, out value);
 
     public void Add(KeyValuePair<FName, Ptr<TRow>> item) => RowMap.Add(item);
 

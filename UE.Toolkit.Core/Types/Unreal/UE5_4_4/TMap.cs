@@ -52,7 +52,7 @@ public interface IMapHashable
 // Built in hashable types
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct TMapElementHashable<KeyType, ValueType>
+public struct TMapElementHashable<KeyType, ValueType>
     where KeyType : unmanaged, IEquatable<KeyType>, IMapHashable
     where ValueType : unmanaged
 {
@@ -81,7 +81,7 @@ public unsafe struct HashablePtr<T> : IMapHashable, IEquatable<HashablePtr<T>> w
     }
     public bool Equals(HashablePtr<T> other) => Ptr.Value == other.Ptr.Value;
 }
-public unsafe struct HashableInt : IMapHashable, IEquatable<HashableInt>
+public struct HashableInt : IMapHashable, IEquatable<HashableInt>
 {
     public int Value;
     public HashableInt(int value) { Value = value; }
@@ -91,7 +91,7 @@ public unsafe struct HashableInt : IMapHashable, IEquatable<HashableInt>
 }
 
 [StructLayout(LayoutKind.Explicit, Size = 0x8)]
-public unsafe struct HashableInt8 : IMapHashable, IEquatable<HashableInt8>
+public struct HashableInt8 : IMapHashable, IEquatable<HashableInt8>
 {
     [FieldOffset(0x0)] public int Value;
     public HashableInt8(int value) { Value = value; }
@@ -321,7 +321,7 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
     ///         </item>
     ///     </list>
     /// </summary>
-    public unsafe nint Self { get; private set; }
+    public nint Self { get; private set; }
 
     protected IUnrealMemoryInternal Allocator;
     protected TMapElementAccessor<TElemKey, TElemValue> Elements;
@@ -330,56 +330,56 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
     protected bool OwnsInstance;
     protected bool Disposed = false;
 
-    private unsafe TArray<TMapElementHashable<TElemKey, TElemValue>>* ElementsRaw
+    private TArray<TMapElementHashable<TElemKey, TElemValue>>* ElementsRaw
     {
         get => (TArray<TMapElementHashable<TElemKey, TElemValue>>*)Self;
     }
 
-    private unsafe byte* BitAllocatorRaw
+    private byte* BitAllocatorRaw
     {
         get => (byte*)(Self + MapConstants.SIZE_OF_ARRAY);
     }
 
-    private unsafe int* FirstFreeIndexPtr
+    private int* FirstFreeIndexPtr
     {
         get => (int*)(Self + MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR);
     }
-    private unsafe int FirstFreeIndex
+    private int FirstFreeIndex
     {
         get => *FirstFreeIndexPtr;
         set => *FirstFreeIndexPtr = value;
     }
 
-    private unsafe int* NumFreeIndicesPtr
+    private int* NumFreeIndicesPtr
     {
         get => (int*)(Self + MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR + sizeof(int));
     }
-    private unsafe int NumFreeIndices
+    private int NumFreeIndices
     {
         get => *NumFreeIndicesPtr;
         set => *NumFreeIndicesPtr = value;
     }
 
-    private unsafe TMapFreeListIndex* FreeList
+    private TMapFreeListIndex* FreeList
     {
         get => (TMapFreeListIndex*)(Self + MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR + sizeof(nint));
     }
 
-    private unsafe int** HashesPtr
+    private int** HashesPtr
     {
         get => (int**)(Self + MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR + MapConstants.SIZE_OF_FREE_LIST);
     }
-    private unsafe int* Hashes
+    private int* Hashes
     {
         get => *HashesPtr;
         set => *HashesPtr = value;
     }
 
-    private unsafe int* HashSizePtr
+    private int* HashSizePtr
     {
         get => (int*)(Self + MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR + MapConstants.SIZE_OF_FREE_LIST + sizeof(nint));
     }
-    private unsafe int HashSize
+    private int HashSize
     {
         get => *HashSizePtr;
         set => *HashSizePtr = value;
@@ -393,7 +393,7 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
     /// </summary>
     /// <param name="_Self">Pointer to an existing <c>TArray</c></param>
     /// <param name="_Allocator">The Unreal allocator, used for methods that modify the <c>TArray</c></param>
-    public unsafe TMapDictionary(TMap<TElemKey, TElemValue>* _Self, IUnrealMemoryInternal _Allocator, Action<string>? _DebugCallback = null)
+    public TMapDictionary(TMap<TElemKey, TElemValue>* _Self, IUnrealMemoryInternal _Allocator, Action<string>? _DebugCallback = null)
     {
         Self = (nint)_Self;
         Allocator = _Allocator;
@@ -403,7 +403,7 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
         DebugCallback = _DebugCallback;
     }
 
-    private unsafe TElemValue* TryGetLinear(TElemKey key)
+    private TElemValue* TryGetLinear(TElemKey key)
     {
         if (Elements.Size == 0) return null;
         for (int i = 0; i < Elements.Size; i++)
@@ -416,7 +416,7 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
         return null;
     }
 
-    private unsafe TElemValue* TryGetByHash(TElemKey key)
+    private TElemValue* TryGetByHash(TElemKey key)
     {
         TElemValue* value = null;
         // Hash alloc doesn't exist for single element maps,
@@ -434,7 +434,7 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
         }
         return value;
     }
-    private unsafe int GetBucketListTail(int HashIndex)
+    private int GetBucketListTail(int HashIndex)
     {
         int currentIndex = Hashes[HashIndex];
         while (true)
@@ -445,7 +445,7 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
         return currentIndex;
     }
 
-    private unsafe void Rehash(int NewSize)
+    private void Rehash(int NewSize)
     {
         
         int* NewHashAlloc = (int*)Allocator.Malloc(sizeof(int) * NewSize);
@@ -463,7 +463,7 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
         HashSize = NewSize;
     }
 
-    private unsafe void ResizeTo(int NewSize)
+    private void ResizeTo(int NewSize)
     {
 
         nint NewElementAlloc = Allocator.Malloc(NewSize * Elements.SizeOf());
@@ -527,7 +527,7 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
 
     public bool IsReadOnly => false;
 
-    public unsafe Ptr<TElemValue> this[TElemKey key] 
+    public Ptr<TElemValue> this[TElemKey key] 
     {
         get => new Ptr<TElemValue>(TryGetByHash(key));
         set => *TryGetByHash(key) = *value.Value;
@@ -598,7 +598,7 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
         return true;
     }
 
-    public bool TryGetValue(TElemKey key, [MaybeNullWhen(false)] out Ptr<TElemValue> value)
+    public bool TryGetValue(TElemKey key, out Ptr<TElemValue> value)
     {
         Ptr<TElemValue> GotValue = new(TryGetByHash(key));
         value = GotValue.Value != null ? GotValue : new(null);
@@ -635,7 +635,7 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
 
     public bool Remove(KeyValuePair<TElemKey, Ptr<TElemValue>> item) => Remove(item.Key);
 
-    public unsafe IEnumerator<KeyValuePair<TElemKey, Ptr<TElemValue>>> GetEnumerator() => new TMapAccessorEnumerator<TElemKey, TElemValue>(Elements.Self);
+    public IEnumerator<KeyValuePair<TElemKey, Ptr<TElemValue>>> GetEnumerator() => new TMapAccessorEnumerator<TElemKey, TElemValue>(Elements.Self);
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 

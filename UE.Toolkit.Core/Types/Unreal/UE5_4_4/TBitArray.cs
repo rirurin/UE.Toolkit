@@ -34,7 +34,7 @@ public unsafe class TBitArrayList : IDisposable, IList<bool>
 
     // The inline allocation policy allocates up to a specified number of elements in the same allocation as the container.
     // Any allocation needed beyond that causes all data to be moved into an indirect allocation.
-    public unsafe byte* Self { get; private set; } // Start with InlineAllocatorSize bytes of inlined flags, then a TArray with remaining flags
+    public byte* Self { get; private set; } // Start with InlineAllocatorSize bytes of inlined flags, then a TArray with remaining flags
 
     protected IUnrealMemoryInternal Allocator;
     private int InlineAllocatorSize;
@@ -46,7 +46,7 @@ public unsafe class TBitArrayList : IDisposable, IList<bool>
     /// </summary>
     /// <param name="_Self">Pointer to an existing <c>TBitArray</c></param>
     /// <param name="_Allocator">The Unreal allocator, used for methods that modify the <c>TBitArray</c></param>
-    public unsafe TBitArrayList(byte* _Self, IUnrealMemoryInternal _Allocator, int _InlineAllocatorSize = TBitArrayConstants.DEFAULT_ALLOCATOR_SIZE)
+    public TBitArrayList(byte* _Self, IUnrealMemoryInternal _Allocator, int _InlineAllocatorSize = TBitArrayConstants.DEFAULT_ALLOCATOR_SIZE)
     {
         Allocator = _Allocator;
         InlineAllocatorSize = _InlineAllocatorSize;
@@ -58,7 +58,7 @@ public unsafe class TBitArrayList : IDisposable, IList<bool>
     /// Creates a new <c>TArrayList</c> by allocating an owned <c>TArray</c> that frees itself when this object is garbage collected.
     /// </summary>
     /// <param name="_Allocator">The Unreal allocator, used for methods that modify the <c>TBitArray</c></param>
-    public unsafe TBitArrayList(IUnrealMemoryInternal _Allocator, int _InlineAllocatorSize = TBitArrayConstants.DEFAULT_ALLOCATOR_SIZE)
+    public TBitArrayList(IUnrealMemoryInternal _Allocator, int _InlineAllocatorSize = TBitArrayConstants.DEFAULT_ALLOCATOR_SIZE)
     {
         Allocator = _Allocator;
         InlineAllocatorSize = _InlineAllocatorSize;
@@ -67,20 +67,20 @@ public unsafe class TBitArrayList : IDisposable, IList<bool>
         OwnsInstance = true;
     }
 
-    protected unsafe byte* Inline
+    protected byte* Inline
     {
         get => Self;
     }
 
     internal int InlineBits => InlineAllocatorSize * TBitArrayConstants.BITS_PER_BYTE;
 
-    protected unsafe byte* Allocation
+    protected byte* Allocation
     {
         get => *(byte**)(Self + InlineAllocatorSize);
         set => *(byte**)(Self + InlineAllocatorSize) = value;
     }
 
-    protected unsafe byte* Data
+    protected byte* Data
     {
         get => (Allocation != null) ? Allocation : Inline;
         set
@@ -111,8 +111,8 @@ public unsafe class TBitArrayList : IDisposable, IList<bool>
     /// doesn't need deallocation.
     /// </summary>
     public void Leak() => OwnsInstance = false;
-    private unsafe int GetStructSize() => InlineAllocatorSize + sizeof(nint) + sizeof(int) * 2;
-    private unsafe static int GetDefaultStructSize() => TBitArrayConstants.DEFAULT_ALLOCATOR_SIZE + sizeof(nint) + sizeof(int) * 2;
+    private int GetStructSize() => InlineAllocatorSize + sizeof(nint) + sizeof(int) * 2;
+    private static int GetDefaultStructSize() => TBitArrayConstants.DEFAULT_ALLOCATOR_SIZE + sizeof(nint) + sizeof(int) * 2;
     int CalculateNewArraySize() => ArrayMax * 2;
 
     public void ResizeTo(int newSize)
@@ -133,7 +133,7 @@ public unsafe class TBitArrayList : IDisposable, IList<bool>
 
     public void Resize() => ResizeTo(CalculateNewArraySize());
 
-    public unsafe byte* Base() => Self;
+    public byte* Base() => Self;
 
     void InsertInner(int index, bool item, bool add)
     {

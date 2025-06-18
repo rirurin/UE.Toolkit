@@ -41,7 +41,7 @@ public unsafe class TArrayList<TType> : IDisposable, IList<Ptr<TType>> where TTy
     /// </summary>
     /// <param name="_Self">Pointer to an existing <c>TArray</c></param>
     /// <param name="_Allocator">The Unreal allocator, used for methods that modify the <c>TArray</c></param>
-    public unsafe TArrayList(TArray<TType>* _Self, IUnrealMemoryInternal _Allocator)
+    public TArrayList(TArray<TType>* _Self, IUnrealMemoryInternal _Allocator)
     {
         Self = _Self;
         Allocator = _Allocator;
@@ -52,14 +52,14 @@ public unsafe class TArrayList<TType> : IDisposable, IList<Ptr<TType>> where TTy
     /// Creates a new <c>TArrayList</c> by allocating an owned <c>TArray</c> that frees itself when this object is garbage collected.
     /// </summary>
     /// <param name="_Allocator">The Unreal allocator, used for methods that modify the <c>TArray</c></param>
-    public unsafe TArrayList(IUnrealMemoryInternal _Allocator)
+    public TArrayList(IUnrealMemoryInternal _Allocator)
     {
         Allocator = _Allocator;
         Self = (TArray<TType>*)Allocator.MallocZeroed(sizeof(TArray<TType>));
         OwnsInstance = true;
     }
 
-    public unsafe TType* Allocation
+    public TType* Allocation
     {
         get => Self->AllocatorInstance;
         private set => Self->AllocatorInstance = value;
@@ -77,7 +77,7 @@ public unsafe class TArrayList<TType> : IDisposable, IList<Ptr<TType>> where TTy
         protected set => Self->ArrayMax = value;
     }
 
-    public unsafe TArray<TType>* Base() => Self;
+    public TArray<TType>* Base() => Self;
 
     bool InBounds(int index) => index >= 0 && index < ArrayNum;
     bool InBoundsForInsertion(int index) => index >= 0 && index <= ArrayNum;
@@ -310,12 +310,12 @@ public class TArrayEnumerator<T> : IEnumerator<Ptr<T>> where T : unmanaged
     protected TArrayList<T> Self;
     private int position = -1;
 
-    public unsafe object Current
+    public object Current
     {
         get => Self[position];
     }
-    public unsafe TArrayEnumerator(TArrayList<T> _Self) => Self = _Self;
-    public unsafe bool MoveNext() => ++position < Self.ArrayNum;
+    public TArrayEnumerator(TArrayList<T> _Self) => Self = _Self;
+    public bool MoveNext() => ++position < Self.ArrayNum;
     Ptr<T> IEnumerator<Ptr<T>>.Current => (Ptr<T>)Current;
     public void Reset() => position = -1;
     public void Dispose() { }

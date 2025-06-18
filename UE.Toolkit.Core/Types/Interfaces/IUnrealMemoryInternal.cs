@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿// ReSharper disable InconsistentNaming
 namespace UE.Toolkit.Core.Types.Interfaces;
 
 public static class MemoryConstants
@@ -62,7 +57,6 @@ public interface IUnrealMemoryInternal
     /// <summary>
     /// For some allocators this will return the actual size that should be requested to eliminate internal fragmentation.
     /// </summary>
-    /// <param name="self">Instance of GMalloc</param>
     /// <param name="count">Minimum size of allocation</param>
     /// <param name="alignment">Alignment of allocation</param>
     /// <returns></returns>

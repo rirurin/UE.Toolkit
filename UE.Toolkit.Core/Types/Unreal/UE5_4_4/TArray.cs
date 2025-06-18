@@ -1,6 +1,5 @@
 // ReSharper disable InconsistentNaming
 
-using System;
 using System.Collections;
 using System.Runtime.InteropServices;
 using UE.Toolkit.Core.Types.Interfaces;

@@ -69,11 +69,11 @@ public class ObjectWriterService(ITypeRegistry typeReg, IUnrealObjects uobjs, ID
 
         if (objType.Name.StartsWith(nameof(UDataTable<byte>)))
         {
-            dt.OnDataTableChanged<UObjectBase>(objWriter.ObjectName, table => objWriter.WriteToObject((nint)table.Instance));
+            dt.OnDataTableChanged<UObjectBase>(objWriter.ObjectName, table => objWriter.WriteToObject((nint)table.Self));
         }
         else
         {
-            uobjs.OnObjectLoadedByName<UObjectBase>(objWriter.ObjectName, obj => objWriter.WriteToObject((nint)obj.Instance));
+            uobjs.OnObjectLoadedByName<UObjectBase>(objWriter.ObjectName, obj => objWriter.WriteToObject((nint)obj.Self));
         }
         
         Log.Information($"{nameof(ObjectWriterService)} || Object XML registered: {objWriter.ObjectName}\nFile: {objFile}");

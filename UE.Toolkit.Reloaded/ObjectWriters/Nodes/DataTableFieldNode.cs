@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Xml;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
-using UE.Toolkit.Core.Types.Wrappers;
+using UE.Toolkit.Interfaces;
 
 namespace UE.Toolkit.Reloaded.ObjectWriters.Nodes;
 
@@ -13,7 +13,7 @@ public class DataTableFieldNode(string fieldName, nint fieldPtr, Type fieldType,
         if (!TryGetRowType(reader, out var itemType)) return;
         
         // DataTable map type is always FName + Pointer, can just use UObject.
-        var tempTable = new UDataTableWrapper<UObjectBase>((UDataTable<UObjectBase>*)fieldPtr); 
+        var tempTable = new ToolkitDataTable<UObjectBase>((UDataTable<UObjectBase>*)fieldPtr); 
         
         // Get any item nodes.
         using var subReader = reader.ReadSubtree();
@@ -31,20 +31,22 @@ public class DataTableFieldNode(string fieldName, nint fieldPtr, Type fieldType,
                 break;
             }
 
-            var row = tempTable.FirstOrDefault(x => x.Name == id);
-            if (row == null)
+            if (tempTable.TryGetValue(id, out var row))
             {
+                var rowValuePtr = (nint)row.Value;
+                if (nodeFactory.TryCreate($"{fieldName} (ID: {id})", rowValuePtr, itemType, out var itemNode))
+                {
+                    var itemTree = subReader.ReadSubtree();
+                    itemTree.MoveToContent();
+                
+                    itemNode.ConsumeNode(itemTree);
+                }
+            }
+            else
+            {
+                
                 Log.Error($"{nameof(DataTableFieldNode)} || Failed to find row with ID '{id}' in '{fieldName}'.");;
                 break;
-            }
-
-            var rowValuePtr = (nint)row.Instance->Value;
-            if (nodeFactory.TryCreate($"{fieldName} (ID: {id})", rowValuePtr, itemType, out var itemNode))
-            {
-                var itemTree = subReader.ReadSubtree();
-                itemTree.MoveToContent();
-                
-                itemNode.ConsumeNode(itemTree);
             }
         }
         

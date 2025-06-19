@@ -1,5 +1,4 @@
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
-using UE.Toolkit.Core.Types.Wrappers;
 using UE.Toolkit.Interfaces;
 
 // ReSharper disable InconsistentNaming
@@ -11,19 +10,19 @@ public unsafe class DataTablesService : IDataTables
     private delegate void UDataTable_HandleDataTableChanged(UDataTable<UObjectBase>* self, FName changedRowName);
     private readonly SHFunction<UDataTable_HandleDataTableChanged>? _HandleDataTableChanged;
     
-    private Action<UDataTableWrapper<UObjectBase>>? _onDataTableChanged;
+    private Action<ToolkitDataTable<UObjectBase>>? _onDataTableChanged;
     
     public DataTablesService()
     {
         _HandleDataTableChanged = new(HandleDataTableChangedImpl);
     }
 
-    public void OnDataTableChanged<TRow>(string name, Action<UDataTableWrapper<TRow>> callback)
+    public void OnDataTableChanged<TRow>(string name, Action<ToolkitDataTable<TRow>> callback)
         where TRow : unmanaged
     {
         _onDataTableChanged += table =>
         {
-            if (table.Name == name) callback(new((UDataTable<TRow>*)table.Instance));
+            if (table.Name == name) callback(new((UDataTable<TRow>*)table.Self));
         };
     }
     
@@ -32,23 +31,26 @@ public unsafe class DataTablesService : IDataTables
         _HandleDataTableChanged!.Hook!.OriginalFunction(self, changedRowName);
         if (self->BaseObj.NamePrivate.ToString() == "None") return;
 
-        var table = new UDataTableWrapper<UObjectBase>(self);
+        var table = new ToolkitDataTable<UObjectBase>(self);
         
         if (Mod.Config.LogTablesEnabled)
         {
             Log.Information($"{nameof(UDataTable_HandleDataTableChanged)} || Table: {table.Name} || Struct: {table.RowStructName}");
-            for (var i = 0; i < table.Count; i++)
+
+            var numRowsLogged = 0;
+            foreach (var row in table)
             {
-                var row = table[i];
-                switch (i)
+                if (numRowsLogged <= 5)
                 {
-                    case < 5:
-                        Log.Information($"\t{row.Name}");
-                        break;
-                    case 5:
-                        Log.Information($"\t...with {table.Count - i} more.");
-                        break;
+                    Log.Information($"\t{row.Key}");
                 }
+                else
+                {
+                    Log.Information($"\t...with {table.Count - numRowsLogged} more.");
+                    break;
+                }
+
+                numRowsLogged++;
             }
         }
         

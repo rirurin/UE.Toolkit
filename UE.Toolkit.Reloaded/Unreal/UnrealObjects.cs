@@ -7,7 +7,6 @@ using UE.Toolkit.Core.Common;
 using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
-using UE.Toolkit.Core.Types.Wrappers;
 using UE.Toolkit.Interfaces;
 using Void = Reloaded.Hooks.Definitions.Structs.Void;
 
@@ -51,11 +50,15 @@ public unsafe class UnrealObjects : IUnrealObjects
             (result, hooks) => UStruct.UStruct_IsChildOf = hooks.CreateWrapper<UStruct_IsChildOf>(result, out _));
         
         _getDispNameTextByIdx = new();
+
+        _onObjectLoaded += objPtr => OnObjectLoaded?.Invoke(new((UObjectBase*)objPtr));
     }
 
+    public Action<ToolkitUObject<UObjectBase>>? OnObjectLoaded { get; set; }
+    
     public IUObjectArray GUObjectArray { get; private set; } = null!;
 
-    public void OnObjectLoadedByName<TObject>(string objName, Action<UObjectWrapper<TObject>> callback)
+    public void OnObjectLoadedByName<TObject>(string objName, Action<ToolkitUObject<TObject>> callback)
         where TObject : unmanaged
     {
         var ansiNameBytes = Marshal.StringToHGlobalAnsi(objName);
@@ -68,10 +71,10 @@ public unsafe class UnrealObjects : IUnrealObjects
         };
     }
 
-    public void OnObjectLoadedByName<TObject>(Action<UObjectWrapper<TObject>> callback)
+    public void OnObjectLoadedByName<TObject>(Action<ToolkitUObject<TObject>> callback)
         where TObject : unmanaged => OnObjectLoadedByName(typeof(TObject).Name, callback);
 
-    public void OnObjectLoadedByClass<TObject>(string objClass, Action<UObjectWrapper<TObject>> callback)
+    public void OnObjectLoadedByClass<TObject>(string objClass, Action<ToolkitUObject<TObject>> callback)
         where TObject : unmanaged
     {
         _onObjectLoaded += objPtr =>
@@ -80,7 +83,7 @@ public unsafe class UnrealObjects : IUnrealObjects
         };
     }
 
-    public void OnObjectLoadedByClass<TObject>(Action<UObjectWrapper<TObject>> callback)
+    public void OnObjectLoadedByClass<TObject>(Action<ToolkitUObject<TObject>> callback)
         where TObject : unmanaged => OnObjectLoadedByClass(typeof(TObject).Name, callback);
 
     public FText* CreateFText(string content)

@@ -111,6 +111,6 @@ public class Mod : ModBase, IExports
     public Type[] GetTypes() =>
     [
         typeof(IDataTables), typeof(IUnrealObjects), typeof(IToolkit),typeof(ITypeRegistry), typeof(UObjectBase),
-        typeof(IUnrealFactory), typeof(IUnrealNames)
+        typeof(IUnrealFactory), typeof(IUnrealNames), typeof(IUnrealMemory)
     ];
 }

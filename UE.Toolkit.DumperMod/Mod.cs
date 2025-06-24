@@ -35,11 +35,12 @@ public class Mod : ModBase
         Log.LogLevel = Config.LogLevel;
 
         _modLoader.GetController<IUnrealObjects>().TryGetTarget(out var objs);
+        _modLoader.GetController<IUnrealStrings>().TryGetTarget(out var strs);
         _modLoader.GetController<IUnrealFactory>().TryGetTarget(out var factory);
 
         var dumpDir = Path.Join(_modLoader.GetDirectoryForModId(_modConfig.ModId), "dump",
             _modLoader.GetAppConfig().AppId);
-        _dumper = new(factory!, objs!, dumpDir);
+        _dumper = new(factory!, objs!, strs!, dumpDir);
     }
 
     #region Standard Overrides

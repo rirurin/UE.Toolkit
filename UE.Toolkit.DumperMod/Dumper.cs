@@ -84,11 +84,13 @@ public unsafe class Dumper
     private readonly Dictionary<string, UEnumDefinition> _UEnumDefinitions = [];
     private readonly string _dumpDir;
     private readonly IUnrealObjects _uobjs;
+    private readonly IUnrealStrings _strs;
     private readonly IUnrealFactory _factory;
 
-    public Dumper(IUnrealFactory factory, IUnrealObjects uobjs, string dumpDir)
+    public Dumper(IUnrealFactory factory, IUnrealObjects uobjs, IUnrealStrings strs, string dumpDir)
     {
         _uobjs = uobjs;
+        _strs = strs;
         _dumpDir = dumpDir;
         _factory = factory;
         
@@ -321,7 +323,7 @@ public unsafe class Dumper
             var userEnum = _factory.Cast<IUUserDefinedEnum>(uenum);
             for (int i = 0; i < uenum.Names.ArrayNum; i++)
             {
-                var dispName = _uobjs.UEnumGetDisplayNameTextByIndex(userEnum.Ptr, i);
+                var dispName = _strs.UEnumGetDisplayNameTextByIndex(userEnum.Ptr, i);
                 dispNames[i] = $"{name}::{dispName}";
             }
         }

@@ -15,5 +15,5 @@ public struct FPersistentObjectPtr
 public struct TPersistentObjectPtr<TObject> where TObject : unmanaged
 {
     public FWeakObjectPtr WeakPtr;
-    public Guid ObjectId;
+    public TObject ObjectId;
 }

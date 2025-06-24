@@ -7,4 +7,10 @@ public struct FWeakObjectPtr
 {
     public int ObjectIndex;
     public int ObjectSerialNumber;
+
+    public void Reset()
+    {
+        ObjectIndex = 0;
+        ObjectSerialNumber = 0;
+    }
 }

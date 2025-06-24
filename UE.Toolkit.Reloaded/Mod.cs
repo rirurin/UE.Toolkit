@@ -24,7 +24,7 @@ public class Mod : ModBase, IExports
 #pragma warning restore CA2211
     
     private readonly IModLoader _modLoader;
-    private readonly IReloadedHooks? _hooks;
+    private readonly IReloadedHooks _hooks;
     private readonly ILogger _log;
     private readonly IMod _owner;
 
@@ -38,11 +38,12 @@ public class Mod : ModBase, IExports
     private readonly TypeRegistry _typeRegistry;
     private readonly ObjectWriterService _writer;
     private readonly ToolkitApi _toolkit;
+    private readonly UnrealStrings _strings;
 
     public Mod(ModContext context)
     {
         _modLoader = context.ModLoader;
-        _hooks = context.Hooks;
+        _hooks = context.Hooks!;
         _log = context.Logger;
         _owner = context.Owner;
         Config = context.Configuration;
@@ -64,6 +65,7 @@ public class Mod : ModBase, IExports
         _typeRegistry = new();
         _writer = new(_typeRegistry, _objects, _tables);
         _toolkit = new(_writer);
+        _strings = new();
         
         _modLoader.AddOrReplaceController<IUnrealMemory>(_owner, _memory);
         _modLoader.AddOrReplaceController<IDataTables>(_owner, _tables);
@@ -71,6 +73,7 @@ public class Mod : ModBase, IExports
         _modLoader.AddOrReplaceController<ITypeRegistry>(_owner, _typeRegistry);
         _modLoader.AddOrReplaceController<IToolkit>(_owner, _toolkit);
         _modLoader.AddOrReplaceController<IUnrealNames>(_owner, _names);
+        _modLoader.AddOrReplaceController<IUnrealStrings>(_owner, _strings);
         _modLoader.AddOrReplaceController(_owner, _factory);
         
         _modLoader.ModLoaded += OnModLoaded;
@@ -111,6 +114,6 @@ public class Mod : ModBase, IExports
     public Type[] GetTypes() =>
     [
         typeof(IDataTables), typeof(IUnrealObjects), typeof(IToolkit),typeof(ITypeRegistry), typeof(UObjectBase),
-        typeof(IUnrealFactory), typeof(IUnrealNames), typeof(IUnrealMemory)
+        typeof(IUnrealFactory), typeof(IUnrealNames), typeof(IUnrealMemory), typeof(IUnrealStrings),
     ];
 }

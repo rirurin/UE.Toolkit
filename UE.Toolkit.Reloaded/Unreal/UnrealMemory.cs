@@ -158,14 +158,11 @@ internal class FMallocBinned3 : IFMalloc
 
 public class UnrealMemory : IUnrealMemory
 {
-    internal static IFMalloc? _FMemory;
+    internal static IFMalloc _FMemory = null!;
 
     public UnrealMemory()
     {
-        Project.Scans.AddScanHook("GMalloc", (result, hooks) =>
-        {
-            _FMemory = new FMallocBinned2(result, hooks);
-        });
+        Project.Scans.AddScanHook("GMalloc", (result, hooks) => _FMemory = new FMallocBinned2(result, hooks));
     }
     
     public nint Malloc(nint count, int alignment = MemoryConstants.DEFAULT_ALIGNMENT) => _FMemory!.Malloc(count, alignment);

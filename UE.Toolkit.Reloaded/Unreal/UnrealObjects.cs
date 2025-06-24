@@ -22,9 +22,6 @@ public unsafe class UnrealObjects : IUnrealObjects
     private delegate FString* FText_ToString(FText* text);
     private readonly SHFunction<FText_ToString> _FText_ToString = new();
     
-    private delegate FText* UEnum_GetDisplayNameTextByIndex(UUserDefinedEnum* userEnum, FText* outName, int index);
-    private readonly SHFunction<UEnum_GetDisplayNameTextByIndex> _getDispNameTextByIdx;
-    
     private static IHook<PostLoadSubobjectsFunction>? _UObject_PostLoadSubobjects;
     private static Action<nint>? _onObjectLoaded;
     
@@ -49,8 +46,6 @@ public unsafe class UnrealObjects : IUnrealObjects
         Project.Scans.AddScanHook(nameof(UStruct_IsChildOf),
             (result, hooks) => UStruct.UStruct_IsChildOf = hooks.CreateWrapper<UStruct_IsChildOf>(result, out _));
         
-        _getDispNameTextByIdx = new();
-
         _onObjectLoaded += objPtr => OnObjectLoaded?.Invoke(new((UObjectBase*)objPtr));
     }
 
@@ -111,18 +106,6 @@ public unsafe class UnrealObjects : IUnrealObjects
         Marshal.Copy(strBytes, 0, (nint)fstring->Data.AllocatorInstance, strBytes.Length);
         
         return fstring;
-    }
-
-    public string UEnumGetDisplayNameTextByIndex(nint userEnum, int index)
-    {
-        var outText = (FText*)Marshal.AllocHGlobal(sizeof(FText));
-        
-        var dispNameFText =
-            _getDispNameTextByIdx.Wrapper((UUserDefinedEnum*)userEnum, outText, index);
-        var dispName = FTextToString(dispNameFText);
-        
-        Marshal.FreeHGlobal((nint)outText);
-        return dispName;
     }
 
 #pragma warning disable CS0649 // Field is never assigned to, and will always have its default value

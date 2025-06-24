@@ -60,19 +60,6 @@ public unsafe interface IUnrealObjects : IObjectCreator
     /// <remarks>Implemented as a post-hook on <c>UObject::PostLoadSubobjects</c>, allowing for editing object data before use.</remarks>
     void OnObjectLoadedByClass<TObject>(string objClass, Action<ToolkitUObject<TObject>> callback)
         where TObject : unmanaged;
-
-    /// <summary>
-    /// Get the string value of an <see cref="FText"/>.
-    /// </summary>
-    string FTextToString(FText* text);
-
-    /// <summary>
-    /// Gets the display name for the member of a UUserDefinedEnum.
-    /// </summary>
-    /// <param name="userEnum">UUserDefinedEnum pointer.</param>
-    /// <param name="index">Member index to get name of.</param>
-    /// <returns>The enum member's name.</returns>
-    string UEnumGetDisplayNameTextByIndex(nint userEnum, int index);
 }
 
 /// <summary>

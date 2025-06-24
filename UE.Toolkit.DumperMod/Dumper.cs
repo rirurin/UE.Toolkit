@@ -242,7 +242,7 @@ public unsafe class Dumper
 
     private static void AddHeader(StringBuilder sb)
     {
-        sb.AppendLine("/* Generated with UE Toolkit: Dumper (1.3.0)     */");
+        sb.AppendLine("/* Generated with UE Toolkit: Dumper (1.4.5)     */");
         sb.AppendLine("/* GitHub: https://github.com/RyoTune/UE.Toolkit */");
         sb.AppendLine("/* Author: RyoTune                               */");
         sb.AppendLine("/* Special thanks to UE4SS team and Rirurin      */");

@@ -1,3 +1,4 @@
+using UE.Toolkit.Core.Types.Unreal.Object;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 
 namespace UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
@@ -27,4 +28,6 @@ public interface IUObject : IPtr
     IUObject GetOutermost();
 
     string GetNativeName();
+
+    TReturnType ProcessEvent<TReturnType>(string funcName, params ProcessEventParameterBase[] param) where TReturnType : unmanaged;
 }

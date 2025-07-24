@@ -55,13 +55,13 @@ public class Mod : ModBase, IExports
         Log.LogLevel = Config.LogLevel;
         
         // Setup game patterns and Unreal factory.
-        GameConfig.SetGame(_modLoader.GetAppConfig().AppId);
+        _memory = new();
+        GameConfig.SetGame(_modLoader.GetAppConfig().AppId, _memory, _hooks);
 
         _factory = GameConfig.Instance.Factory;
         _names = new();
         _objects = new(_factory);
         _tables = new();
-        _memory = new();
         _typeRegistry = new();
         _writer = new(_typeRegistry, _objects, _tables);
         _toolkit = new(_writer);
@@ -75,7 +75,11 @@ public class Mod : ModBase, IExports
         _modLoader.AddOrReplaceController<IUnrealNames>(_owner, _names);
         _modLoader.AddOrReplaceController<IUnrealStrings>(_owner, _strings);
         _modLoader.AddOrReplaceController(_owner, _factory);
-        
+
+        // Setup debug log for Toolkit Core (for testing)
+        Core.Types.DebugLog.SetPrintCallback(s => Log.Information(s));
+        Core.Types.DebugLog.SetErrorCallback(s => Log.Error(s));
+
         _modLoader.ModLoaded += OnModLoaded;
     }
 

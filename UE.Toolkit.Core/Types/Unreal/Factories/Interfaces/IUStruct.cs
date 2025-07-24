@@ -8,7 +8,7 @@ public interface IUStruct : IUObject
     
     IEnumerable<IUField> Children { get; }
     
-    IEnumerable<IFField> ChildProperties { get; }
+    IEnumerable<IFField>? ChildProperties { get; }
     
     int PropertiesSize { get; }
     

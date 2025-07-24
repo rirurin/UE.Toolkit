@@ -1,3 +1,5 @@
+using Reloaded.Hooks.ReloadedII.Interfaces;
+using UE.Toolkit.Core.Types.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 
 namespace UE.Toolkit.Core.Types.Unreal.Factories;
@@ -7,6 +9,7 @@ namespace UE.Toolkit.Core.Types.Unreal.Factories;
 /// </summary>
 public interface IUnrealFactory
 {
+    // Object methods
     T Cast<T>(IPtr obj);
     IFProperty CreateFProperty(nint ptr);
     IFByteProperty CreateFByteProperty(nint ptr);
@@ -30,4 +33,8 @@ public interface IUnrealFactory
     IUUserDefinedEnum CreateUUserDefinedEnum(nint ptr);
     IFFieldClass CreateFFieldClass(nint ptr);
     IFField CreateFField(nint ptr);
+
+    // Memory methods
+    IUnrealMemoryInternal GetAllocator();
+    IReloadedHooks GetHooks();
 }

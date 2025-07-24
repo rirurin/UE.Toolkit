@@ -1,9 +1,14 @@
+using Reloaded.Hooks.ReloadedII.Interfaces;
+using UE.Toolkit.Core.Types.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 
 namespace UE.Toolkit.Core.Types.Unreal.Factories;
 
 public abstract class BaseUnrealFactory : IUnrealFactory
 {
+    public IUnrealMemoryInternal Allocator { get; }
+    public IReloadedHooks Hooks { get; }
+
     public T Cast<T>(IPtr obj)
     {
         var typeName = typeof(T).Name;
@@ -68,4 +73,13 @@ public abstract class BaseUnrealFactory : IUnrealFactory
     public abstract IUUserDefinedEnum CreateUUserDefinedEnum(nint ptr);
     public abstract IFFieldClass CreateFFieldClass(nint ptr);
     public abstract IFField CreateFField(nint ptr);
+
+    public IUnrealMemoryInternal GetAllocator() => Allocator;
+    public IReloadedHooks GetHooks() => Hooks;
+
+    public BaseUnrealFactory(IUnrealMemoryInternal allocator, IReloadedHooks hooks)
+    {
+        Allocator = allocator;
+        Hooks = hooks;
+    }
 }

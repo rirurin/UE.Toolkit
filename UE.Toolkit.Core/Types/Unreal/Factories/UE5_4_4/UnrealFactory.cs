@@ -1,6 +1,9 @@
+using Reloaded.Hooks.ReloadedII.Interfaces;
 using System.Collections;
 using UE.Toolkit.Core.Common;
+using UE.Toolkit.Core.Types.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
+using UE.Toolkit.Core.Types.Unreal.Object;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 
 // ReSharper disable InconsistentNaming
@@ -9,6 +12,7 @@ namespace UE.Toolkit.Core.Types.Unreal.Factories.UE5_4_4;
 
 public class UnrealFactory : BaseUnrealFactory
 {
+
     public override IFProperty CreateFProperty(nint ptr) => new FProperty_UE5_4_4(ptr, this);
     public override IFByteProperty CreateFByteProperty(nint ptr) => new FByteProperty_UE5_4_4(ptr, this);
     public override IFEnumProperty CreateFEnumProperty(nint ptr) => new FEnumProperty_UE5_4_4(ptr, this);
@@ -31,6 +35,8 @@ public class UnrealFactory : BaseUnrealFactory
     public override IUUserDefinedEnum CreateUUserDefinedEnum(nint ptr) => new UUserDefinedEnum_UE5_4_4(ptr, this);
     public override IFFieldClass CreateFFieldClass(nint ptr) => new FFieldClass_UE5_4_4(ptr, this);
     public override IFField CreateFField(nint ptr) => new FField_UE5_4_4(ptr, this);
+
+    public UnrealFactory(IUnrealMemoryInternal allocator, IReloadedHooks hooks) : base(allocator, hooks) { }
 }
 
 public unsafe class FOptionalProperty_UE5_4_4(nint ptr, IUnrealFactory factory)
@@ -274,8 +280,8 @@ public unsafe class UStruct_UE5_4_4(nint ptr, IUnrealFactory factory)
         => _self->SuperStruct != null ? _factory.CreateUStruct((nint)_self->SuperStruct) : null;
     public IEnumerable<IUField> Children
         => new IUFieldEnumerable(_factory.CreateUField((nint)_self->Children));
-    public IEnumerable<IFField> ChildProperties =>
-        new IFFieldEnumerable(_factory.CreateFField((nint)_self->ChildProperties));
+    public IEnumerable<IFField>? ChildProperties
+        => _self->ChildProperties != null ? new IFFieldEnumerable(_factory.CreateFField((nint)_self->ChildProperties)) : null;
     public int PropertiesSize => _self->PropertiesSize;
     public int MinAlignment => _self->MinAlignment;
     public TArray<byte> Script { get; } = new();
@@ -392,12 +398,20 @@ public unsafe class UObject_UE5_4_4(nint ptr, IUnrealFactory factory) : IUObject
     public IUObject GetOutermost() => _factory.CreateUObject((nint)_self->GetOutermost());
 
     public string GetNativeName() => ToolkitUtils.GetNativeName(this);
+
+    public TReturnType ProcessEvent<TReturnType>(string funcName, params ProcessEventParameterBase[] param) where TReturnType : unmanaged
+        => ToolkitUtils.ProcessEvent<TReturnType>(this, factory, funcName, param);
 }
 
 public unsafe class UClass_UE5_4_4(nint ptr, IUnrealFactory factory)
     : UStruct_UE5_4_4(ptr, factory), IUClass
 {
     private readonly UClass* _self = (UClass*)ptr;
+
+    public TMapDictionary<FName, Ptr<UFunction>> GetFunctionMap()
+    {
+        throw new NotImplementedException();
+    }
 
     public IUClass? GetSuperClass()
         => _self->GetSuperClass() != null ? _factory.CreateUClass((nint)_self->GetSuperClass()) : null;

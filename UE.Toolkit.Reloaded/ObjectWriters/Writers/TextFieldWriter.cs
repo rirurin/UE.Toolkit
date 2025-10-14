@@ -37,6 +37,11 @@ public unsafe class TextFieldWriter(string fieldName, nint fieldPtr, Type fieldT
                 var fstring = objCreator.CreateFString(strValue);
                 *(FString*)fieldPtr = *fstring;
                 break;
+            case nameof(FName):
+                _ogData = new byte[sizeof(FName)];
+                Marshal.Copy(fieldPtr, _ogData, 0, sizeof(FName));
+                *(FName*)fieldPtr = new(strValue);
+                break;
             default:
                 Log.Error($"{nameof(TextFieldWriter)} || Invalid type '{fieldType.Name}' for field '{fieldName}'.");
                 return;

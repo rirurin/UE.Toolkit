@@ -21,7 +21,8 @@ public class FieldNodeFactory(ITypeRegistry typeReg, IObjectCreator objCreator)
             || fieldType.IsEnum
             || fieldType == typeof(string)
             || fieldType == typeof(FText)
-            || fieldType == typeof(FString))
+            || fieldType == typeof(FString)
+            || fieldType == typeof(FName))
         {
             return new PrimitiveFieldNode(fieldName, fieldPtr, fieldType, objCreator);
         }

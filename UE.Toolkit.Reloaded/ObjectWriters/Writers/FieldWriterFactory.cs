@@ -10,7 +10,7 @@ public static class FieldWriterFactory
         if (fieldType.IsPrimitive || fieldType.Name == nameof(String))
             return new PrimitiveFieldWriter(fieldName, fieldPtr, fieldType);
 
-        if (fieldType == typeof(FText) || fieldType == typeof(FString))
+        if (fieldType == typeof(FText) || fieldType == typeof(FString) || fieldType == typeof(FName))
             return new TextFieldWriter(fieldName, fieldPtr, fieldType, objCreator);
         
         Log.Error($"{nameof(FieldWriterFactory)} || No writer found for field '{fieldName}' of type '{fieldType.Name}'.");

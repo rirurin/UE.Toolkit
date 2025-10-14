@@ -221,6 +221,8 @@ public unsafe struct FNameEntry
                 Marshal.Copy(strBytes, 0, (nint)str, strBytes.Length);
             }
         }
+        
+        _header.Len = (ushort)newValue.Length;
     }
 
     public Span<char> ToSpanWide()

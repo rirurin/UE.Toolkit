@@ -39,6 +39,8 @@ public class Mod : ModBase, IExports
     private readonly ObjectWriterService _writer;
     private readonly ToolkitApi _toolkit;
     private readonly UnrealStrings _strings;
+    private readonly UnrealClasses _classes;
+    private readonly Common.ResolveAddress _address;
 
     public Mod(ModContext context)
     {
@@ -66,6 +68,8 @@ public class Mod : ModBase, IExports
         _writer = new(_typeRegistry, _objects, _tables);
         _toolkit = new(_writer);
         _strings = new();
+        _address = new();
+        _classes = new(_hooks, _address);
         
         _modLoader.AddOrReplaceController<IUnrealMemory>(_owner, _memory);
         _modLoader.AddOrReplaceController<IDataTables>(_owner, _tables);
@@ -74,6 +78,7 @@ public class Mod : ModBase, IExports
         _modLoader.AddOrReplaceController<IToolkit>(_owner, _toolkit);
         _modLoader.AddOrReplaceController<IUnrealNames>(_owner, _names);
         _modLoader.AddOrReplaceController<IUnrealStrings>(_owner, _strings);
+        _modLoader.AddOrReplaceController<IUnrealClasses>(_owner, _classes);
         _modLoader.AddOrReplaceController(_owner, _factory);
         
         _modLoader.ModLoaded += OnModLoaded;

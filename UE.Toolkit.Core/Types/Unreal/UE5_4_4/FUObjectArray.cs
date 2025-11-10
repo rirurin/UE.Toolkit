@@ -115,7 +115,7 @@ public unsafe struct FUObjectItem
     public UObjectBase* Object;
     
     // Internal flags. These can only be changed via Set* and Clear* functions
-    public int Flags;
+    public EInternalObjectFlags Flags;
     
     // UObject Owner Cluster Index
     public int ClusterRootIndex;

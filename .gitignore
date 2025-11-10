@@ -6,3 +6,7 @@ riderModule.iml
 
 # Visual Studio build files
 .vs
+*.sln.DotSettings.user
+
+# Jetbrains IDE
+.idea/*

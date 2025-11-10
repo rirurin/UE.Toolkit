@@ -417,4 +417,20 @@ public unsafe class UObjectArray_UE5_4_4(nint ptr, IUnrealFactory factory) : IUO
         
         return factory.CreateUObject((nint)objItem->Object);
     }
+
+    public void AddToRootSet(int idx)
+    {
+        var objItem = _self->ObjObjects.GetItem(idx);
+        if (objItem == null || objItem->Object == null) return;
+        objItem->Flags |= EInternalObjectFlags.RootSet;
+        objItem->Object->ObjectFlags |= EObjectFlags.RF_MarkAsRootSet;
+    }
+
+    public void RemoveFromRootSet(int idx)
+    {
+        var objItem = _self->ObjObjects.GetItem(idx);
+        if (objItem == null || objItem->Object == null) return;
+        objItem->Flags &= ~EInternalObjectFlags.RootSet;
+        objItem->Object->ObjectFlags &= ~EObjectFlags.RF_MarkAsRootSet;
+    }
 }

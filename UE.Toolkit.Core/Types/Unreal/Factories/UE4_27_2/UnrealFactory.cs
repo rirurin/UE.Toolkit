@@ -9,6 +9,7 @@ using FUObjectArray_Pack4 = UE.Toolkit.Core.Types.Unreal.UE5_4_4.FUObjectArray_P
 using FName = UE.Toolkit.Core.Types.Unreal.UE5_4_4.FName;
 using FText = UE.Toolkit.Core.Types.Unreal.UE5_4_4.FText;
 using EStructFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EStructFlags;
+using EInternalObjectFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EInternalObjectFlags;
 using EObjectFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EObjectFlags;
 
 // ReSharper disable InconsistentNaming
@@ -405,4 +406,20 @@ public unsafe class UObjectArrayUE4_27_2(nint ptr, IUnrealFactory factory) : IUO
     }
 
     public int NumElements => _self->ObjObjects.NumElements;
+
+    public void AddToRootSet(int idx)
+    {
+        var objItem = _self->ObjObjects.GetItem(idx);
+        if (objItem == null || objItem->Object == null) return;
+        objItem->Flags |= EInternalObjectFlags.RootSet;
+        objItem->Object->ObjectFlags |= EObjectFlags.RF_MarkAsRootSet;
+    }
+
+    public void RemoveFromRootSet(int idx)
+    {
+        var objItem = _self->ObjObjects.GetItem(idx);
+        if (objItem == null || objItem->Object == null) return;
+        objItem->Flags &= ~EInternalObjectFlags.RootSet;
+        objItem->Object->ObjectFlags &= ~EObjectFlags.RF_MarkAsRootSet;
+    }
 }

@@ -93,20 +93,7 @@ public unsafe class UnrealObjects : IUnrealObjects
     
     public string FTextToString(FText* text) => _FText_ToString.Wrapper(text)->ToString();
 
-    public FString* CreateFString(string content)
-    {
-        content += '\0';
-        
-        var fstring = (FString*)UnrealMemory._FMemory!.Malloc(sizeof(FString));
-        fstring->Data.ArrayNum = content.Length;
-        fstring->Data.ArrayMax = content.Length;
-        
-        var strBytes = Encoding.Unicode.GetBytes(content);
-        fstring->Data.AllocatorInstance = (char*)UnrealMemory._FMemory.Malloc(strBytes.Length);
-        Marshal.Copy(strBytes, 0, (nint)fstring->Data.AllocatorInstance, strBytes.Length);
-        
-        return fstring;
-    }
+    public FString* CreateFString(string content) => UnrealStringsStatic.CreateFString(content);
 
 #pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
     private struct PostLoadSubobjectsFunction

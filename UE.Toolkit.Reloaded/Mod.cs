@@ -69,7 +69,7 @@ public class Mod : ModBase, IExports
         _toolkit = new(_writer);
         _strings = new();
         _address = new();
-        _classes = new(_hooks, _address);
+        _classes = new(_factory, _memory, _hooks, _address);
         
         _modLoader.AddOrReplaceController<IUnrealMemory>(_owner, _memory);
         _modLoader.AddOrReplaceController<IDataTables>(_owner, _tables);

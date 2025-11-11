@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 
 namespace UE.Toolkit.Core.Types.Unreal.Factories;
@@ -21,6 +22,8 @@ public abstract class BaseUnrealFactory : IUnrealFactory
                 return (T)CreateUUserDefinedEnum(obj.Ptr);
             case nameof(IFByteProperty):
                 return (T)CreateFByteProperty(obj.Ptr);
+            case nameof(IFBoolProperty):
+                return (T)CreateFBoolProperty(obj.Ptr);
             case nameof(IFEnumProperty):
                 return (T)CreateFEnumProperty(obj.Ptr);
             case nameof(IFObjectProperty):
@@ -45,8 +48,10 @@ public abstract class BaseUnrealFactory : IUnrealFactory
                 throw new NotSupportedException(typeName);
         }
     }
+    public abstract nint SizeOf<T>();
 
     public abstract IFProperty CreateFProperty(nint ptr);
+    public abstract IFBoolProperty CreateFBoolProperty(nint ptr);
     public abstract IFByteProperty CreateFByteProperty(nint ptr);
     public abstract IFEnumProperty CreateFEnumProperty(nint ptr);
     public abstract IFObjectProperty CreateFObjectProperty(nint ptr);

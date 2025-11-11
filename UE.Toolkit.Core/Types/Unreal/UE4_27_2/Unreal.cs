@@ -181,6 +181,9 @@ public struct UEnum
 public unsafe struct FFieldClass
 {
     [FieldOffset(0x0)] public FName name;
+    [FieldOffset(0x8)] public ulong Id;
+    [FieldOffset(0x10)] public ulong CastFlags;
+    [FieldOffset(0x18)] public EClassFlags ClassFlags;
     [FieldOffset(0x20)] public FFieldClass* super;
     [FieldOffset(0x28)] public FField* default_obj;
     [FieldOffset(0x30)] public IntPtr ctor; // [PropertyName]::Construct (e..g for ArrayProperty, this would be FArrayProperty::Construct)

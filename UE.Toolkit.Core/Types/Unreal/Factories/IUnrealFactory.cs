@@ -8,7 +8,9 @@ namespace UE.Toolkit.Core.Types.Unreal.Factories;
 public interface IUnrealFactory
 {
     T Cast<T>(IPtr obj);
+    nint SizeOf<T>();
     IFProperty CreateFProperty(nint ptr);
+    IFBoolProperty CreateFBoolProperty(nint ptr);
     IFByteProperty CreateFByteProperty(nint ptr);
     IFEnumProperty CreateFEnumProperty(nint ptr);
     IFObjectProperty CreateFObjectProperty(nint ptr);

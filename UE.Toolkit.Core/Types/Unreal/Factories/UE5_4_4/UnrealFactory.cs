@@ -9,8 +9,40 @@ namespace UE.Toolkit.Core.Types.Unreal.Factories.UE5_4_4;
 
 public class UnrealFactory : BaseUnrealFactory
 {
+    
+    public override nint SizeOf<T>()
+    {
+        var TypeName = typeof(T).Name;
+        unsafe
+        {
+            return TypeName switch
+            {
+                nameof(IUObject) => sizeof(UObjectBase),
+                nameof(IUClass) => sizeof(UClass),
+                nameof(IUScriptStruct) => sizeof(UScriptStruct),
+                nameof(IUEnum) => sizeof(UEnum),
+                nameof(IUUserDefinedEnum) => sizeof(UUserDefinedEnum),
+                nameof(IFProperty) => sizeof(FProperty),
+                nameof(IFByteProperty) => sizeof(FByteProperty),
+                nameof(IFBoolProperty) => sizeof(FBoolProperty),
+                nameof(IFEnumProperty) => sizeof(FEnumProperty),
+                nameof(IFObjectProperty) => sizeof(FObjectProperty),
+                nameof(IFSoftClassProperty) => sizeof(FSoftClassProperty),
+                nameof(IFClassProperty) => sizeof(FClassProperty),
+                nameof(IFStructProperty) => sizeof(FStructProperty),
+                nameof(IFMapProperty) => sizeof(FMapProperty),
+                nameof(IFInterfaceProperty) => sizeof(FInterfaceProperty),
+                nameof(IFArrayProperty) => sizeof(FArrayProperty),
+                nameof(IFSetProperty) => sizeof(FSetProperty),
+                nameof(IFOptionalProperty) => sizeof(FOptionalProperty),
+                _ => throw new NotSupportedException(TypeName)
+            };
+        }
+    }
+    
     public override IFProperty CreateFProperty(nint ptr) => new FProperty_UE5_4_4(ptr, this);
     public override IFByteProperty CreateFByteProperty(nint ptr) => new FByteProperty_UE5_4_4(ptr, this);
+    public override IFBoolProperty CreateFBoolProperty(nint ptr) => new FBoolProperty_UE5_4_4(ptr, this);
     public override IFEnumProperty CreateFEnumProperty(nint ptr) => new FEnumProperty_UE5_4_4(ptr, this);
     public override IFObjectProperty CreateFObjectProperty(nint ptr) => new FObjectProperty_UE5_4_4(ptr, this);
     public override IFSoftClassProperty CreateFSoftClassProperty(nint ptr) => new FSoftClassProperty_UE5_4_4(ptr, this);
@@ -103,6 +135,7 @@ public unsafe class FFieldClass_UE5_4_4(nint ptr, IUnrealFactory factory)
 {
     private readonly FFieldClass* _self = (FFieldClass*)ptr;
 
+    public nint Ptr => ptr;
     public string Name => _self->Name.ToString();
     public ulong Id => _self->Id;
     public ulong CastFlags => _self->CastFlags;
@@ -228,12 +261,13 @@ public unsafe class IFPropertyEnumerable(IFProperty initial, PropertyType propTy
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
-public enum PropertyType
+public unsafe class FBoolProperty_UE5_4_4(nint ptr, IUnrealFactory factory)
+    : FProperty_UE5_4_4(ptr, factory), IFBoolProperty
 {
-    PropertyLink,
-    NextRef,
-    DestructorLink,
-    PostConstructLink,
+    public byte FieldSize => ((FBoolProperty*)ptr)->FieldSize;
+    public byte ByteOffset => ((FBoolProperty*)ptr)->ByteOffset;
+    public byte ByteMask => ((FBoolProperty*)ptr)->ByteMask;
+    public byte FieldMask => ((FBoolProperty*)ptr)->FieldMask;
 }
 
 public unsafe class FByteProperty_UE5_4_4(nint ptr, IUnrealFactory factory)

@@ -1,6 +1,6 @@
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.Structs;
 using UE.Toolkit.Core.Common;
@@ -24,6 +24,8 @@ public unsafe class UnrealObjects : IUnrealObjects
     
     private static IHook<PostLoadSubobjectsFunction>? _UObject_PostLoadSubobjects;
     private static Action<nint>? _onObjectLoaded;
+
+    internal ConcurrentDictionary<nint, Action<IUClass>> OnCDOLoaded = new();
     
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
     private static void UObject_PostLoadSubobjects(nint self, nint outerInstanceGraph)
@@ -35,8 +37,12 @@ public unsafe class UnrealObjects : IUnrealObjects
         _onObjectLoaded?.Invoke(self);
     }
 
+    private IUnrealFactory Factory;
+
     public UnrealObjects(IUnrealFactory factory)
     {
+        Factory = factory;
+        
         Project.Scans.AddScanHook(nameof(UObject_PostLoadSubobjects),
             (result, hooks) => _UObject_PostLoadSubobjects = hooks.CreateHook<PostLoadSubobjectsFunction>((delegate* unmanaged[Stdcall]<nint, nint, void>)&UObject_PostLoadSubobjects, result).Activate());
         

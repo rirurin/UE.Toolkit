@@ -3,6 +3,7 @@
 // ReSharper disable CommentTypo
 namespace UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 
+[Flags]
 public enum EPropertyFlags : ulong
 {
     CPF_None = 0,

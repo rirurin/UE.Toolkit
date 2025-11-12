@@ -13,3 +13,11 @@ public interface IUnrealClassesInternal
 {
     public bool GetFieldClassGlobal(FName Name, out FieldClassGlobal FieldClass);
 }
+
+[Flags]
+public enum StructType
+{
+    None = 0,
+    Class = 1 << 0,
+    ScriptStruct = 1 << 1
+}

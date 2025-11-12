@@ -54,14 +54,6 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory, IUnre
             var LastFProp = (FProperty*)LastProp.Ptr;
             LastFProp->prop_link_next = pProperty;
             ((FField*)LastFProp)->next = (FField*)pProperty;
-            /*
-            var FirstProp = Reflect.PropertyLink.First();
-            var FirstFProp = (FProperty*)FirstProp.Ptr;
-            var NextProp = FirstFProp->prop_link_next;
-            if (NextProp != null)
-                pProperty->prop_link_next = NextProp;
-            FirstFProp->prop_link_next = pProperty;
-            */
         }       
     }
 
@@ -77,62 +69,154 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory, IUnre
         pField->flags_private = EObjectFlags.RF_Public | EObjectFlags.RF_MarkAsNative | EObjectFlags.RF_Transient;
     }
 
-    protected override unsafe void SetCopyPropertyFields<T>(IFProperty Property, int Offset, PropertyVisibility Visibility)
+    private unsafe void SetPropertyFieldDefaults(FProperty* pProperty, int Offset)
     {
-        var pProperty = (FProperty*)Property.Ptr;
-        pProperty->array_dim = 1;
-        pProperty->element_size = Marshal.SizeOf<T>();
-        var PropertyFlags = PropertyBuilderFlags.NoCtor | PropertyBuilderFlags.Copy | PropertyBuilderFlags.NoDtor;
-        pProperty->property_flags = CreatePropertyFlags(Visibility, PropertyFlags);
         pProperty->rep_index = 0;
         pProperty->blueprint_rep_cond = 0;
         pProperty->offset_internal = Offset;
         pProperty->rep_notify_func = new();
     }
 
-    private unsafe bool CreateCopyPropertyInner<TOwner, TField>(out IFProperty? NewProperty,
-        string Name, int Offset, string PropertyName, PropertyVisibility Visibility)
-        where TOwner : unmanaged
-        where TField : unmanaged
+    private unsafe void SetPropertyFieldsInner<T>(IFProperty Property, int Offset,
+        PropertyVisibility Visibility, PropertyBuilderFlags PropertyFlags)
     {
-        NewProperty = null;
-        if (!TryGetClassAndProperty<TOwner>(PropertyName, out var ClassReflection, out var PropertyClass))
-            return false;
-        var NewFProperty = (FProperty*)Memory.Malloc(Marshal.SizeOf<FProperty>(), FIELD_ALIGNMENT);
-        SetPropertySuperFields(Factory.CreateFField((nint)NewFProperty), Name, ClassReflection, PropertyClass);
-        NewProperty = Factory.CreateFProperty((nint)NewFProperty);
-        SetCopyPropertyFields<TField>(NewProperty, Offset, Visibility);
-        LinkToPropertyList(NewProperty, ClassReflection);
-        return true;       
+        var pProperty = (FProperty*)Property.Ptr;
+        pProperty->array_dim = 1;
+        pProperty->element_size = Marshal.SizeOf<T>();
+        pProperty->property_flags = CreatePropertyFlags(Visibility, PropertyFlags);
+        SetPropertyFieldDefaults(pProperty, Offset);       
+    }
+
+    protected override unsafe void SetCopyPropertyFields<T>(IFProperty Property, int Offset, 
+        PropertyVisibility Visibility)
+    {
+        var PropertyFlags = PropertyBuilderFlags.NoCtor | PropertyBuilderFlags.Copy | PropertyBuilderFlags.NoDtor;
+        SetPropertyFieldsInner<T>(Property, Offset, Visibility, PropertyFlags);
+    }
+
+    protected override void SetStringPropertyFields<T>(IFProperty Property, int Offset,
+        PropertyVisibility Visibility)
+        => SetPropertyFieldsInner<T>(Property, Offset, Visibility, PropertyBuilderFlags.NoCtor);
+    
+    protected override void SetTextPropertyFields<T>(IFProperty Property, int Offset,
+        PropertyVisibility Visibility)
+        => SetPropertyFieldsInner<T>(Property, Offset, Visibility, PropertyBuilderFlags.None);
+
+    protected override unsafe void SetBoolPropertyFields(IFBoolProperty Property, BooleanMask Mask) 
+    {
+        var pBoolProperty = (FBoolProperty*)Property.Ptr;
+        pBoolProperty->field_size = (byte)Marshal.SizeOf<byte>();
+        pBoolProperty->byte_offset = 0;
+        pBoolProperty->byte_mask = Mask.ByteMask;
+        pBoolProperty->field_mask = Mask.FieldMask;       
     }
      
     public override bool CreateI8<TOwner>(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
-        => CreateCopyPropertyInner<TOwner, byte>(out NewProperty, Name, Offset, "Int8Property", Visibility);
+        => CreateCopyPropertyInner<TOwner, byte, FProperty>(out NewProperty, Name, Offset, "Int8Property", Visibility);
     
     public override bool CreateI16<TOwner>(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
-        => CreateCopyPropertyInner<TOwner, short>(out NewProperty, Name, Offset, "Int16Property", Visibility);
+        => CreateCopyPropertyInner<TOwner, short, FProperty>(out NewProperty, Name, Offset, "Int16Property", Visibility);
     
     public override bool CreateI32<TOwner>(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
-        => CreateCopyPropertyInner<TOwner, int>(out NewProperty, Name, Offset, "IntProperty", Visibility);
+        => CreateCopyPropertyInner<TOwner, int, FProperty>(out NewProperty, Name, Offset, "IntProperty", Visibility);
     
     public override bool CreateI64<TOwner>(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
-        => CreateCopyPropertyInner<TOwner, long>(out NewProperty, Name, Offset, "Int64Property", Visibility);
+        => CreateCopyPropertyInner<TOwner, long, FProperty>(out NewProperty, Name, Offset, "Int64Property", Visibility);
     
     public override bool CreateU8<TOwner>(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
-        => CreateCopyPropertyInner<TOwner, byte>(out NewProperty, Name, Offset, "UInt8Property", Visibility);
+        => CreateCopyPropertyInner<TOwner, byte, FProperty>(out NewProperty, Name, Offset, "UInt8Property", Visibility);
     
     public override bool CreateU16<TOwner>(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
-        => CreateCopyPropertyInner<TOwner, short>(out NewProperty, Name, Offset, "UInt16Property", Visibility);
+        => CreateCopyPropertyInner<TOwner, short, FProperty>(out NewProperty, Name, Offset, "UInt16Property", Visibility);
     
     public override bool CreateU32<TOwner>(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
-        => CreateCopyPropertyInner<TOwner, int>(out NewProperty, Name, Offset, "UInt32Property", Visibility);
+        => CreateCopyPropertyInner<TOwner, int, FProperty>(out NewProperty, Name, Offset, "UInt32Property", Visibility);
     
     public override bool CreateU64<TOwner>(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
-        => CreateCopyPropertyInner<TOwner, long>(out NewProperty, Name, Offset, "UInt64Property", Visibility);
+        => CreateCopyPropertyInner<TOwner, long, FProperty>(out NewProperty, Name, Offset, "UInt64Property", Visibility);
     
     public override bool CreateF32<TOwner>(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
-        => CreateCopyPropertyInner<TOwner, float>(out NewProperty, Name, Offset, "FFloatProperty", Visibility);
+        => CreateCopyPropertyInner<TOwner, float, FProperty>(out NewProperty, Name, Offset, "FloatProperty", Visibility);
     
     public override bool CreateF64<TOwner>(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
-        => CreateCopyPropertyInner<TOwner, double>(out NewProperty, Name, Offset, "FDoubleProperty", Visibility);
+        => CreateCopyPropertyInner<TOwner, double, FProperty>(out NewProperty, Name, Offset, "DoubleProperty", Visibility);
+
+    public override bool CreateStruct<TOwner, TField>(out IFStructProperty? NewProperty, string Name, int Offset,
+        PropertyVisibility Visibility)
+    {
+        NewProperty = null;
+        if (!TryGetClassAndProperty<TOwner>("StructProperty", out var ClassReflection, out var PropertyClass)
+            || !Classes.GetScriptStructInfoFromType<TField>(out var ScriptStruct))
+            return false;
+        var Alloc = Memory.Malloc(Marshal.SizeOf<FStructProperty>(), FIELD_ALIGNMENT);
+        NewProperty = Factory.CreateFStructProperty(Alloc);
+        SetPropertySuperFields(Factory.CreateFField(Alloc), Name, ClassReflection, PropertyClass);
+        unsafe
+        {
+            var pProperty = (FProperty*)Alloc;
+            pProperty->array_dim = 1;
+            pProperty->element_size = ScriptStruct.PropertiesSize; // FExampleStruct mExampleField; 
+            pProperty->property_flags = CreatePropertyFlags(Visibility, PropertyBuilderFlags.None);
+            SetPropertyFieldDefaults(pProperty, Offset);
+        }
+        LinkToPropertyList(NewProperty, ClassReflection);
+        unsafe { ((FStructProperty*)NewProperty.Ptr)->struct_data = (UScriptStruct*)ScriptStruct.Ptr; }
+        return true;
+    }
+    
+    public override bool CreateObject<TOwner, TField>(out IFObjectProperty? NewProperty, string Name, int Offset,
+        PropertyVisibility Visibility)
+    {
+        NewProperty = null;
+        if (!TryGetClassAndProperty<TOwner>("ObjectProperty", out var ClassReflection, out var PropertyClass)
+            || !Classes.GetClassInfoFromClass<TField>(out var FieldClass))
+            return false;
+        var Alloc = Memory.Malloc(Marshal.SizeOf<FObjectProperty>(), FIELD_ALIGNMENT);
+        NewProperty = Factory.CreateFObjectProperty(Alloc);
+        SetPropertySuperFields(Factory.CreateFField(Alloc), Name, ClassReflection, PropertyClass);
+        unsafe
+        {
+            var pProperty = (FProperty*)Alloc;
+            pProperty->array_dim = 1;
+            pProperty->element_size = Marshal.SizeOf<nint>();
+            // For ObjectProperty:  UExampleClass* pExampleObject;
+            // For ClassProperty:  TSubclassOf<class UExampleClass> pExampleClass;
+            pProperty->property_flags = CreatePropertyFlags(Visibility, PropertyBuilderFlags.None);
+            SetPropertyFieldDefaults(pProperty, Offset);
+        }
+        LinkToPropertyList(NewProperty, ClassReflection);
+        unsafe { ((FObjectProperty*)NewProperty.Ptr)->prop_class = (UClass*)FieldClass.Ptr; }
+        return true;
+    }
+    
+    public override bool CreateName<TOwner>(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
+        => CreateCopyPropertyInner<TOwner, FName, FProperty>(out NewProperty, Name, Offset, "NameProperty", Visibility);
+    
+    public override bool CreateString<TOwner>(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
+        => CreateStringPropertyInner<TOwner, FName, FProperty>(out NewProperty, Name, Offset, "StringProperty", Visibility);
+    
+    public override bool CreateText<TOwner>(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
+        => CreateTextPropertyInner<TOwner, FName, FProperty>(out NewProperty, Name, Offset, "TextProperty", Visibility);
+
+    public override bool CreateArray<TOwner>(out IFArrayProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility,
+        IFProperty Inner)
+    {
+        NewProperty = null;
+        if (!TryGetClassAndProperty<TOwner>("ArrayProperty", out var ClassReflection, out var PropertyClass))
+            return false;
+        var Alloc = Memory.Malloc(Marshal.SizeOf<FArrayProperty>(), FIELD_ALIGNMENT);
+        NewProperty = Factory.CreateFArrayProperty(Alloc);
+        SetPropertySuperFields(Factory.CreateFField(Alloc), Name, ClassReflection, PropertyClass);
+        unsafe
+        {
+            var pProperty = (FProperty*)Alloc;
+            pProperty->array_dim = 1;
+            pProperty->element_size = 0x10; // sizeof(TArray<T>)
+            pProperty->property_flags = CreatePropertyFlags(Visibility, PropertyBuilderFlags.NoCtor);
+            SetPropertyFieldDefaults(pProperty, Offset);
+        }
+        LinkToPropertyList(NewProperty, ClassReflection);
+        unsafe { ((FArrayProperty*)Alloc)->inner = (FProperty*)Inner.Ptr; }
+        return true;
+    }
 }

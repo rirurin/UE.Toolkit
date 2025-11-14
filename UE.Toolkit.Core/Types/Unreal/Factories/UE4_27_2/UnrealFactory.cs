@@ -1,8 +1,10 @@
 using System.Collections;
+using System.Runtime.InteropServices;
 using UE.Toolkit.Core.Common;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE4_27_2;
 using EPropertyFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EPropertyFlags;
+using EPropertyGenFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EPropertyGenFlags;
 using EClassFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EClassFlags;
 using FFieldObjectUnion = UE.Toolkit.Core.Types.Unreal.UE5_4_4.FFieldObjectUnion;
 using FUObjectArray_Pack4 = UE.Toolkit.Core.Types.Unreal.UE5_4_4.FUObjectArray_Pack4;
@@ -11,6 +13,26 @@ using FText = UE.Toolkit.Core.Types.Unreal.UE5_4_4.FText;
 using EStructFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EStructFlags;
 using EInternalObjectFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EInternalObjectFlags;
 using EObjectFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EObjectFlags;
+using FArrayProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FArrayProperty;
+using FBoolProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FBoolProperty;
+using FByteProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FByteProperty;
+using FClassProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FClassProperty;
+using FEnumProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FEnumProperty;
+using FField = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FField;
+using FFieldClass = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FFieldClass;
+using FMapProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FMapProperty;
+using FObjectProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FObjectProperty;
+using FProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FProperty;
+using FSetProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FSetProperty;
+using FStructParams = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FStructParams;
+using FStructProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FStructProperty;
+using UClass = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UClass;
+using UEnum = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UEnum;
+using UField = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UField;
+using UObjectBase = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UObjectBase;
+using UScriptStruct = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UScriptStruct;
+using UStruct = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UStruct;
+using UUserDefinedEnum = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UUserDefinedEnum;
 
 // ReSharper disable InconsistentNaming
 
@@ -93,6 +115,10 @@ public class UnrealFactory : BaseUnrealFactory
     public override IFFieldClass CreateFFieldClass(nint ptr) => new FFieldClassUE4_27_2(ptr, this);
 
     public override IFField CreateFField(nint ptr) => new FFieldUE4_27_2(ptr, this);
+    
+    public override IFStructParams CreateFStructParams(nint ptr) => new FStructParamsUE4_27_2(ptr, this);
+    
+    public override IFPropertyParams CreateFPropertyParams(nint ptr) => new FPropertyParamsUE4_27_2(ptr, this);
 }
 
 public unsafe class FSetPropertyUE4_27_2(nint ptr, IUnrealFactory factory)
@@ -464,4 +490,69 @@ public unsafe class UObjectArrayUE4_27_2(nint ptr, IUnrealFactory factory) : IUO
         objItem->Flags &= ~EInternalObjectFlags.RootSet;
         objItem->Object->ObjectFlags &= ~EObjectFlags.RF_MarkAsRootSet;
     }
+}
+
+public class FPropertyParamEnumerator(IFStructParams owner) 
+    : IEnumerator<IFPropertyParams>, IEnumerable<IFPropertyParams>
+{
+    private int CurrentIndex = -1;
+    
+    #region impl IEnumerator 
+    
+    public bool MoveNext() => ++CurrentIndex < owner.PropertyCount;
+
+    public void Reset() => CurrentIndex = -1;
+
+    public IFPropertyParams Current => owner.GetProperty(CurrentIndex);
+
+    object? IEnumerator.Current => Current;
+
+    public void Dispose() {}
+    
+    #endregion
+    
+    #region impl IEnumerable
+    
+    public IEnumerator<IFPropertyParams> GetEnumerator() => this;
+    
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    
+    #endregion
+}
+
+public unsafe class FStructParamsUE4_27_2(nint ptr, IUnrealFactory factory) : IFStructParams
+{
+    private readonly FStructParams* _self = (FStructParams*)ptr;
+    protected readonly IUnrealFactory _factory = factory;
+
+    public nint Ptr => (nint)_self;
+
+    public nint OuterFunc => _self->OuterFunc;
+    public nint SuperFunc => _self->SuperFunc;
+    public nint StructOpsFunc => _self->StructOpsFunc;
+    public string Name => Marshal.PtrToStringUTF8(_self->NameUTF8)!;
+    public ulong Size => _self->SizeOf;
+    public ulong Alignment => _self->AlignOf;
+    public EObjectFlags ObjectFlags => _self->ObjectFlags;
+    public int StructFlags => _self->StructFlags;
+    public int PropertyCount => _self->NumProperties;
+    public IFPropertyParams? GetProperty(int Index)
+    {
+        var Result = ((FStructParams*)Ptr)->GetProperty(Index);
+        return Result != null ? _factory.CreateFPropertyParams((nint)Result) : null;
+    }
+
+    public IEnumerable<IFPropertyParams> Properties => new FPropertyParamEnumerator(this);
+}
+
+public unsafe class FPropertyParamsUE4_27_2(nint ptr, IUnrealFactory factory) : IFPropertyParams
+{
+    private readonly FPropertyParamsBase* _self = (FPropertyParamsBase*)ptr;
+    protected readonly IUnrealFactory _factory = factory;   
+    
+    public nint Ptr => (nint)_self;
+    public string Name => Marshal.PtrToStringUTF8(_self->NameUTF8)!;
+    public EPropertyFlags PropertyFlags => _self->PropertyFlags;
+    public EPropertyGenFlags GenFlags => _self->PropertyGenFlags;
+    public EObjectFlags ObjectFlags => _self->ObjectFlags;
 }

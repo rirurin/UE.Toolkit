@@ -97,10 +97,10 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
         if (!TryGetClassAndProperty<TOwner>(PropertyName, out var ClassReflection, out var PropertyClass))
             return false;
         var Alloc = Memory.Malloc(Marshal.SizeOf<TProperty>(), FIELD_ALIGNMENT);
-        SetPropertySuperFields(Factory.CreateFField(Alloc), Name, ClassReflection, PropertyClass);
+        SetPropertySuperFields(Factory.CreateFField(Alloc), Name, ClassReflection!, PropertyClass!);
         NewProperty = Factory.CreateFProperty(Alloc);
         Callback(NewProperty, Offset, Visibility);
-        LinkToPropertyList(NewProperty, ClassReflection);
+        LinkToPropertyList(NewProperty, ClassReflection!);
         return true;
     }
     
@@ -137,7 +137,7 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
         if (!CreateCopyPropertyInner<TOwner, byte, FBoolProperty>(out var BaseProperty, Name, Offset, 
                 "BoolProperty", Visibility))
             return false;
-        NewProperty = Factory.CreateFBoolProperty(BaseProperty.Ptr);
+        NewProperty = Factory.CreateFBoolProperty(BaseProperty!.Ptr);
         SetBoolPropertyFields(NewProperty, Mask);
         return true;
     }
@@ -215,7 +215,7 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
         NewProperty = null;
         if (!CreateObject<TOwner, TField>(out var ObjectProperty, Name, Offset, Visibility))
             return false;
-        NewProperty = Factory.CreateFClassProperty(ObjectProperty.Ptr);
+        NewProperty = Factory.CreateFClassProperty(ObjectProperty!.Ptr);
         return true;
     }
     

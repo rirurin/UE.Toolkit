@@ -32,4 +32,7 @@ public interface IUnrealFactory
     IUUserDefinedEnum CreateUUserDefinedEnum(nint ptr);
     IFFieldClass CreateFFieldClass(nint ptr);
     IFField CreateFField(nint ptr);
+    // IUPackage CreateUPackage(nint ptr);
+    IFStructParams CreateFStructParams(nint ptr);
+    IFPropertyParams CreateFPropertyParams(nint ptr);
 }

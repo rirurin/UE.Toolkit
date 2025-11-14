@@ -1,6 +1,9 @@
 ﻿using System.Collections.Concurrent;
+using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Reloaded.Hooks.Definitions;
+using UE.Toolkit.Core.Types;
 using UE.Toolkit.Core.Types.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
@@ -181,6 +184,41 @@ public unsafe class UnrealClasses : IUnrealClasses
                 */
             }
         }
+    }
+
+    private delegate nint GetStaticStruct(nint pInRegister, nint pStructOuter, nint pStructName, nint Size, int Crc);
+    private SHFunction<GetStaticStruct> _GetStaticStruct;
+    private Dictionary<string, IUObject> PackageNameToUObject = new();
+    private static Func<nint>? GetStaticStructCurrentCallback = null;
+
+    private nint GetStaticStructImpl(nint pInRegister, nint pStructOuter, nint pStructName, nint Size, int Crc)
+    {
+        // UPackage::GamePackage
+        var StructOuter = Factory.CreateUObject(pStructOuter);
+        // var StructName = Marshal.PtrToStringUni(pStructName);
+        var PackageName = StructOuter.NamePrivate.ToString();
+        PackageNameToUObject.TryAdd(PackageName, StructOuter);
+        // Log.Debug($"GetStaticStruct({StructName}): (outer: {StructOuter.NamePrivate}, size: 0x{Size:x}, crc: 0x{Crc:x})");
+        return  _GetStaticStruct!.Hook!.OriginalFunction(pInRegister, pStructOuter, pStructName, Size, Crc);
+    }
+
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+    private static nint GetStaticStructCallback() => GetStaticStructCurrentCallback!();
+
+    private delegate void ConstructUScriptStruct(nint ppScriptStruct, nint pStructParams);
+    private SHFunction<ConstructUScriptStruct> _ConstructUScriptStruct;
+
+    private void ConstructUScriptStructImpl(nint ppScriptStruct, nint pStructParams)
+    {
+        /*
+        var StructParams = Factory.CreateFStructParams(pStructParams);
+        Log.Debug($"FStructParams {StructParams.Name} @ 0x{StructParams.Ptr:x}: flags: {StructParams.ObjectFlags}, {StructParams.StructFlags} (size: 0x{StructParams.Size:x}, align: 0x{StructParams.Alignment:x})");
+        foreach (var Property in StructParams.Properties)
+        {
+            Log.Debug($"\tFPropertyParams {Property.Name} @ 0x{Property.Ptr:x}: {Property.GenFlags}, {Property.PropertyFlags}, {Property.ObjectFlags}");
+        }
+        */
+        _ConstructUScriptStruct!.Hook!.OriginalFunction(ppScriptStruct, pStructParams);
     }
     
     #region IUnrealClasses implementation
@@ -377,6 +415,8 @@ public unsafe class UnrealClasses : IUnrealClasses
         
         _GetPrivateStaticClassBodyUE4 = new(GetPrivateStaticClassBodyUE4);
         _GetPrivateStaticClassBodyUE5 = new(GetPrivateStaticClassBodyUE5);
+        _GetStaticStruct = new(GetStaticStructImpl);
+        _ConstructUScriptStruct = new(ConstructUScriptStructImpl);
     }
 }
 

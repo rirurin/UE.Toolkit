@@ -21,7 +21,7 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory, IUnre
         {
             PropertyVisibility.Public => EPropertyFlags.CPF_NativeAccessSpecifierPublic,
             PropertyVisibility.Protected => EPropertyFlags.CPF_NativeAccessSpecifierProtected,
-            PropertyVisibility.Private => EPropertyFlags.CPF_NativeAccessSpecifierPrivate,
+            _ => EPropertyFlags.CPF_NativeAccessSpecifierPrivate,
         };
         return Flags;
     }
@@ -139,16 +139,16 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory, IUnre
             return false;
         var Alloc = Memory.Malloc(Marshal.SizeOf<FStructProperty>(), FIELD_ALIGNMENT);
         NewProperty = Factory.CreateFStructProperty(Alloc);
-        SetPropertySuperFields(Factory.CreateFField(Alloc), Name, ClassReflection, PropertyClass);
+        SetPropertySuperFields(Factory.CreateFField(Alloc), Name, ClassReflection!, PropertyClass!);
         unsafe
         {
             var pProperty = (FProperty*)Alloc;
             pProperty->ArrayDim = 1;
-            pProperty->ElementSize = ScriptStruct.PropertiesSize; // FExampleStruct mExampleField; 
+            pProperty->ElementSize = ScriptStruct!.PropertiesSize; // FExampleStruct mExampleField; 
             pProperty->PropertyFlags = CreatePropertyFlags(Visibility, PropertyBuilderFlags.None);
             SetPropertyFieldDefaults(pProperty, Offset);
         }
-        LinkToPropertyList(NewProperty, ClassReflection);
+        LinkToPropertyList(NewProperty, ClassReflection!);
         unsafe { ((FStructProperty*)NewProperty.Ptr)->Struct = (UScriptStruct*)ScriptStruct.Ptr; }
         return true;
     }
@@ -162,7 +162,7 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory, IUnre
             return false;
         var Alloc = Memory.Malloc(Marshal.SizeOf<FObjectProperty>(), FIELD_ALIGNMENT);
         NewProperty = Factory.CreateFObjectProperty(Alloc);
-        SetPropertySuperFields(Factory.CreateFField(Alloc), Name, ClassReflection, PropertyClass);
+        SetPropertySuperFields(Factory.CreateFField(Alloc), Name, ClassReflection!, PropertyClass!);
         unsafe
         {
             var pProperty = (FProperty*)Alloc;
@@ -173,8 +173,8 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory, IUnre
             pProperty->PropertyFlags = CreatePropertyFlags(Visibility, PropertyBuilderFlags.None);
             SetPropertyFieldDefaults(pProperty, Offset);
         }
-        LinkToPropertyList(NewProperty, ClassReflection);
-        unsafe { ((FObjectProperty*)NewProperty.Ptr)->PropertyClass = (UClass*)FieldClass.Ptr; }
+        LinkToPropertyList(NewProperty, ClassReflection!);
+        unsafe { ((FObjectProperty*)NewProperty.Ptr)->PropertyClass = (UClass*)FieldClass!.Ptr; }
         return true;
     }
 
@@ -195,7 +195,7 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory, IUnre
             return false;
         var Alloc = Memory.Malloc(Marshal.SizeOf<FArrayProperty>(), FIELD_ALIGNMENT);
         NewProperty = Factory.CreateFArrayProperty(Alloc);
-        SetPropertySuperFields(Factory.CreateFField(Alloc), Name, ClassReflection, PropertyClass);
+        SetPropertySuperFields(Factory.CreateFField(Alloc), Name, ClassReflection!, PropertyClass!);
         unsafe
         {
             var pProperty = (FProperty*)Alloc;
@@ -204,7 +204,7 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory, IUnre
             pProperty->PropertyFlags = CreatePropertyFlags(Visibility, PropertyBuilderFlags.NoCtor);
             SetPropertyFieldDefaults(pProperty, Offset);
         }
-        LinkToPropertyList(NewProperty, ClassReflection);
+        LinkToPropertyList(NewProperty, ClassReflection!);
         unsafe { ((FArrayProperty*)Alloc)->Inner = (FProperty*)Inner.Ptr; }
         return true;
     }

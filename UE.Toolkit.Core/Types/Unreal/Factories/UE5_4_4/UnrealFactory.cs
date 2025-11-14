@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Runtime.InteropServices;
 using UE.Toolkit.Core.Common;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
@@ -63,6 +64,8 @@ public class UnrealFactory : BaseUnrealFactory
     public override IUUserDefinedEnum CreateUUserDefinedEnum(nint ptr) => new UUserDefinedEnum_UE5_4_4(ptr, this);
     public override IFFieldClass CreateFFieldClass(nint ptr) => new FFieldClass_UE5_4_4(ptr, this);
     public override IFField CreateFField(nint ptr) => new FField_UE5_4_4(ptr, this);
+    public override IFStructParams CreateFStructParams(nint ptr) => new FStructParamsUE5_4_4(ptr, this);
+    public override IFPropertyParams CreateFPropertyParams(nint ptr) => new FPropertyParamsUE5_4_4(ptr, this);
 }
 
 public unsafe class FOptionalProperty_UE5_4_4(nint ptr, IUnrealFactory factory)
@@ -467,4 +470,69 @@ public unsafe class UObjectArray_UE5_4_4(nint ptr, IUnrealFactory factory) : IUO
         objItem->Flags &= ~EInternalObjectFlags.RootSet;
         objItem->Object->ObjectFlags &= ~EObjectFlags.RF_MarkAsRootSet;
     }
+}
+
+public class FPropertyParamEnumerator(IFStructParams owner) 
+    : IEnumerator<IFPropertyParams>, IEnumerable<IFPropertyParams>
+{
+    private int CurrentIndex = -1;
+    
+    #region impl IEnumerator
+    
+    public bool MoveNext() => ++CurrentIndex < owner.PropertyCount;
+
+    public void Reset() => CurrentIndex = -1;
+
+    public IFPropertyParams Current => owner.GetProperty(CurrentIndex);
+
+    object? IEnumerator.Current => Current;
+
+    public void Dispose() {}
+    
+    #endregion
+    
+    #region impl IEnumerable
+    
+    public IEnumerator<IFPropertyParams> GetEnumerator() => this;
+    
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    
+    #endregion
+}
+
+public unsafe class FStructParamsUE5_4_4(nint ptr, IUnrealFactory factory) : IFStructParams
+{
+    private readonly FStructParams* _self = (FStructParams*)ptr;
+    protected readonly IUnrealFactory _factory = factory;
+
+    public nint Ptr => (nint)_self;
+
+    public nint OuterFunc => _self->OuterFunc;
+    public nint SuperFunc => _self->SuperFunc;
+    public nint StructOpsFunc => _self->StructOpsFunc;
+    public string Name => Marshal.PtrToStringUTF8(_self->NameUTF8)!;
+    public ulong Size => _self->SizeOf;
+    public ulong Alignment => _self->AlignOf;
+    public EObjectFlags ObjectFlags => _self->ObjectFlags;
+    public int StructFlags => _self->StructFlags;
+    public int PropertyCount => _self->NumProperties;
+    public IFPropertyParams? GetProperty(int Index)
+    {
+        var Result = ((FStructParams*)Ptr)->GetProperty(Index);
+        return Result != null ? _factory.CreateFPropertyParams((nint)Result) : null;
+    }
+    
+    public IEnumerable<IFPropertyParams> Properties => new FPropertyParamEnumerator(this);
+}
+
+public unsafe class FPropertyParamsUE5_4_4(nint ptr, IUnrealFactory factory) : IFPropertyParams
+{
+    private readonly FPropertyParamsBase* _self = (FPropertyParamsBase*)ptr;
+    protected readonly IUnrealFactory _factory = factory;   
+    
+    public nint Ptr => (nint)_self;
+    public string Name => Marshal.PtrToStringUTF8(_self->NameUTF8)!;
+    public EPropertyFlags PropertyFlags => _self->PropertyFlags;
+    public EPropertyGenFlags GenFlags => _self->PropertyGenFlags;
+    public EObjectFlags ObjectFlags => _self->ObjectFlags;
 }

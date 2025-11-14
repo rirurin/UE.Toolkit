@@ -70,6 +70,7 @@ public interface IUnrealClasses : IUnrealClassesInternal
     /// </summary>
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     public bool AddI8Property<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
@@ -79,6 +80,7 @@ public interface IUnrealClasses : IUnrealClassesInternal
     /// </summary>
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     public bool AddI16Property<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
@@ -88,6 +90,7 @@ public interface IUnrealClasses : IUnrealClassesInternal
     /// </summary>
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     public bool AddI32Property<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
@@ -106,6 +109,7 @@ public interface IUnrealClasses : IUnrealClassesInternal
     /// </summary>
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     public bool AddU8Property<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
@@ -115,6 +119,7 @@ public interface IUnrealClasses : IUnrealClassesInternal
     /// </summary>
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     public bool AddU16Property<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
@@ -124,6 +129,7 @@ public interface IUnrealClasses : IUnrealClassesInternal
     /// </summary>
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     public bool AddU32Property<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
@@ -133,6 +139,7 @@ public interface IUnrealClasses : IUnrealClassesInternal
     /// </summary>
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     public bool AddU64Property<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
@@ -142,6 +149,7 @@ public interface IUnrealClasses : IUnrealClassesInternal
     /// </summary>
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     public bool AddF32Property<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
@@ -151,6 +159,7 @@ public interface IUnrealClasses : IUnrealClassesInternal
     /// </summary>
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     public bool AddF64Property<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
 
@@ -160,6 +169,7 @@ public interface IUnrealClasses : IUnrealClassesInternal
     /// </summary>
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     public bool AddCBoolProperty<TObject>(string Name, int Offset, out IFBoolProperty? Out) where TObject : unmanaged;
     
@@ -170,6 +180,7 @@ public interface IUnrealClasses : IUnrealClassesInternal
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Byte offset of the new field.</param>
     /// <param name="Bit">Bit offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     public bool AddBitBoolProperty<TObject>(string Name, int Offset, int Bit, out IFBoolProperty? Out) where TObject : unmanaged;
 
@@ -179,6 +190,7 @@ public interface IUnrealClasses : IUnrealClassesInternal
     /// </summary>
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     /// <typeparam name="TField">Field type.</typeparam>
     public bool AddStructProperty<TObject, TField>(string Name, int Offset, out IFStructProperty? Out)
@@ -191,6 +203,7 @@ public interface IUnrealClasses : IUnrealClassesInternal
     /// </summary>
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     /// <typeparam name="TField">Field type.</typeparam>
     public bool AddObjectProperty<TObject, TField>(string Name, int Offset, out IFObjectProperty? Out)
@@ -203,6 +216,7 @@ public interface IUnrealClasses : IUnrealClassesInternal
     /// </summary>
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     /// <typeparam name="TField">Field type.</typeparam>
     public bool AddClassProperty<TObject, TField>(string Name, int Offset, out IFClassProperty? Out)
@@ -215,6 +229,7 @@ public interface IUnrealClasses : IUnrealClassesInternal
     /// </summary>
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     public bool AddNameProperty<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
@@ -224,6 +239,7 @@ public interface IUnrealClasses : IUnrealClassesInternal
     /// </summary>
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     public bool AddStringProperty<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
@@ -233,6 +249,7 @@ public interface IUnrealClasses : IUnrealClassesInternal
     /// </summary>
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     public bool AddTextProperty<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
@@ -242,6 +259,8 @@ public interface IUnrealClasses : IUnrealClassesInternal
     /// </summary>
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Inner">The inner property used for each entry in the array.</param>
+    /// <param name="Property">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     public bool AddArrayProperty<TObject>(string Name, int Offset, IFProperty Inner, out IFArrayProperty? Property) 
         where TObject : unmanaged;

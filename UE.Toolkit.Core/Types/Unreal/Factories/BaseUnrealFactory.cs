@@ -73,4 +73,7 @@ public abstract class BaseUnrealFactory : IUnrealFactory
     public abstract IUUserDefinedEnum CreateUUserDefinedEnum(nint ptr);
     public abstract IFFieldClass CreateFFieldClass(nint ptr);
     public abstract IFField CreateFField(nint ptr);
+    // public abstract IUPackage CreateUPackage(nint ptr);
+    public abstract IFStructParams CreateFStructParams(nint ptr);
+    public abstract IFPropertyParams CreateFPropertyParams(nint ptr);
 }

@@ -1,5 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using EObjectFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EObjectFlags;
 
 namespace UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 
@@ -15,7 +14,7 @@ public unsafe struct FStructParams
     public ushort SizeOf;
     public byte AlignOf;
     public EObjectFlags ObjectFlags;
-    public int StructFlags;
+    public EStructFlags StructFlags;
 
     public FPropertyParamsBase* GetProperty(int Index)
     {

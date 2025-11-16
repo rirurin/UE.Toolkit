@@ -1,8 +1,9 @@
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using UE.Toolkit.Core.Common;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
-using UE.Toolkit.Core.Types.Unreal.UE4_27_2;
+using EFunctionFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EFunctionFlags;
 using EPropertyFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EPropertyFlags;
 using EPropertyGenFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EPropertyGenFlags;
 using EClassFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EClassFlags;
@@ -20,15 +21,18 @@ using FClassProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FClassProperty;
 using FEnumProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FEnumProperty;
 using FField = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FField;
 using FFieldClass = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FFieldClass;
+using FGenericPropertyParams = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FGenericPropertyParams;
 using FMapProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FMapProperty;
 using FObjectProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FObjectProperty;
 using FProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FProperty;
+using FPropertyParamsBase = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FPropertyParamsBase;
 using FSetProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FSetProperty;
 using FStructParams = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FStructParams;
 using FStructProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FStructProperty;
 using UClass = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UClass;
 using UEnum = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UEnum;
 using UField = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UField;
+using UFunction = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UFunction;
 using UObjectBase = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UObjectBase;
 using UScriptStruct = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UScriptStruct;
 using UStruct = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UStruct;
@@ -111,6 +115,8 @@ public class UnrealFactory : BaseUnrealFactory
     public override IUStruct CreateUStruct(nint ptr) => new UStructUE4_27_2(ptr, this);
 
     public override IUUserDefinedEnum CreateUUserDefinedEnum(nint ptr) => new UUserDefinedEnumUE4_27_2(ptr, this);
+    
+    public override IUFunction CreateUFunction(nint ptr) => new UFunctionUE4_27_2(ptr, this);
 
     public override IFFieldClass CreateFFieldClass(nint ptr) => new FFieldClassUE4_27_2(ptr, this);
 
@@ -119,6 +125,8 @@ public class UnrealFactory : BaseUnrealFactory
     public override IFStructParams CreateFStructParams(nint ptr) => new FStructParamsUE4_27_2(ptr, this);
     
     public override IFPropertyParams CreateFPropertyParams(nint ptr) => new FPropertyParamsUE4_27_2(ptr, this);
+    
+    public override IFGenericPropertyParams CreateFGenericPropertyParams(nint ptr) => new FGenericPropertyParamsUE4_27_2(ptr, this);
 }
 
 public unsafe class FSetPropertyUE4_27_2(nint ptr, IUnrealFactory factory)
@@ -457,6 +465,34 @@ public unsafe class UClassUE4_27_2(nint ptr, IUnrealFactory factory)
 
     public IUClass? GetSuperClass()
         => _self->_super.super_struct != null ? _factory.CreateUClass((nint)_self->_super.super_struct) : null;
+
+    public IUFunction? GetFunction(string Name)
+    {
+        var FuncMapDict = new UE.Toolkit.Core.Types.Unreal.UE5_4_4.TMapDictionary<FName, Ptr<UFunction>>(
+            (UE.Toolkit.Core.Types.Unreal.UE5_4_4.TMap<FName, Ptr<UFunction>>*)(&_self->func_map),
+            _factory.Memory
+        );
+        return FuncMapDict.TryGetValue(new(Name), out var Function)
+            ? factory.CreateUFunction((nint)Function.Value->Value)
+            : null;
+    }
+}
+
+public unsafe class UFunctionUE4_27_2(nint ptr, IUnrealFactory factory)
+    : UStructUE4_27_2(ptr, factory), IUFunction
+{
+    private readonly UFunction* _self = (UFunction*)ptr;
+
+    public EFunctionFlags FunctionFlags => _self->func_flags;
+    public int ParamCount => _self->num_params;
+    public int ParamSize => _self->params_size;
+    public int ReturnValueOffset => _self->return_value_offset;
+
+    public int GetTotalParameterSize()
+    {
+        var LastProperty = ChildProperties.Any() ? _factory.CreateFProperty(ChildProperties.Last().Ptr) : null;
+        return LastProperty != null ? LastProperty!.Offset_Internal + LastProperty!.ElementSize : 0;
+    }
 }
 
 public unsafe class UObjectArrayUE4_27_2(nint ptr, IUnrealFactory factory) : IUObjectArray
@@ -491,6 +527,7 @@ public unsafe class UObjectArrayUE4_27_2(nint ptr, IUnrealFactory factory) : IUO
         objItem->Object->ObjectFlags &= ~EObjectFlags.RF_MarkAsRootSet;
     }
 }
+
 
 public class FPropertyParamEnumerator(IFStructParams owner) 
     : IEnumerator<IFPropertyParams>, IEnumerable<IFPropertyParams>
@@ -534,7 +571,7 @@ public unsafe class FStructParamsUE4_27_2(nint ptr, IUnrealFactory factory) : IF
     public ulong Size => _self->SizeOf;
     public ulong Alignment => _self->AlignOf;
     public EObjectFlags ObjectFlags => _self->ObjectFlags;
-    public int StructFlags => _self->StructFlags;
+    public EStructFlags StructFlags => _self->StructFlags;
     public int PropertyCount => _self->NumProperties;
     public IFPropertyParams? GetProperty(int Index)
     {
@@ -555,4 +592,13 @@ public unsafe class FPropertyParamsUE4_27_2(nint ptr, IUnrealFactory factory) : 
     public EPropertyFlags PropertyFlags => _self->PropertyFlags;
     public EPropertyGenFlags GenFlags => _self->PropertyGenFlags;
     public EObjectFlags ObjectFlags => _self->ObjectFlags;
+}
+
+public unsafe class FGenericPropertyParamsUE4_27_2(nint ptr, IUnrealFactory factory) 
+    : FPropertyParamsUE4_27_2(ptr, factory), IFGenericPropertyParams
+{
+    private readonly FGenericPropertyParams* _self = (FGenericPropertyParams*)ptr;
+
+    public int ArrayDim => _self->Super.ArrayDim;
+    public int Offset => _self->Super.Offset;
 }

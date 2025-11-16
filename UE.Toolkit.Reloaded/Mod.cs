@@ -23,6 +23,7 @@ public class Mod : ModBase, IExports
     public static Config Config = null!;
 #pragma warning restore CA2211
     
+    // Reloaded-II API
     private readonly IModLoader _modLoader;
     private readonly IReloadedHooks _hooks;
     private readonly ILogger _log;
@@ -30,9 +31,10 @@ public class Mod : ModBase, IExports
 
     private readonly IModConfig _modConfig;
 
+    // Unreal Toolkit API
     private readonly IUnrealFactory _factory;
     private readonly UnrealNames _names;
-    private readonly UnrealMemory _memory;
+    private readonly IUnrealMemory _memory;
     private readonly UnrealObjects _objects;
     private readonly DataTablesService _tables;
     private readonly TypeRegistry _typeRegistry;
@@ -41,6 +43,7 @@ public class Mod : ModBase, IExports
     private readonly UnrealStrings _strings;
     private readonly UnrealClasses _classes;
     private readonly Common.ResolveAddress _address;
+    private readonly UnrealMethods _methods;
 
     public Mod(ModContext context)
     {
@@ -63,15 +66,16 @@ public class Mod : ModBase, IExports
         _names = new();
         _objects = new(_factory);
         _tables = new();
-        _memory = new();
+        _memory = GameConfig.Instance.Memory;
         _typeRegistry = new();
         _writer = new(_typeRegistry, _objects, _tables);
         _toolkit = new(_writer);
         _strings = new();
         _address = new();
         _classes = new(_factory, _memory, _hooks, _address);
+        _methods = new(_factory, _memory, _classes, _objects, _hooks);
         
-        _modLoader.AddOrReplaceController<IUnrealMemory>(_owner, _memory);
+        _modLoader.AddOrReplaceController(_owner, _memory);
         _modLoader.AddOrReplaceController<IDataTables>(_owner, _tables);
         _modLoader.AddOrReplaceController<IUnrealObjects>(_owner, _objects);
         _modLoader.AddOrReplaceController<ITypeRegistry>(_owner, _typeRegistry);
@@ -80,6 +84,7 @@ public class Mod : ModBase, IExports
         _modLoader.AddOrReplaceController<IUnrealStrings>(_owner, _strings);
         _modLoader.AddOrReplaceController<IUnrealClasses>(_owner, _classes);
         _modLoader.AddOrReplaceController(_owner, _factory);
+        _modLoader.AddOrReplaceController<IUnrealMethods>(_owner, _methods);
         
         _modLoader.ModLoaded += OnModLoaded;
     }

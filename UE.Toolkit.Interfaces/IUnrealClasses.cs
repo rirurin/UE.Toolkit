@@ -5,28 +5,8 @@ namespace UE.Toolkit.Interfaces;
 
 public interface IUnrealClasses : IUnrealClassesInternal
 {
-    /// <summary>
-    /// Listen for the creation of an object's class, then extend it's allocation size and call a custom constructor
-    /// after the existing constructor has executed.
-    /// </summary>
-    /// <param name="ExtraSize">Number of bytes to increase the allocation size of object instances by.</param>
-    /// <param name="callback">A custom constructor to call after the original constructor</param>
-    /// <typeparam name="TObject">Object type.</typeparam>
-    /// <remarks>
-    /// The extension is only created for the specific object type. If a struct/class inherits from this class, it
-    /// won't receive an extension.
-    /// </remarks>
-    public void AddExtension<TObject>(uint ExtraSize, Action<ToolkitUObject<TObject>> callback) 
-        where TObject: unmanaged;
     
-    /// <summary>
-    /// Listen for the creation of an object's class, then call a custom constructor after the existing constructor
-    /// has executed.
-    /// </summary>
-    /// <param name="callback">A custom constructor to call after the original constructor</param>
-    /// <typeparam name="TObject">Object type.</typeparam>
-    public void AddConstructor<TObject>(Action<ToolkitUObject<TObject>> callback)
-        where TObject : unmanaged => AddExtension(0, callback);
+    #region Class/Struct Getters
     
     /// <summary>
     /// Get the type information for a specified object. If this class has no type info, this will return null.
@@ -63,6 +43,33 @@ public interface IUnrealClasses : IUnrealClassesInternal
     /// <param name="Value">Type information for the object type with the given name.</param>
     /// <returns>If the type information exists.</returns>
     public bool GetScriptStructInfoFromName(string Name, out IUScriptStruct? Value);
+    
+    #endregion
+    
+    #region Struct Field Extension Methods
+    
+    /// <summary>
+    /// Listen for the creation of an object's class, then extend it's allocation size and call a custom constructor
+    /// after the existing constructor has executed.
+    /// </summary>
+    /// <param name="ExtraSize">Number of bytes to increase the allocation size of object instances by.</param>
+    /// <param name="callback">A custom constructor to call after the original constructor</param>
+    /// <typeparam name="TObject">Object type.</typeparam>
+    /// <remarks>
+    /// The extension is only created for the specific object type. If a struct/class inherits from this class, it
+    /// won't receive an extension.
+    /// </remarks>
+    public void AddExtension<TObject>(uint ExtraSize, Action<ToolkitUObject<TObject>> callback) 
+        where TObject: unmanaged;
+    
+    /// <summary>
+    /// Listen for the creation of an object's class, then call a custom constructor after the existing constructor
+    /// has executed.
+    /// </summary>
+    /// <param name="callback">A custom constructor to call after the original constructor</param>
+    /// <typeparam name="TObject">Object type.</typeparam>
+    public void AddConstructor<TObject>(Action<ToolkitUObject<TObject>> callback)
+        where TObject : unmanaged => AddExtension(0, callback);
 
     /// <summary>
     /// Add an Int8 property to the object's class with the specified name and offset. This will make the field
@@ -264,4 +271,100 @@ public interface IUnrealClasses : IUnrealClassesInternal
     /// <typeparam name="TObject">Object type.</typeparam>
     public bool AddArrayProperty<TObject>(string Name, int Offset, IFProperty Inner, out IFArrayProperty? Property) 
         where TObject : unmanaged;
+    
+    #endregion
+    
+    #region New Struct Construction
+
+    /// <summary>
+    /// Create a Int8 param to insert into a struct param's property list. This is used when registering new
+    /// struct types to the engine at runtime.
+    /// </summary>
+    /// <param name="Name">Param's name.</param>
+    /// <param name="Offset">Param's offset.</param>
+    public IFGenericPropertyParams? CreateI8Param(string Name, int Offset);
+    
+    /// <summary>
+    /// Create a Int16 param to insert into a struct param's property list. This is used when registering new
+    /// struct types to the engine at runtime.
+    /// </summary>
+    /// <param name="Name">Param's name.</param>
+    /// <param name="Offset">Param's offset.</param>
+    public IFGenericPropertyParams? CreateI16Param(string Name, int Offset);
+    
+    /// <summary>
+    /// Create a Int32 param to insert into a struct param's property list. This is used when registering new
+    /// struct types to the engine at runtime.
+    /// </summary>
+    /// <param name="Name">Param's name.</param>
+    /// <param name="Offset">Param's offset.</param>
+    public IFGenericPropertyParams? CreateI32Param(string Name, int Offset);
+    
+    /// <summary>
+    /// Create a Int64 param to insert into a struct param's property list. This is used when registering new
+    /// struct types to the engine at runtime.
+    /// </summary>
+    /// <param name="Name">Param's name.</param>
+    /// <param name="Offset">Param's offset.</param>
+    public IFGenericPropertyParams? CreateI64Param(string Name, int Offset);
+    
+    /// <summary>
+    /// Create a UInt8 param to insert into a struct param's property list. This is used when registering new
+    /// struct types to the engine at runtime.
+    /// </summary>
+    /// <param name="Name">Param's name.</param>
+    /// <param name="Offset">Param's offset.</param>
+    public IFGenericPropertyParams? CreateU8Param(string Name, int Offset);
+    
+    /// <summary>
+    /// Create a UInt16 param to insert into a struct param's property list. This is used when registering new
+    /// struct types to the engine at runtime.
+    /// </summary>
+    /// <param name="Name">Param's name.</param>
+    /// <param name="Offset">Param's offset.</param>
+    public IFGenericPropertyParams? CreateU16Param(string Name, int Offset);
+    
+    /// <summary>
+    /// Create a UInt32 param to insert into a struct param's property list. This is used when registering new
+    /// struct types to the engine at runtime.
+    /// </summary>
+    /// <param name="Name">Param's name.</param>
+    /// <param name="Offset">Param's offset.</param>
+    public IFGenericPropertyParams? CreateU32Param(string Name, int Offset);
+    
+    /// <summary>
+    /// Create a UInt64 param to insert into a struct param's property list. This is used when registering new
+    /// struct types to the engine at runtime.
+    /// </summary>
+    /// <param name="Name">Param's name.</param>
+    /// <param name="Offset">Param's offset.</param>
+    public IFGenericPropertyParams? CreateU64Param(string Name, int Offset);
+    
+    /// <summary>
+    /// Create a float param to insert into a struct param's property list. This is used when registering new
+    /// struct types to the engine at runtime.
+    /// </summary>
+    /// <param name="Name">Param's name.</param>
+    /// <param name="Offset">Param's offset.</param>
+    public IFGenericPropertyParams? CreateF32Param(string Name, int Offset);
+    
+    /// <summary>
+    /// Create a double param to insert into a struct param's property list. This is used when registering new
+    /// struct types to the engine at runtime.
+    /// </summary>
+    /// <param name="Name">Param's name.</param>
+    /// <param name="Offset">Param's offset.</param>
+    public IFGenericPropertyParams? CreateF64Param(string Name, int Offset);
+
+    /// <summary>
+    /// Create a new UE struct definition at runtime which can be used by Blueprints and Object XML. This can be used
+    /// to annotate instances of another struct with an inner type.
+    /// </summary>
+    /// <param name="Name">Name of the new struct.</param>
+    /// <param name="Size">Size of the new struct.</param>
+    /// <param name="Fields">A list of exposed fields within this struct.</param>
+    /// <param name="Out">New script struct.</param>
+    public bool CreateScriptStruct(string Name, int Size, List<IFPropertyParams> Fields, out IUScriptStruct? Out);
+
+    #endregion
 }

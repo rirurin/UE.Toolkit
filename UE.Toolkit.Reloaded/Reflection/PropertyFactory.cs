@@ -4,10 +4,12 @@ using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Interfaces;
+using UE.Toolkit.Reloaded.Reflection.UE5_4_4;
 
 namespace UE.Toolkit.Reloaded.Reflection;
 
-public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory memory, IUnrealClasses classes)
+public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory memory, 
+    IUnrealClasses classes, IPropertyFlagsBuilder flags)
 {
     private Dictionary<string, FName>? PropertyNames = null;
     
@@ -75,8 +77,6 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
     protected abstract void SetPropertySuperFields(IFField Field, string Name, IUClass ClassReflection,
         FieldClassGlobal PropertyClass);
     
-    protected abstract EPropertyFlags CreatePropertyFlags(PropertyVisibility Visibility, PropertyBuilderFlags InFlags);
-
     protected abstract void SetCopyPropertyFields<T>(IFProperty Property, int Offset, PropertyVisibility Visibility)
         where T : unmanaged;
     
@@ -236,6 +236,7 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
     protected readonly IUnrealFactory Factory = factory;
     protected readonly IUnrealMemory Memory = memory;
     protected readonly IUnrealClasses Classes = classes;
+    protected readonly IPropertyFlagsBuilder Flags = flags;
 
     protected const int FIELD_ALIGNMENT = 0x80;
 }

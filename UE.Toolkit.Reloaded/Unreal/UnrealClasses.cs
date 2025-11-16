@@ -1,9 +1,8 @@
 ﻿using System.Collections.Concurrent;
-using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Marshalling;
 using Reloaded.Hooks.Definitions;
-using UE.Toolkit.Core.Types;
 using UE.Toolkit.Core.Types.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
@@ -188,7 +187,8 @@ public unsafe class UnrealClasses : IUnrealClasses
 
     private delegate nint GetStaticStruct(nint pInRegister, nint pStructOuter, nint pStructName, nint Size, int Crc);
     private SHFunction<GetStaticStruct> _GetStaticStruct;
-    private Dictionary<string, IUObject> PackageNameToUObject = new();
+    private static Dictionary<string, IUObject> PackageNameToUObject = new();
+    private static string? PackageNameToUObjectKey;
     private static Func<nint>? GetStaticStructCurrentCallback = null;
 
     private nint GetStaticStructImpl(nint pInRegister, nint pStructOuter, nint pStructName, nint Size, int Crc)
@@ -205,19 +205,21 @@ public unsafe class UnrealClasses : IUnrealClasses
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
     private static nint GetStaticStructCallback() => GetStaticStructCurrentCallback!();
 
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+    internal static nint FStructProperty_OuterFunc_Callback() => PackageNameToUObject[PackageNameToUObjectKey].Ptr;
+
     private delegate void ConstructUScriptStruct(nint ppScriptStruct, nint pStructParams);
     private SHFunction<ConstructUScriptStruct> _ConstructUScriptStruct;
 
     private void ConstructUScriptStructImpl(nint ppScriptStruct, nint pStructParams)
     {
-        /*
-        var StructParams = Factory.CreateFStructParams(pStructParams);
-        Log.Debug($"FStructParams {StructParams.Name} @ 0x{StructParams.Ptr:x}: flags: {StructParams.ObjectFlags}, {StructParams.StructFlags} (size: 0x{StructParams.Size:x}, align: 0x{StructParams.Alignment:x})");
-        foreach (var Property in StructParams.Properties)
+        if (Mod.Config.LogScriptStructEnabled)
         {
-            Log.Debug($"\tFPropertyParams {Property.Name} @ 0x{Property.Ptr:x}: {Property.GenFlags}, {Property.PropertyFlags}, {Property.ObjectFlags}");
+            var StructParams = Factory.CreateFStructParams(pStructParams);
+            Log.Information($"{StructParams.Name} @ 0x{StructParams.Ptr:x} || Object Flags: {StructParams.ObjectFlags} || Struct Flags: {StructParams.StructFlags} || Size: 0x{StructParams.Size:x} || Align: 0x{StructParams.Alignment:x})");
+            foreach (var Property in StructParams.Properties)
+                Log.Information($"\t\t {Property.Name} @ 0x{Property.Ptr:x} || Gen Flags: {Property.GenFlags} || Property Flags: {Property.PropertyFlags} || Object Flags: {Property.ObjectFlags}"); 
         }
-        */
         _ConstructUScriptStruct!.Hook!.OriginalFunction(ppScriptStruct, pStructParams);
     }
     
@@ -373,7 +375,46 @@ public unsafe class UnrealClasses : IUnrealClasses
         out IFArrayProperty? Property) where TObject : unmanaged
     {
         Property = null;
-        return false;
+        return PropertyFactory.CreateArray<TObject>(out Property, Name, Offset, PropertyVisibility.Public, Inner);
+    }
+
+    public IFGenericPropertyParams? CreateI8Param(string Name, int Offset)
+        => TypeFactory.CreateI8Param(Name, Offset, out var Out) ? Out : null;
+    
+    public IFGenericPropertyParams? CreateI16Param(string Name, int Offset)
+        => TypeFactory.CreateI16Param(Name, Offset, out var Out) ? Out : null;
+    
+    public IFGenericPropertyParams? CreateI32Param(string Name, int Offset)
+        => TypeFactory.CreateI32Param(Name, Offset, out var Out) ? Out : null;
+    
+    public IFGenericPropertyParams? CreateI64Param(string Name, int Offset)
+        => TypeFactory.CreateI64Param(Name, Offset, out var Out) ? Out : null;
+    
+    public IFGenericPropertyParams? CreateU8Param(string Name, int Offset)
+        => TypeFactory.CreateU8Param(Name, Offset, out var Out) ? Out : null;
+    
+    public IFGenericPropertyParams? CreateU16Param(string Name, int Offset)
+        => TypeFactory.CreateU16Param(Name, Offset, out var Out) ? Out : null;
+    
+    public IFGenericPropertyParams? CreateU32Param(string Name, int Offset)
+        => TypeFactory.CreateU32Param(Name, Offset, out var Out) ? Out : null;
+    
+    public IFGenericPropertyParams? CreateU64Param(string Name, int Offset)
+        => TypeFactory.CreateU64Param(Name, Offset, out var Out) ? Out : null;
+    
+    public IFGenericPropertyParams? CreateF32Param(string Name, int Offset)
+        => TypeFactory.CreateF32Param(Name, Offset, out var Out) ? Out : null;
+    
+    public IFGenericPropertyParams? CreateF64Param(string Name, int Offset)
+        => TypeFactory.CreateF64Param(Name, Offset, out var Out) ? Out : null;
+
+    public bool CreateScriptStruct(string Name, int Size, List<IFPropertyParams> Fields, out IUScriptStruct? Out)
+    {
+        TypeFactory.CreateStructParam(Name, Size, Fields, out var Param);
+        var pScriptStruct = nint.Zero;
+        ConstructUScriptStructImpl((nint)(&pScriptStruct), Param.Ptr);
+        Out = Factory.CreateUScriptStruct(pScriptStruct);
+        return true;
     }
 
     #endregion
@@ -396,6 +437,7 @@ public unsafe class UnrealClasses : IUnrealClasses
     private ResolveAddress Address;
 
     private BasePropertyFactory PropertyFactory;
+    private BaseTypeFactory TypeFactory;
 
     public UnrealClasses(IUnrealFactory _Factory, IUnrealMemory _Memory, IReloadedHooks _Hooks, ResolveAddress _Address)
     {
@@ -403,20 +445,36 @@ public unsafe class UnrealClasses : IUnrealClasses
         Memory = _Memory;
         Hooks = _Hooks;
         Address = _Address;
-
+        
+        IPropertyFlagsBuilder FlagsBuilder = GameConfig.Instance.Id switch
+        {
+            "P3R" => new Reflection.UE4_27_2.PropertyFlagsBuilder(),
+            _ => new Reflection.UE5_4_4.PropertyFlagsBuilder(),
+        };
+        
         PropertyFactory = GameConfig.Instance.Id switch
         {
-            "P3R" => new Reflection.UE4_27_2.PropertyFactory(Factory, Memory, this),
-            _ => new Reflection.UE5_4_4.PropertyFactory(Factory, Memory, this),
+            "P3R" => new Reflection.UE4_27_2.PropertyFactory(Factory, Memory, this, FlagsBuilder),
+            _ => new Reflection.UE5_4_4.PropertyFactory(Factory, Memory, this, FlagsBuilder),
+        };
+        
+        TypeFactory = GameConfig.Instance.Id switch
+        {
+            "P3R" => new Reflection.UE4_27_2.TypeFactory(Factory, Memory, this, FlagsBuilder),
+            _ => new Reflection.UE5_4_4.TypeFactory(Factory, Memory, this, FlagsBuilder),
         };
         
         Project.Inis.UsingSetting<uint>(Constants.UnrealIniId, "Link", nameof(UStruct),
             value => UStructLinkOffset = value);
         
+        Project.Inis.UsingSetting<string>(Constants.UnrealIniId, "GamePackage", nameof(UPackage),
+            value => PackageNameToUObjectKey = value);
+        
         _GetPrivateStaticClassBodyUE4 = new(GetPrivateStaticClassBodyUE4);
         _GetPrivateStaticClassBodyUE5 = new(GetPrivateStaticClassBodyUE5);
         _GetStaticStruct = new(GetStaticStructImpl);
         _ConstructUScriptStruct = new(ConstructUScriptStructImpl);
+        // _ConstructUScriptStruct = new();
     }
 }
 

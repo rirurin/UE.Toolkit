@@ -62,10 +62,12 @@ public class UnrealFactory : BaseUnrealFactory
     public override IUField CreateUField(nint ptr) => new UField_UE5_4_4(ptr, this);
     public override IUStruct CreateUStruct(nint ptr) => new UStruct_UE5_4_4(ptr, this);
     public override IUUserDefinedEnum CreateUUserDefinedEnum(nint ptr) => new UUserDefinedEnum_UE5_4_4(ptr, this);
+    public override IUFunction CreateUFunction(nint ptr) => new UFunction_UE5_4_4(ptr, this);
     public override IFFieldClass CreateFFieldClass(nint ptr) => new FFieldClass_UE5_4_4(ptr, this);
     public override IFField CreateFField(nint ptr) => new FField_UE5_4_4(ptr, this);
     public override IFStructParams CreateFStructParams(nint ptr) => new FStructParamsUE5_4_4(ptr, this);
     public override IFPropertyParams CreateFPropertyParams(nint ptr) => new FPropertyParamsUE5_4_4(ptr, this);
+    public override IFGenericPropertyParams CreateFGenericPropertyParams(nint ptr) => new FGenericPropertyParamsUE5_4_4(ptr, this);
 }
 
 public unsafe class FOptionalProperty_UE5_4_4(nint ptr, IUnrealFactory factory)
@@ -438,6 +440,33 @@ public unsafe class UClass_UE5_4_4(nint ptr, IUnrealFactory factory)
 
     public IUClass? GetSuperClass()
         => _self->GetSuperClass() != null ? _factory.CreateUClass((nint)_self->GetSuperClass()) : null;
+    
+    public IUFunction? GetFunction(string Name)
+    {
+        var FuncMapDict = new TMapDictionary<FName, UFunction>(
+            (TMap<FName, UFunction>*)(&_self->FuncMap), factory.Memory
+        );
+        return FuncMapDict.TryGetValue(new(Name), out var Function)
+            ? factory.CreateUFunction((nint)Function.Value)
+            : null;
+    }
+}
+
+public unsafe class UFunction_UE5_4_4(nint ptr, IUnrealFactory factory)
+    : UStruct_UE5_4_4(ptr, factory), IUFunction
+{
+    private readonly UFunction* _self = (UFunction*)ptr;
+
+    public EFunctionFlags FunctionFlags => _self->FunctionFlags;
+    public int ParamCount => _self->NumParms;
+    public int ParamSize => _self->ParmsSize;
+    public int ReturnValueOffset => _self->ReturnValueOffset;
+    
+    public int GetTotalParameterSize()
+    {
+        var LastProperty = ChildProperties.Any() ? _factory.CreateFProperty(ChildProperties.Last().Ptr) : null;
+        return LastProperty != null ? LastProperty!.Offset_Internal + LastProperty!.ElementSize : 0;
+    }
 }
 
 public unsafe class UObjectArray_UE5_4_4(nint ptr, IUnrealFactory factory) : IUObjectArray
@@ -514,7 +543,7 @@ public unsafe class FStructParamsUE5_4_4(nint ptr, IUnrealFactory factory) : IFS
     public ulong Size => _self->SizeOf;
     public ulong Alignment => _self->AlignOf;
     public EObjectFlags ObjectFlags => _self->ObjectFlags;
-    public int StructFlags => _self->StructFlags;
+    public EStructFlags StructFlags => _self->StructFlags;
     public int PropertyCount => _self->NumProperties;
     public IFPropertyParams? GetProperty(int Index)
     {
@@ -535,4 +564,13 @@ public unsafe class FPropertyParamsUE5_4_4(nint ptr, IUnrealFactory factory) : I
     public EPropertyFlags PropertyFlags => _self->PropertyFlags;
     public EPropertyGenFlags GenFlags => _self->PropertyGenFlags;
     public EObjectFlags ObjectFlags => _self->ObjectFlags;
+}
+
+public unsafe class FGenericPropertyParamsUE5_4_4(nint ptr, IUnrealFactory factory) 
+    : FPropertyParamsUE5_4_4(ptr, factory), IFGenericPropertyParams
+{
+    private readonly FGenericPropertyParams* _self = (FGenericPropertyParams*)ptr;
+
+    public int ArrayDim => _self->Super.ArrayDim;
+    public int Offset => _self->Super.Offset;
 }

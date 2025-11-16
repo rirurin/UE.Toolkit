@@ -1,3 +1,4 @@
+using UE.Toolkit.Core.Types.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 
 namespace UE.Toolkit.Core.Types.Unreal.Factories;
@@ -9,6 +10,8 @@ public interface IUnrealFactory
 {
     T Cast<T>(IPtr obj);
     nint SizeOf<T>();
+    IUnrealMemoryInternal? Memory { get; set; }
+    
     IFProperty CreateFProperty(nint ptr);
     IFBoolProperty CreateFBoolProperty(nint ptr);
     IFByteProperty CreateFByteProperty(nint ptr);
@@ -22,6 +25,7 @@ public interface IUnrealFactory
     IFArrayProperty CreateFArrayProperty(nint ptr);
     IFSetProperty CreateFSetProperty(nint ptr);
     IFOptionalProperty CreateFOptionalProperty(nint ptr);
+    
     IUObjectArray CreateUObjectArray(nint ptr);
     IUObject CreateUObject(nint ptr);
     IUClass CreateUClass(nint ptr);
@@ -30,9 +34,13 @@ public interface IUnrealFactory
     IUField CreateUField(nint ptr);
     IUStruct CreateUStruct(nint ptr);
     IUUserDefinedEnum CreateUUserDefinedEnum(nint ptr);
+    // IUPackage CreateUPackage(nint ptr); 
+    IUFunction CreateUFunction(nint ptr);
+    
     IFFieldClass CreateFFieldClass(nint ptr);
     IFField CreateFField(nint ptr);
-    // IUPackage CreateUPackage(nint ptr);
+
     IFStructParams CreateFStructParams(nint ptr);
     IFPropertyParams CreateFPropertyParams(nint ptr);
+    IFGenericPropertyParams CreateFGenericPropertyParams(nint ptr);
 }

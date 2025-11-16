@@ -9,3 +9,9 @@ public interface IFPropertyParams : IPtr
     EPropertyGenFlags GenFlags { get; }
     EObjectFlags ObjectFlags { get; }
 }
+
+public interface IFGenericPropertyParams : IFPropertyParams
+{
+    int ArrayDim { get; }
+    int Offset { get; }
+}

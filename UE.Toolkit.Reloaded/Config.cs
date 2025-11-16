@@ -19,6 +19,10 @@ public class Config : Configurable<Config>
     [DefaultValue(false)]
     public bool LogTablesEnabled { get; set; } = false;
 
+    [DisplayName("Log UScriptStruct")]
+    [DefaultValue(false)]
+    public bool LogScriptStructEnabled { get; set; } = false;
+
     [DisplayName("Log FNames (SLOW)")]
     [Description("Logs FNames.\nThis has a significant performance hit and names should be searched in the log file, not the console.")]
     [DefaultValue(false)]

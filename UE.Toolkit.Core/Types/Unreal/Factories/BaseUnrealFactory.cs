@@ -1,10 +1,13 @@
-using System.Runtime.InteropServices;
+using UE.Toolkit.Core.Types.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 
 namespace UE.Toolkit.Core.Types.Unreal.Factories;
 
 public abstract class BaseUnrealFactory : IUnrealFactory
 {
+    
+    public IUnrealMemoryInternal? Memory { get; set; }
+    
     public T Cast<T>(IPtr obj)
     {
         var typeName = typeof(T).Name;
@@ -20,6 +23,7 @@ public abstract class BaseUnrealFactory : IUnrealFactory
                 return (T)CreateUEnum(obj.Ptr);
             case nameof(IUUserDefinedEnum):
                 return (T)CreateUUserDefinedEnum(obj.Ptr);
+            
             case nameof(IFByteProperty):
                 return (T)CreateFByteProperty(obj.Ptr);
             case nameof(IFBoolProperty):
@@ -44,6 +48,7 @@ public abstract class BaseUnrealFactory : IUnrealFactory
                 return (T)CreateFSetProperty(obj.Ptr);
             case nameof(IFOptionalProperty):
                 return (T)CreateFOptionalProperty(obj.Ptr);
+            
             default:
                 throw new NotSupportedException(typeName);
         }
@@ -63,7 +68,9 @@ public abstract class BaseUnrealFactory : IUnrealFactory
     public abstract IFArrayProperty CreateFArrayProperty(nint ptr);
     public abstract IFSetProperty CreateFSetProperty(nint ptr);
     public abstract IFOptionalProperty CreateFOptionalProperty(nint ptr);
+    
     public abstract IUObjectArray CreateUObjectArray(nint ptr);
+    
     public abstract IUObject CreateUObject(nint ptr);
     public abstract IUClass CreateUClass(nint ptr);
     public abstract IUScriptStruct CreateUScriptStruct(nint ptr);
@@ -71,9 +78,13 @@ public abstract class BaseUnrealFactory : IUnrealFactory
     public abstract IUField CreateUField(nint ptr);
     public abstract IUStruct CreateUStruct(nint ptr);
     public abstract IUUserDefinedEnum CreateUUserDefinedEnum(nint ptr);
+    // public abstract IUPackage CreateUPackage(nint ptr);
+    public abstract IUFunction CreateUFunction(nint ptr);
+    
     public abstract IFFieldClass CreateFFieldClass(nint ptr);
     public abstract IFField CreateFField(nint ptr);
-    // public abstract IUPackage CreateUPackage(nint ptr);
+    
     public abstract IFStructParams CreateFStructParams(nint ptr);
     public abstract IFPropertyParams CreateFPropertyParams(nint ptr);
+    public abstract IFGenericPropertyParams CreateFGenericPropertyParams(nint ptr);
 }

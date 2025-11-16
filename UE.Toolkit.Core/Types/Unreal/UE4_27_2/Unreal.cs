@@ -39,6 +39,8 @@ public unsafe struct UClass
     [FieldOffset(0xe8)] public FName class_conf_name;
     [FieldOffset(0x100)] public TArray<UField> net_fields;
     [FieldOffset(0x118)] public UObjectBase* class_default_obj; // Default object of type described in UClass instance
+    [FieldOffset(0x120)] public nint sparse_class_data;
+    [FieldOffset(0x128)] public UScriptStruct* sparse_class_data_struct;
     [FieldOffset(0x130)] public TMap func_map;
     [FieldOffset(0x180)] public TMap super_func_map;
     [FieldOffset(0x1d8)] public TArray<IntPtr> interfaces;
@@ -156,6 +158,9 @@ public unsafe struct UFunction
     [FieldOffset(0xb0)] public EFunctionFlags func_flags;
     [FieldOffset(0xb4)] public byte num_params;
     [FieldOffset(0xb6)] public ushort params_size;
+    [FieldOffset(0xb8)] public ushort return_value_offset;
+    [FieldOffset(0xba)] public ushort rpc_id;
+    [FieldOffset(0xbc)] public ushort rpc_response_id;
     [FieldOffset(0xc0)] public FProperty* first_prop_to_init;
     [FieldOffset(0xc8)] public UFunction* event_graph_func;
     [FieldOffset(0xd8)] public IntPtr exec_func_ptr;

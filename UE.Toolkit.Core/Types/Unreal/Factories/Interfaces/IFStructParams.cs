@@ -11,7 +11,7 @@ public interface IFStructParams : IPtr
     ulong Size { get; }
     ulong Alignment { get; }
     EObjectFlags ObjectFlags { get; }
-    int StructFlags { get; }
+    EStructFlags StructFlags { get; }
     int PropertyCount { get; }
     IFPropertyParams? GetProperty(int Index);
     IEnumerable<IFPropertyParams> Properties { get; }

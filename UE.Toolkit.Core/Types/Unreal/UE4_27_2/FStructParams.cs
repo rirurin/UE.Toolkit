@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using EObjectFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EObjectFlags;
+using EStructFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EStructFlags;
 
 namespace UE.Toolkit.Core.Types.Unreal.UE4_27_2;
 
@@ -15,7 +16,7 @@ public unsafe struct FStructParams
     public FPropertyParamsBase** Properties;
     public int NumProperties;
     public EObjectFlags ObjectFlags;
-    public int StructFlags;
+    public EStructFlags StructFlags;
 
     public FPropertyParamsBase* GetProperty(int Index)
     {

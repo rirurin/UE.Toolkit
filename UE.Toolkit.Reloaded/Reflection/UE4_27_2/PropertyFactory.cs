@@ -15,25 +15,10 @@ using UObjectBase = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UObjectBase;
 
 namespace UE.Toolkit.Reloaded.Reflection.UE4_27_2;
 
-public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory, IUnrealClasses classes)
-    : BasePropertyFactory(factory, memory, classes)
+public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory, 
+    IUnrealClasses classes, IPropertyFlagsBuilder flags)
+    : BasePropertyFactory(factory, memory, classes, flags)
 {
-
-    protected override EPropertyFlags CreatePropertyFlags(PropertyVisibility Visibility, PropertyBuilderFlags InFlags)
-    {
-        var Flags = EPropertyFlags.CPF_Edit | EPropertyFlags.CPF_BlueprintVisible;
-        if (InFlags.HasFlag(PropertyBuilderFlags.NoCtor)) Flags |= EPropertyFlags.CPF_ZeroConstructor;
-        if (InFlags.HasFlag(PropertyBuilderFlags.Copy)) Flags |= EPropertyFlags.CPF_IsPlainOldData;
-        if (InFlags.HasFlag(PropertyBuilderFlags.NoDtor)) Flags |= EPropertyFlags.CPF_NoDestructor;
-        if (InFlags.HasFlag(PropertyBuilderFlags.Hash)) Flags |= EPropertyFlags.CPF_HasGetValueTypeHash;
-        Flags |= Visibility switch
-        {
-            PropertyVisibility.Public => EPropertyFlags.CPF_NativeAccessSpecifierPublic,
-            PropertyVisibility.Protected => EPropertyFlags.CPF_NativeAccessSpecifierProtected,
-            _ => EPropertyFlags.CPF_NativeAccessSpecifierPrivate,
-        };
-        return Flags;
-    }
 
     protected override unsafe void LinkToPropertyList(IFProperty Property, IUClass Reflect)
     {
@@ -83,7 +68,7 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory, IUnre
         var pProperty = (FProperty*)Property.Ptr;
         pProperty->array_dim = 1;
         pProperty->element_size = Marshal.SizeOf<T>();
-        pProperty->property_flags = CreatePropertyFlags(Visibility, PropertyFlags);
+        pProperty->property_flags = Flags.CreatePropertyFlags(Visibility, PropertyFlags);
         SetPropertyFieldDefaults(pProperty, Offset);       
     }
 
@@ -156,7 +141,7 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory, IUnre
             var pProperty = (FProperty*)Alloc;
             pProperty->array_dim = 1;
             pProperty->element_size = ScriptStruct!.PropertiesSize; // FExampleStruct mExampleField; 
-            pProperty->property_flags = CreatePropertyFlags(Visibility, PropertyBuilderFlags.None);
+            pProperty->property_flags = Flags.CreatePropertyFlags(Visibility, PropertyBuilderFlags.None);
             SetPropertyFieldDefaults(pProperty, Offset);
         }
         LinkToPropertyList(NewProperty, ClassReflection!);
@@ -181,7 +166,7 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory, IUnre
             pProperty->element_size = Marshal.SizeOf<nint>();
             // For ObjectProperty:  UExampleClass* pExampleObject;
             // For ClassProperty:  TSubclassOf<class UExampleClass> pExampleClass;
-            pProperty->property_flags = CreatePropertyFlags(Visibility, PropertyBuilderFlags.None);
+            pProperty->property_flags = Flags.CreatePropertyFlags(Visibility, PropertyBuilderFlags.None);
             SetPropertyFieldDefaults(pProperty, Offset);
         }
         LinkToPropertyList(NewProperty, ClassReflection!);
@@ -212,7 +197,7 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory, IUnre
             var pProperty = (FProperty*)Alloc;
             pProperty->array_dim = 1;
             pProperty->element_size = 0x10; // sizeof(TArray<T>)
-            pProperty->property_flags = CreatePropertyFlags(Visibility, PropertyBuilderFlags.NoCtor);
+            pProperty->property_flags = Flags.CreatePropertyFlags(Visibility, PropertyBuilderFlags.NoCtor);
             SetPropertyFieldDefaults(pProperty, Offset);
         }
         LinkToPropertyList(NewProperty, ClassReflection);

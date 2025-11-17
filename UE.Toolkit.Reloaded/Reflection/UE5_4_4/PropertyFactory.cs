@@ -24,12 +24,21 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory,
         if (((UStruct*)pClass)->PropertyLink == null)
         {
             ((UStruct*)pClass)->PropertyLink = pProperty;
+            ((UStruct*)pClass)->ChildProperties = (FField*)pProperty;
         }
         else
         {
-            var LastProp = Reflect.PropertyLink.Last();
-            var LastFProp = (FProperty*)LastProp.Ptr;
-            LastFProp->PropertyLinkNext = pProperty;
+            var TargetProp = GetPreviousProperty(Property, Reflect);
+            var NextProp = TargetProp.PropertyLinkNext.Any() ? TargetProp.PropertyLinkNext.First() : null;
+            var pTargetProp = (FProperty*)TargetProp.Ptr;
+            pTargetProp->PropertyLinkNext = pProperty;
+            ((FField*)pTargetProp)->Next = (FField*)pProperty;
+            if (NextProp != null)
+            {
+                var pNextProp = (FProperty*)NextProp.Ptr;
+                pProperty->PropertyLinkNext = pNextProp;
+                ((FField*)pProperty)->Next = (FField*)pNextProp;
+            }
         }       
     }
     

@@ -261,7 +261,7 @@ public interface IUnrealClasses : IUnrealClassesInternal
     public bool AddTextProperty<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
     /// <summary>
-    /// Add a Array (TArray<T>) containing elememts of the property defined in Inner to the object's class with the
+    /// Add a Array (TArray) containing elememts of the property defined in Inner to the object's class with the
     /// specified name and offset. This will make the field exposable to blueprints and Object XML.
     /// </summary>
     /// <param name="Name">Name of the new field.</param>

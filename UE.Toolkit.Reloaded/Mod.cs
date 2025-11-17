@@ -68,7 +68,7 @@ public class Mod : ModBase, IExports
         _tables = new();
         _memory = GameConfig.Instance.Memory;
         _typeRegistry = new();
-        _writer = new(_typeRegistry, _objects, _tables);
+        _writer = new(_typeRegistry, _objects, _tables, _memory);
         _toolkit = new(_writer);
         _strings = new();
         _address = new();

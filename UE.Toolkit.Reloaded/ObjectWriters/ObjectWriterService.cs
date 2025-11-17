@@ -8,11 +8,11 @@ using UE.Toolkit.Reloaded.ObjectWriters.Nodes;
 
 namespace UE.Toolkit.Reloaded.ObjectWriters;
 
-public class ObjectWriterService(ITypeRegistry typeReg, IUnrealObjects uobjs, IDataTables dt)
+public class ObjectWriterService(ITypeRegistry typeReg, IUnrealObjects uobjs, IDataTables dt, IUnrealMemory memory)
 {
     private readonly Dictionary<TypeKey, Type> _types = [];
     private readonly List<ObjectWriter> _objWriters = [];
-    private readonly FieldNodeFactory _nodeFactory = new(typeReg, uobjs);
+    private readonly FieldNodeFactory _nodeFactory = new(typeReg, uobjs, memory);
 
     public void AddPath(string path)
     {

@@ -5,9 +5,10 @@ using UE.Toolkit.Interfaces.ObjectWriters;
 
 namespace UE.Toolkit.Reloaded.ObjectWriters.Nodes;
 
-public class FieldNodeFactory(ITypeRegistry typeReg, IObjectCreator objCreator)
+public class FieldNodeFactory(ITypeRegistry typeReg, IObjectCreator objCreator, IUnrealMemoryInternal memory)
 {
     public ITypeRegistry TypeRegistry { get; } = typeReg;
+    public IUnrealMemoryInternal Memory { get; } = memory;
     
     public bool TryCreate(string fieldName, nint fieldPtr, Type fieldType, [NotNullWhen(true)]out IFieldNode? node)
     {

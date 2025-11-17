@@ -37,11 +37,25 @@ public class TArrayFieldNode(string fieldName, nint fieldPtr, Type fieldType, Fi
                 break;
             }
 
-            itemIdx -= 1; // We're doing 1 indexing because normal people can't handle 0...
-            if (itemIdx < 0 || itemIdx > tempArray->ArrayNum)
+            // Reserve -1 as a value for pushing a new value into the TArray. Choose a better method perhaps?
+            if (itemIdx != -1)
             {
-                Log.Warning($"{nameof(TArrayFieldNode)} || ID is either less than 1 or more than item count: {id} || Total: {tempArray->ArrayNum}");
-                break;
+                itemIdx -= 1; // We're doing 1 indexing because normal people can't handle 0...
+                if (itemIdx < 0 || itemIdx > tempArray->ArrayNum)
+                {
+                    Log.Warning($"{nameof(TArrayFieldNode)} || ID is either less than 1 or more than item count: {id} || Total: {tempArray->ArrayNum}");
+                    break;
+                }   
+            } else
+            {
+                Log.Verbose($"{nameof(TArrayFieldNode)} @ 0x{(nint)tempArray:x} || Old Size : {tempArray->ArrayNum} || Old Capacity: {tempArray->ArrayMax}");
+                if (tempArray->ArrayNum == tempArray->ArrayMax)
+                {
+                    TArrayListStatic.ResizeToStatic(tempArray, 
+                        TArrayListStatic.CalculateNewArraySizeStatic(tempArray), itemSize, nodeFactory.Memory);   
+                }
+                itemIdx = tempArray->ArrayNum;
+                tempArray->ArrayNum++;
             }
 
             var itemPtr = itemIdx * itemSize + (nint)tempArray->AllocatorInstance;

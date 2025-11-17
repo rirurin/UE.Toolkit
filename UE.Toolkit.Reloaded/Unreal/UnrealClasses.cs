@@ -410,7 +410,9 @@ public unsafe class UnrealClasses : IUnrealClasses
 
     public bool CreateScriptStruct(string Name, int Size, List<IFPropertyParams> Fields, out IUScriptStruct? Out)
     {
-        TypeFactory.CreateStructParam(Name, Size, Fields, out var Param);
+        Out = null;
+        if (!TypeFactory.CreateStructParam(Name, Size, Fields, out var Param))
+            return false;
         var pScriptStruct = nint.Zero;
         ConstructUScriptStructImpl((nint)(&pScriptStruct), Param.Ptr);
         Out = Factory.CreateUScriptStruct(pScriptStruct);

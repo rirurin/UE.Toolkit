@@ -86,11 +86,10 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
     protected abstract void SetTextPropertyFields<T>(IFProperty Property, int Offset, PropertyVisibility Visibility)
         where T : unmanaged;
 
-    private bool CreatePropertyInner<TOwner, TField, TProperty>(out IFProperty? NewProperty,
+    private bool CreatePropertyInner<TOwner, TProperty>(out IFProperty? NewProperty,
         string Name, int Offset, string PropertyName, PropertyVisibility Visibility,
         Action<IFProperty, int, PropertyVisibility> Callback)
         where TOwner : unmanaged
-        where TField : unmanaged
         where TProperty : unmanaged
     {
         NewProperty = null;
@@ -109,7 +108,7 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
         where TOwner : unmanaged
         where TField : unmanaged
         where TProperty : unmanaged
-        => CreatePropertyInner<TOwner, TField, TProperty>(out NewProperty, Name,
+        => CreatePropertyInner<TOwner, TProperty>(out NewProperty, Name,
             Offset, PropertyName, Visibility, SetCopyPropertyFields<TField>);
     
     protected bool CreateStringPropertyInner<TOwner, TField, TProperty>(out IFProperty? NewProperty,
@@ -117,7 +116,7 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
         where TOwner : unmanaged
         where TField : unmanaged
         where TProperty : unmanaged
-        => CreatePropertyInner<TOwner, TField, TProperty>(out NewProperty, Name,
+        => CreatePropertyInner<TOwner, TProperty>(out NewProperty, Name,
             Offset, PropertyName, Visibility, SetStringPropertyFields<TField>);
     
     protected bool CreateTextPropertyInner<TOwner, TField, TProperty>(out IFProperty? NewProperty,
@@ -125,7 +124,7 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
         where TOwner : unmanaged
         where TField : unmanaged
         where TProperty : unmanaged
-        => CreatePropertyInner<TOwner, TField, TProperty>(out NewProperty, Name,
+        => CreatePropertyInner<TOwner, TProperty>(out NewProperty, Name,
             Offset, PropertyName, Visibility, SetTextPropertyFields<TField>);
 
     protected abstract void SetBoolPropertyFields(IFBoolProperty Property, BooleanMask Mask);
@@ -140,6 +139,26 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
         NewProperty = Factory.CreateFBoolProperty(BaseProperty!.Ptr);
         SetBoolPropertyFields(NewProperty, Mask);
         return true;
+    }
+
+    protected IFProperty GetPreviousProperty(IFProperty Property, IUClass Reflect)
+    {
+        IFProperty? TargetProp = null;
+        foreach (var Prop in Reflect.PropertyLink)
+        {
+            if (!Prop.PropertyLinkNext.Any())
+            {
+                // We're the last element in the chain
+                TargetProp = Prop;
+            }
+            else if (Prop.PropertyLinkNext.First().Offset_Internal > Property.Offset_Internal)
+            {
+                // The next element will have a larger offset than our new field, so insert before them
+                TargetProp = Prop;
+                break;
+            }
+        }
+        return TargetProp!;
     }
     
     #endregion

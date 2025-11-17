@@ -242,7 +242,7 @@ public unsafe class Dumper
 
     private static void AddHeader(StringBuilder sb)
     {
-        sb.AppendLine("/* Generated with UE Toolkit: Dumper (1.4.5)     */");
+        sb.AppendLine("/* Generated with UE Toolkit: Dumper (1.6.0)     */");
         sb.AppendLine("/* GitHub: https://github.com/RyoTune/UE.Toolkit */");
         sb.AppendLine("/* Author: RyoTune                               */");
         sb.AppendLine("/* Special thanks to UE4SS team and Rirurin      */");
@@ -277,6 +277,7 @@ public unsafe class Dumper
         // TODO: Flag stuff?
 
         var super = uclass.GetSuperClass();
+        var superSize = super?.PropertiesSize ?? 0;
         var superName = super?.NamePrivate.ToString();
         //var superNativeName = super != null ? GetNativeClassName(super) : "UObjectBaseUtility";
         
@@ -284,7 +285,7 @@ public unsafe class Dumper
         
         // TODO: Generate delegates.
 
-        var properties = ResolveProperties(uclass.PropertyLink);
+        var properties = ResolveProperties(uclass.PropertyLink, superSize);
 
         // TODO: Generate functions.
 
@@ -301,10 +302,11 @@ public unsafe class Dumper
         var size = scriptStruct.PropertiesSize;
         var alignment = scriptStruct.MinAlignment;
         var super = scriptStruct.SuperStruct;
+        var superSize = super?.PropertiesSize ?? 0;
         var superName = super?.NamePrivate.ToString();
         //var superNativeName = super != null ? GetNativeStructName((UScriptStruct*)super) : null;
         
-        var props = ResolveProperties(scriptStruct.PropertyLink);
+        var props = ResolveProperties(scriptStruct.PropertyLink, superSize);
 
         _UStructDefinitions[structName] = new(structName, structNativeName, size, alignment, props, superName);
         Log.Debug($"UScriptStruct: {structNativeName}");
@@ -372,11 +374,16 @@ public unsafe class Dumper
         _UEnumDefinitions[name] = new(name, underlyingType, entries);
     }
 
-    private PropertyDefinition[] ResolveProperties(IEnumerable<IFProperty> propLink)
+    private PropertyDefinition[] ResolveProperties(IEnumerable<IFProperty> propLink, int SuperStructEnd)
     {
         var props = new List<PropertyDefinition>();
         foreach (var prop in propLink)
         {
+            // Stop when we find a property with an offset lower than the size of the super struct.
+            // PropertyLink contains a list of fields declared by object in ascending order, then from it's super
+            // object and so on.
+            if (prop.Offset_Internal < SuperStructEnd)
+                break;
             var newProp = ResolveProperty(prop);
             var numSameName = props.Count(x => x.Name.StartsWith(newProp.Name)); // Compare against sanitized name, since that's what props are using.
             

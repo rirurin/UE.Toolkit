@@ -32,13 +32,21 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory,
         if (((UStruct*)pClass)->prop_link == null)
         {
             ((UStruct*)pClass)->prop_link = pProperty;
+            ((UStruct*)pClass)->child_properties = (FField*)pProperty;
         }
         else
         {
-            var LastProp = Reflect.PropertyLink.Last();
-            var LastFProp = (FProperty*)LastProp.Ptr;
-            LastFProp->prop_link_next = pProperty;
-            ((FField*)LastFProp)->next = (FField*)pProperty;
+            var TargetProp = GetPreviousProperty(Property, Reflect);
+            var NextProp = TargetProp.PropertyLinkNext.Any() ? TargetProp.PropertyLinkNext.First() : null;
+            var pTargetProp = (FProperty*)TargetProp.Ptr;
+            pTargetProp->prop_link_next = pProperty;
+            ((FField*)pTargetProp)->next = (FField*)pProperty;
+            if (NextProp != null)
+            {
+                var pNextProp = (FProperty*)NextProp.Ptr;
+                pProperty->prop_link_next = pNextProp;
+                ((FField*)pProperty)->next = (FField*)pNextProp;
+            }
         }       
     }
 

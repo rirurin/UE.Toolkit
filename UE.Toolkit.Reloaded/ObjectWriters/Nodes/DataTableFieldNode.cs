@@ -1,5 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 using System.Xml;
+using UE.Toolkit.Core.Types;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Interfaces;
 
@@ -11,9 +13,11 @@ public class DataTableFieldNode(string fieldName, nint fieldPtr, Type fieldType,
     {
         // DataTable item type.
         if (!TryGetRowType(reader, out var itemType)) return;
+        var itemSize = Marshal.SizeOf(itemType);
         
         // DataTable map type is always FName + Pointer, can just use UObject.
-        var tempTable = new ToolkitDataTable<UObjectBase>((UDataTable<UObjectBase>*)fieldPtr); 
+        // var tempTable = new ToolkitDataTable<UObjectBase>((UDataTable<UObjectBase>*)fieldPtr); 
+        var tempTable = new UDataTableManaged<UObjectBase>((UDataTable<UObjectBase>*)fieldPtr, nodeFactory.Memory);
         
         // Get any item nodes.
         using var subReader = reader.ReadSubtree();
@@ -30,8 +34,8 @@ public class DataTableFieldNode(string fieldName, nint fieldPtr, Type fieldType,
                 Log.Error($"{nameof(DataTableFieldNode)} || '{WriterConstants.ItemTag}' in field '{fieldName}' is missing an ID.");
                 break;
             }
-
-            if (tempTable.TryGetValue(id, out var row))
+            
+            if (tempTable.TryGetValue(new(id), out var row))
             {
                 var rowValuePtr = (nint)row.Value;
                 if (nodeFactory.TryCreate($"{fieldName} (ID: {id})", rowValuePtr, itemType, out var itemNode))
@@ -44,8 +48,9 @@ public class DataTableFieldNode(string fieldName, nint fieldPtr, Type fieldType,
             }
             else
             {
-                
-                Log.Error($"{nameof(DataTableFieldNode)} || Failed to find row with ID '{id}' in '{fieldName}'.");;
+                tempTable.Add(new (id), new Ptr<UObjectBase>((UObjectBase*)nodeFactory.Memory.MallocZeroed(itemSize)));
+                Log.Debug($"{nameof(DataTableFieldNode)} || Added row with ID '{id}' into '{fieldName}'.");
+                // Log.Error($"{nameof(DataTableFieldNode)} || Failed to find row with ID '{id}' in '{fieldName}'.");
                 break;
             }
         }

@@ -30,6 +30,10 @@ public unsafe class PrimitiveFieldWriter(string fieldName, nint fieldPtr, Type f
                 SetField(intValue);
             }
         }
+        else if (bool.TryParse(value, out var boolValue))
+        {
+            SetField(boolValue);
+        }
         else if (double.TryParse(value, out var numValue))
         {
             SetField(numValue);

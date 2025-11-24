@@ -44,6 +44,7 @@ public class Mod : ModBase, IExports
     private readonly UnrealClasses _classes;
     private readonly Common.ResolveAddress _address;
     private readonly UnrealMethods _methods;
+    private readonly UnrealState _state;
 
     public Mod(ModContext context)
     {
@@ -74,6 +75,7 @@ public class Mod : ModBase, IExports
         _address = new();
         _classes = new(_factory, _memory, _hooks, _address);
         _methods = new(_factory, _memory, _classes, _objects, _hooks);
+        _state = new(_factory);
         
         _modLoader.AddOrReplaceController(_owner, _memory);
         _modLoader.AddOrReplaceController<IDataTables>(_owner, _tables);
@@ -85,6 +87,7 @@ public class Mod : ModBase, IExports
         _modLoader.AddOrReplaceController<IUnrealClasses>(_owner, _classes);
         _modLoader.AddOrReplaceController(_owner, _factory);
         _modLoader.AddOrReplaceController<IUnrealMethods>(_owner, _methods);
+        _modLoader.AddOrReplaceController<IUnrealState>(_owner, _state);
         
         _modLoader.ModLoaded += OnModLoaded;
     }
@@ -123,7 +126,8 @@ public class Mod : ModBase, IExports
 
     public Type[] GetTypes() =>
     [
-        typeof(IDataTables), typeof(IUnrealObjects), typeof(IToolkit),typeof(ITypeRegistry), typeof(UObjectBase),
+        typeof(IDataTables), typeof(IUnrealObjects), typeof(IToolkit), typeof(ITypeRegistry), typeof(UObjectBase),
         typeof(IUnrealFactory), typeof(IUnrealNames), typeof(IUnrealMemory), typeof(IUnrealStrings),
+        typeof(IUnrealClasses), typeof(IUnrealMethods), typeof(IUnrealState)
     ];
 }

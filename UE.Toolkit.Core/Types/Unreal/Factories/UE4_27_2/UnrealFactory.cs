@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using UE.Toolkit.Core.Common;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
+using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using EFunctionFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EFunctionFlags;
 using EPropertyFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EPropertyFlags;
 using EPropertyGenFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EPropertyGenFlags;
@@ -29,7 +30,9 @@ using FPropertyParamsBase = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FPropertyParam
 using FSetProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FSetProperty;
 using FStructParams = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FStructParams;
 using FStructProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FStructProperty;
+using FWorldContext = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FWorldContext;
 using UClass = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UClass;
+using UEngine = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UEngine;
 using UEnum = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UEnum;
 using UField = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UField;
 using UFunction = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UFunction;
@@ -127,6 +130,9 @@ public class UnrealFactory : BaseUnrealFactory
     public override IFPropertyParams CreateFPropertyParams(nint ptr) => new FPropertyParamsUE4_27_2(ptr, this);
     
     public override IFGenericPropertyParams CreateFGenericPropertyParams(nint ptr) => new FGenericPropertyParamsUE4_27_2(ptr, this);
+    
+    public override IFWorldContext CreateFWorldContext(nint ptr) => new FWorldContextUE4_27_2(ptr, this);
+    public override IUEngine CreateUEngine(nint ptr) => new UEngineUE4_27_2(ptr, this);
 }
 
 public unsafe class FSetPropertyUE4_27_2(nint ptr, IUnrealFactory factory)
@@ -601,4 +607,51 @@ public unsafe class FGenericPropertyParamsUE4_27_2(nint ptr, IUnrealFactory fact
 
     public int ArrayDim => _self->Super.ArrayDim;
     public int Offset => _self->Super.Offset;
+}
+
+public unsafe class FWorldContextUE4_27_2(nint ptr, IUnrealFactory factory) : IFWorldContext
+{
+    protected readonly IUnrealFactory _factory = factory;
+    private readonly FWorldContext* _self = (FWorldContext*)ptr;
+    public nint Ptr => (nint)_self;
+    public WorldType GetWorldType() => _self->WorldType;
+    public nint GetWorld() => (nint)_self->ThisCurrentWorld;
+}
+
+public unsafe class FWorldContextEnumerator(UEngineUE4_27_2 owner, IUnrealFactory factory) 
+    : IEnumerator<IFWorldContext>, IEnumerable<IFWorldContext>
+{
+    private int CurrentIndex = -1;
+    
+    #region impl IEnumerator 
+    
+    public bool MoveNext() => ++CurrentIndex < owner.GetWorldListInner()->ArrayNum;
+
+    public void Reset() => CurrentIndex = -1;
+
+    public IFWorldContext Current => factory.CreateFWorldContext((nint)owner.GetWorldListInner()->AllocatorInstance[CurrentIndex].Value);
+
+    object? IEnumerator.Current => Current;
+
+    public void Dispose() {}
+    
+    #endregion
+    
+    #region impl IEnumerable
+    
+    public IEnumerator<IFWorldContext> GetEnumerator() => this;
+    
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    
+    #endregion
+}
+
+public unsafe class UEngineUE4_27_2(nint ptr, IUnrealFactory factory) 
+    : UObjectUE4_27_2(ptr, factory), IUEngine
+{
+    private readonly UEngine* _self = (UEngine*)ptr;
+
+    internal TArray<Ptr<FWorldContext>>* GetWorldListInner() => &_self->WorldList;
+    
+    public IEnumerable<IFWorldContext> GetWorldList() => new FWorldContextEnumerator(this, factory);
 }

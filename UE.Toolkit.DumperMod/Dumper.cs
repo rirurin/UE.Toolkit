@@ -112,6 +112,15 @@ public unsafe class Dumper
         {
             sb = new();
             AddHeader(sb);
+            AddPtrDefinition(sb);
+        }
+        else
+        {
+            var outputFile = Path.Join(_dumpDir, "Builtin_Ptr.cs");
+            var sbPtr = new StringBuilder();
+            AddHeader(sbPtr);
+            AddPtrDefinition(sbPtr);
+            File.WriteAllText(outputFile, sbPtr.ToString());
         }
 
         var numDumped = 0;
@@ -265,6 +274,20 @@ public unsafe class Dumper
             sb.AppendLine($"namespace {Mod.Config.FileNamespace.TrimEnd(';').Replace("namespace ", string.Empty)};");
             sb.AppendLine();
         }
+    }
+
+    private static void AddPtrDefinition(StringBuilder sb)
+    {
+        sb.AppendLine("public readonly unsafe struct Ptr<T>(T* value) : IEquatable<Ptr<T>>");
+        sb.AppendLine("    where T : unmanaged");
+        sb.AppendLine("{");
+        sb.AppendLine("    public readonly T* Value = value;");
+        sb.AppendLine();
+        sb.AppendLine("    public bool Equals(Ptr<T> other) => Value == other.Value;");
+        sb.AppendLine("    public static bool operator ==(Ptr<T> a, Ptr<T> b) => a.Equals(b);");
+        sb.AppendLine("    public static bool operator !=(Ptr<T> a, Ptr<T> b) => !a.Equals(b);");
+        sb.AppendLine("}");
+        sb.AppendLine();
     }
 
     private void GenerateObjectDefinition(IUClass uclass)
@@ -499,15 +522,13 @@ public unsafe class Dumper
                     
                     _UStructDefinitions.TryGetValue(mapPropKeyType.TrimEnd('*'), out var knownKeyStruct);
                     _UStructDefinitions.TryGetValue(mapPropValueType.TrimEnd('*'), out var knownValueStruct);
-                    
-                    var keyType = isKeyPtr ? "nint" : SanitizeName(knownKeyStruct?.DisplayName ?? mapPropKeyType);
-                    var valueType = isValuePtr ? "nint" : SanitizeName(knownValueStruct?.DisplayName ?? mapPropValueType);
 
-                    if (isKeyPtr || isValuePtr)
-                    {
-                        return $"TMap<{keyType}, {valueType}> /* TMap<{mapPropKeyType}, {mapPropValueType}> */";
-                    }
+                    var keyName = SanitizeName(knownKeyStruct?.DisplayName ?? mapPropKeyType);
+                    var valueName = SanitizeName(knownValueStruct?.DisplayName ?? mapPropValueType);
                     
+                    var keyType = isKeyPtr ? $"Ptr<{keyName}>" : keyName;
+                    var valueType = isValuePtr ? $"Ptr<{valueName}>" : valueName;
+                   
                     return $"TMap<{keyType}, {valueType}>";
                 };
             case "InterfaceProperty":
@@ -519,9 +540,10 @@ public unsafe class Dumper
                 {
                     var isPtrType = arrayPropType.EndsWith('*') || arrayPropType.Contains('<'); // Use nint for pointers and generic types.
                     _UStructDefinitions.TryGetValue(arrayPropType.TrimEnd('*'), out var knownStruct);
+                    var arrTypeSanitized = SanitizeName(knownStruct?.DisplayName ?? arrayPropType);
                     return isPtrType ?
-                        $"TArray<nint> /* TArray<{knownStruct?.DisplayName ?? arrayPropType}> */" :
-                        $"TArray<{SanitizeName(knownStruct?.DisplayName ?? arrayPropType)}>";
+                        $"TArray<Ptr<{arrTypeSanitized}>>" :
+                        $"TArray<{arrTypeSanitized}>";
                 };
             case "SetProperty":
                 var setPropType = GetPropertyTypeName(_factory.Cast<IFSetProperty>(prop).ElementProp);

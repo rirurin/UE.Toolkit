@@ -50,7 +50,6 @@ public class DataTableFieldNode(string fieldName, nint fieldPtr, Type fieldType,
             {
                 tempTable.Add(new (id), new Ptr<UObjectBase>((UObjectBase*)nodeFactory.Memory.MallocZeroed(itemSize)));
                 Log.Debug($"{nameof(DataTableFieldNode)} || Added row with ID '{id}' into '{fieldName}'.");
-                // Log.Error($"{nameof(DataTableFieldNode)} || Failed to find row with ID '{id}' in '{fieldName}'.");
                 break;
             }
         }

@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 using UE.Toolkit.Core.Types.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Interfaces.ObjectWriters;
@@ -18,6 +19,9 @@ public class FieldNodeFactory(ITypeRegistry typeReg, IObjectCreator objCreator, 
 
     private IFieldNode? Create(string fieldName, nint fieldPtr, Type fieldType)
     {
+        
+        Log.Debug($"{nameof(FieldNodeFactory)} || Create Node '{fieldName}' with type '{fieldType.Name}'.");
+        
         if (fieldType.IsPrimitive
             || fieldType.IsEnum
             || fieldType == typeof(string)
@@ -36,6 +40,21 @@ public class FieldNodeFactory(ITypeRegistry typeReg, IObjectCreator objCreator, 
         if (fieldType.Name.StartsWith("UDataTable"))
         {
             return new DataTableFieldNode(fieldName, fieldPtr, fieldType, this);
+        } 
+        
+        if (fieldType.Name.StartsWith("TMap"))
+        {
+            var keyType = fieldType.GetGenericArguments()[0];
+            if (keyType == typeof(int))
+            {
+                return new TMapIntFieldNode(fieldName, fieldPtr, fieldType, this);
+            }
+            Log.Warning($"{nameof(FieldNodeFactory)} || TODO: Field '{fieldName}' with type '{fieldType.Name}'.");
+            foreach (var Generic in fieldType.GenericTypeArguments)
+            {
+                Log.Warning($"{nameof(FieldNodeFactory)} || TMap Argument: {Generic.Name}");
+            }
+            return null;
         }
 
         if (fieldType.IsValueType)

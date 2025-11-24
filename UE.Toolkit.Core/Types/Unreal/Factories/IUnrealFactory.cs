@@ -43,4 +43,7 @@ public interface IUnrealFactory
     IFStructParams CreateFStructParams(nint ptr);
     IFPropertyParams CreateFPropertyParams(nint ptr);
     IFGenericPropertyParams CreateFGenericPropertyParams(nint ptr);
+
+    IFWorldContext CreateFWorldContext(nint ptr);
+    IUEngine CreateUEngine(nint ptr);
 }

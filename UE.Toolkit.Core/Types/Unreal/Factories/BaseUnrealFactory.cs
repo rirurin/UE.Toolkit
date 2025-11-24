@@ -87,4 +87,7 @@ public abstract class BaseUnrealFactory : IUnrealFactory
     public abstract IFStructParams CreateFStructParams(nint ptr);
     public abstract IFPropertyParams CreateFPropertyParams(nint ptr);
     public abstract IFGenericPropertyParams CreateFGenericPropertyParams(nint ptr);
+    
+    public abstract IFWorldContext CreateFWorldContext(nint ptr);
+    public abstract IUEngine CreateUEngine(nint ptr);
 }

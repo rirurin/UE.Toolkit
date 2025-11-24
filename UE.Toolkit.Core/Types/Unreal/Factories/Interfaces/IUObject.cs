@@ -27,4 +27,6 @@ public interface IUObject : IPtr
     IUObject GetOutermost();
 
     string GetNativeName();
+
+    // IUObject GetWorld();
 }

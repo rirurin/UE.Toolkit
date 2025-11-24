@@ -10,3 +10,4 @@ riderModule.iml
 
 # Jetbrains IDE
 .idea/*
+global.json

@@ -65,9 +65,11 @@ public class UnrealFactory : BaseUnrealFactory
     public override IUFunction CreateUFunction(nint ptr) => new UFunction_UE5_4_4(ptr, this);
     public override IFFieldClass CreateFFieldClass(nint ptr) => new FFieldClass_UE5_4_4(ptr, this);
     public override IFField CreateFField(nint ptr) => new FField_UE5_4_4(ptr, this);
-    public override IFStructParams CreateFStructParams(nint ptr) => new FStructParamsUE5_4_4(ptr, this);
-    public override IFPropertyParams CreateFPropertyParams(nint ptr) => new FPropertyParamsUE5_4_4(ptr, this);
-    public override IFGenericPropertyParams CreateFGenericPropertyParams(nint ptr) => new FGenericPropertyParamsUE5_4_4(ptr, this);
+    public override IFStructParams CreateFStructParams(nint ptr) => new FStructParams_UE5_4_4(ptr, this);
+    public override IFPropertyParams CreateFPropertyParams(nint ptr) => new FPropertyParams_UE5_4_4(ptr, this);
+    public override IFGenericPropertyParams CreateFGenericPropertyParams(nint ptr) => new FGenericPropertyParams_UE5_4_4(ptr, this);
+    public override IFWorldContext CreateFWorldContext(nint ptr) => new FWorldContext_UE5_4_4(ptr, this);
+    public override IUEngine CreateUEngine(nint ptr) => new UEngine_UE5_4_4(ptr, this);
 }
 
 public unsafe class FOptionalProperty_UE5_4_4(nint ptr, IUnrealFactory factory)
@@ -529,7 +531,7 @@ public class FPropertyParamEnumerator(IFStructParams owner)
     #endregion
 }
 
-public unsafe class FStructParamsUE5_4_4(nint ptr, IUnrealFactory factory) : IFStructParams
+public unsafe class FStructParams_UE5_4_4(nint ptr, IUnrealFactory factory) : IFStructParams
 {
     private readonly FStructParams* _self = (FStructParams*)ptr;
     protected readonly IUnrealFactory _factory = factory;
@@ -554,7 +556,7 @@ public unsafe class FStructParamsUE5_4_4(nint ptr, IUnrealFactory factory) : IFS
     public IEnumerable<IFPropertyParams> Properties => new FPropertyParamEnumerator(this);
 }
 
-public unsafe class FPropertyParamsUE5_4_4(nint ptr, IUnrealFactory factory) : IFPropertyParams
+public unsafe class FPropertyParams_UE5_4_4(nint ptr, IUnrealFactory factory) : IFPropertyParams
 {
     private readonly FPropertyParamsBase* _self = (FPropertyParamsBase*)ptr;
     protected readonly IUnrealFactory _factory = factory;   
@@ -566,11 +568,58 @@ public unsafe class FPropertyParamsUE5_4_4(nint ptr, IUnrealFactory factory) : I
     public EObjectFlags ObjectFlags => _self->ObjectFlags;
 }
 
-public unsafe class FGenericPropertyParamsUE5_4_4(nint ptr, IUnrealFactory factory) 
-    : FPropertyParamsUE5_4_4(ptr, factory), IFGenericPropertyParams
+public unsafe class FGenericPropertyParams_UE5_4_4(nint ptr, IUnrealFactory factory) 
+    : FPropertyParams_UE5_4_4(ptr, factory), IFGenericPropertyParams
 {
     private readonly FGenericPropertyParams* _self = (FGenericPropertyParams*)ptr;
 
     public int ArrayDim => _self->Super.ArrayDim;
     public int Offset => _self->Super.Offset;
+}
+
+public unsafe class FWorldContext_UE5_4_4(nint ptr, IUnrealFactory factory) : IFWorldContext
+{
+    protected readonly IUnrealFactory _factory = factory;
+    private readonly FWorldContext* _self = (FWorldContext*)ptr;
+    public nint Ptr => (nint)_self;
+    public WorldType GetWorldType() => _self->WorldType;
+    public nint GetWorld() => (nint)_self->ThisCurrentWorld;
+}
+
+public unsafe class FWorldContextEnumerator(UEngine_UE5_4_4 owner, IUnrealFactory factory) 
+    : IEnumerator<IFWorldContext>, IEnumerable<IFWorldContext>
+{
+    private int CurrentIndex = -1;
+    
+    #region impl IEnumerator 
+    
+    public bool MoveNext() => ++CurrentIndex < owner.GetWorldListInner()->ArrayNum;
+
+    public void Reset() => CurrentIndex = -1;
+
+    public IFWorldContext Current => factory.CreateFWorldContext((nint)owner.GetWorldListInner()->AllocatorInstance[CurrentIndex].Value);
+
+    object? IEnumerator.Current => Current;
+
+    public void Dispose() {}
+    
+    #endregion
+    
+    #region impl IEnumerable
+    
+    public IEnumerator<IFWorldContext> GetEnumerator() => this;
+    
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    
+    #endregion
+}
+
+public unsafe class UEngine_UE5_4_4(nint ptr, IUnrealFactory factory) 
+    : UObject_UE5_4_4(ptr, factory), IUEngine
+{
+    private readonly UEngine* _self = (UEngine*)ptr;
+
+    internal TArray<Ptr<FWorldContext>>* GetWorldListInner() => &_self->WorldList;
+    
+    public IEnumerable<IFWorldContext> GetWorldList() => new FWorldContextEnumerator(this, factory);
 }

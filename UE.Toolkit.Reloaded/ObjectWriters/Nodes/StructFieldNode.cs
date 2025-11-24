@@ -3,15 +3,35 @@ using System.Xml;
 
 namespace UE.Toolkit.Reloaded.ObjectWriters.Nodes;
 
+internal record FieldData(Type type, nint offset);
+
 public class StructFieldNode : IFieldNode
 {
-    private static readonly Dictionary<string, Dictionary<string, Type>> CachedStructsFields = [];
+    private static readonly Dictionary<string, Dictionary<string, FieldData>> CachedStructsFields = [];
     
-    private readonly Dictionary<string, Type> _fields;
+    private readonly Dictionary<string, FieldData> _fields;
     private readonly string _structName;
     private readonly nint _structPtr;
     private readonly Type _structType;
     private readonly FieldNodeFactory _nodeFactory;
+
+    private static Dictionary<string, FieldData> GetFieldsFromStruct(Type structType)
+    {
+        var FieldList = new Dictionary<string, FieldData>();
+        foreach (var Field in structType.GetFields().SelectMany((x, i) =>
+                 {
+                     if (i == 0 && x.Name == "Super") return GetFieldsFromStruct(x.FieldType).AsEnumerable();
+                     return Enumerable.Repeat<KeyValuePair<string, FieldData>>(new(
+                         x.Name, new(x.FieldType, Marshal.OffsetOf(structType, x.Name))), 1);
+                 }))
+        {
+            // ToDictionary() implementation will crash if there are duplicate field names
+            // While this shouldn't be the case with new struct dumps, make sure that the old 
+            // format still works
+            FieldList.TryAdd(Field.Key, Field.Value);
+        }
+        return FieldList;
+    }
 
     public StructFieldNode(string structName, nint structPtr, Type structType, FieldNodeFactory nodeFactory)
     {
@@ -27,7 +47,7 @@ public class StructFieldNode : IFieldNode
         }
         else
         {
-            _fields = structType.GetFields().ToDictionary(x => x.Name, x => x.FieldType);
+            _fields = GetFieldsFromStruct(structType);
             CachedStructsFields[structType.Name] = _fields;
         }
     }
@@ -43,9 +63,11 @@ public class StructFieldNode : IFieldNode
             anyElementFound = true;
             
             var fieldName = reader.Name;
-            if (_fields.TryGetValue(fieldName, out var fieldType))
+            if (_fields.TryGetValue(fieldName, out var fieldData))
             {
-                var fieldPtr = _structPtr + Marshal.OffsetOf(_structType, fieldName);
+                var fieldType = fieldData.type;
+                // var fieldPtr = _structPtr + Marshal.OffsetOf(_structType, fieldName);
+                var fieldPtr = _structPtr + fieldData.offset;
                 if (_nodeFactory.TryCreate(fieldName, fieldPtr, fieldType, out var fieldNode))
                 {
                     fieldNode.ConsumeNode(reader);

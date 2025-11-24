@@ -163,16 +163,19 @@ public class TMapElementAccessor<TElemKey, TElemValue> : IEnumerable<Ptr<TElemVa
         get => Elements;
         set => Elements = value;
     }
+    
     internal unsafe TMapElementHashable<TElemKey, TElemValue>* Allocation
     {
         get => Elements->AllocatorInstance;
         set => Elements->AllocatorInstance = value;
     }
+    
     internal unsafe int Size
     {
         get => Elements->ArrayNum;
         set => Elements->ArrayNum = value;
     }
+    
     internal unsafe int Capacity
     {
         get => Elements->ArrayMax;
@@ -184,6 +187,7 @@ public class TMapElementAccessor<TElemKey, TElemValue> : IEnumerable<Ptr<TElemVa
         get => &Allocation[Index].Value;
         set => Allocation[Index].Value = *value;
     }
+    
     internal unsafe TElemKey GetKey(int Index) => Allocation[Index].Key;
     internal unsafe TElemKey SetKey(int Index, TElemKey Key) => Allocation[Index].Key = Key;
     internal unsafe int GetNextHashId(int Index) => Allocation[Index].HashNextId;
@@ -335,35 +339,25 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
         get => (TArray<TMapElementHashable<TElemKey, TElemValue>>*)Self;
     }
 
-    private byte* BitAllocatorRaw
-    {
-        get => (byte*)(Self + MapConstants.SIZE_OF_ARRAY);
-    }
+    private byte* BitAllocatorRaw => (byte*)(Self + MapConstants.SIZE_OF_ARRAY);
 
-    private int* FirstFreeIndexPtr
-    {
-        get => (int*)(Self + MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR);
-    }
+    private int* FirstFreeIndexPtr => (int*)(Self + MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR);
+    
     private int FirstFreeIndex
     {
         get => *FirstFreeIndexPtr;
         set => *FirstFreeIndexPtr = value;
     }
 
-    private int* NumFreeIndicesPtr
-    {
-        get => (int*)(Self + MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR + sizeof(int));
-    }
+    private int* NumFreeIndicesPtr => (int*)(Self + MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR + sizeof(int));
+    
     private int NumFreeIndices
     {
         get => *NumFreeIndicesPtr;
         set => *NumFreeIndicesPtr = value;
     }
 
-    private TMapFreeListIndex* FreeList
-    {
-        get => (TMapFreeListIndex*)(Self + MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR + sizeof(nint));
-    }
+    private TMapFreeListIndex* FreeList => (TMapFreeListIndex*)(Self + MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR + sizeof(nint));
 
     private int** HashesPtr
     {
@@ -375,10 +369,8 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
         set => *HashesPtr = value;
     }
 
-    private int* HashSizePtr
-    {
-        get => (int*)(Self + MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR + MapConstants.SIZE_OF_FREE_LIST + sizeof(nint));
-    }
+    private int* HashSizePtr => (int*)(Self + MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR + MapConstants.SIZE_OF_FREE_LIST + sizeof(nint));
+
     private int HashSize
     {
         get => *HashSizePtr;
@@ -389,10 +381,10 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
     private static int SizeOf => MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR + MapConstants.SIZE_OF_FREE_LIST + sizeof(nint) + sizeof(nint);
 
     /// <summary>
-    /// Wraps a <c>TArrayList</c> around an existing <c>TArray</c> created in C++
+    /// Wraps a <c>TMapDictionary</c> around an existing <c>TMap</c> created in C++
     /// </summary>
-    /// <param name="_Self">Pointer to an existing <c>TArray</c></param>
-    /// <param name="_Allocator">The Unreal allocator, used for methods that modify the <c>TArray</c></param>
+    /// <param name="_Self">Pointer to an existing <c>TMap</c></param>
+    /// <param name="_Allocator">The Unreal allocator, used for methods that modify the <c>TMap</c></param>
     public TMapDictionary(TMap<TElemKey, TElemValue>* _Self, IUnrealMemoryInternal _Allocator, Action<string>? _DebugCallback = null)
     {
         Self = (nint)_Self;
@@ -661,7 +653,7 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
             // Disposed unmanaged resources (for Unreal)
             if (OwnsInstance)
             {
-                if (FreeList!= null)
+                if (FreeList != null)
                 {
                     Allocator.Free((nint)FreeList);
                 }
@@ -699,4 +691,314 @@ public class TMapAccessorEnumerator<TElemKey, TElemValue> : IEnumerator<KeyValue
     public void Dispose() { }
     public unsafe bool MoveNext() => ++Position < Self->ArrayNum;
     public void Reset() => Position = -1;
+}
+
+/// INTERNAL USE
+/// Used in cases where the value type is not known at compile time, such as when processing Object XML.
+/// The only operations supported are ones required to work with Object XML.
+public class TMapDynamicElementAccessor<TElemKey> : IDisposable
+    where TElemKey : unmanaged, IEquatable<TElemKey>, IMapHashable
+{
+    protected unsafe TArray<byte>* Elements;
+    private Type ValueType;
+    protected IUnrealMemoryInternal Allocator;
+    protected bool OwnsInstance = false;
+    private bool Disposed = false;
+    
+    public unsafe TMapDynamicElementAccessor(TArray<byte>* _Self, Type _ValueType, IUnrealMemoryInternal _Allocator, bool _OwnsInstance = false)
+    {
+        Self = _Self;
+        ValueType = _ValueType;
+        Allocator = _Allocator;
+        OwnsInstance = _OwnsInstance;
+    }
+    
+    internal unsafe TArray<byte>* Self
+    {
+        get => Elements;
+        set => Elements = value;
+    }
+    
+    internal unsafe byte* Allocation
+    {
+        get => Elements->AllocatorInstance;
+        set => Elements->AllocatorInstance = value;
+    }
+    
+    internal unsafe int Size
+    {
+        get => Elements->ArrayNum;
+        set => Elements->ArrayNum = value;
+    }
+    
+    internal unsafe int Capacity
+    {
+        get => Elements->ArrayMax;
+        set => Elements->ArrayMax = value;
+    }
+
+    internal int ValueSize => Marshal.SizeOf(ValueType);
+
+    internal unsafe nint this[int Index]
+    {
+        get => (nint)Allocation + (Index * ValueSize);
+    }
+
+    // TMapElement layout:
+    // public KeyType Key;
+    // public ValueType Value;
+    // public int HashNextId;
+    // public int HashIndex;
+    
+    internal unsafe int SizeOf() => sizeof(TElemKey) + ValueSize + 2 * sizeof(int);
+    private int GetKeyOffset(int Index) => Index * SizeOf();
+    private unsafe int GetValueOffset(int Index) => GetKeyOffset(Index) + sizeof(TElemKey);
+    private int GetNextHashIdOffset(int Index) => GetKeyOffset(Index + 1) - 2 * sizeof(int);
+    private int GetHashIndexOffset(int Index) => GetKeyOffset(Index + 1) - sizeof(int);
+    
+    internal unsafe TElemKey GetKey(int Index) => *(TElemKey*)(Allocation + GetKeyOffset(Index));
+    internal unsafe TElemKey SetKey(int Index, TElemKey Key) => *(TElemKey*)(Allocation + GetKeyOffset(Index)) = Key;
+    internal unsafe int GetNextHashId(int Index) => *(int*)(Allocation + GetNextHashIdOffset(Index));
+    internal unsafe int SetNextHashId(int Index, int Value) => *(int*)(Allocation + GetNextHashIdOffset(Index)) = Value;
+    internal unsafe int GetHashIndex(int Index) => *(int*)(Allocation + GetHashIndexOffset(Index));
+    internal unsafe int SetHashIndex(int Index, int Value) => *(int*)(Allocation + GetHashIndexOffset(Index)) = Value;
+    internal unsafe nint GetAddress(int Index) => (nint)(Allocation + GetValueOffset(Index));
+    
+    #region DISPOSE INTERFACE
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    // Same destructor as TArray
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!Disposed)
+        {
+            if (disposing) { }
+            // Disposed unmanaged resources (for Unreal)
+            if (OwnsInstance)
+            {
+                unsafe
+                {
+                    if (Allocation != null)
+                    {
+                        Allocator.Free((nint)Allocation);
+                    }
+                    Allocator.Free((nint)Elements);
+                }
+            }
+            Disposed = true;
+        }
+    }
+
+    ~TMapDynamicElementAccessor() => Dispose(false);
+
+    #endregion
+}
+
+/// INTERNAL USE
+/// Used in cases where the value type is not known at compile time, such as when processing Object XML.
+/// The only operations supported are ones required to work with Object XML.
+public unsafe class TMapDynamicDictionary<TElemKey> : IDisposable
+    where TElemKey : unmanaged, IEquatable<TElemKey>, IMapHashable
+{
+    public nint Self { get; private set; }
+
+    protected IUnrealMemoryInternal Allocator;
+    protected TMapDynamicElementAccessor<TElemKey> Elements;
+    private Type ValueType;
+    protected TBitArrayList BitAllocator;
+    protected bool OwnsInstance;
+    protected bool Disposed = false;
+    
+    private TArray<byte>* ElementsRaw => (TArray<byte>*)Self;
+    
+    private byte* BitAllocatorRaw => (byte*)(Self + MapConstants.SIZE_OF_ARRAY);
+
+    private int* FirstFreeIndexPtr => (int*)(Self + MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR);
+    
+    private int FirstFreeIndex
+    {
+        get => *FirstFreeIndexPtr;
+        set => *FirstFreeIndexPtr = value;
+    }
+
+    private int* NumFreeIndicesPtr => (int*)(Self + MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR + sizeof(int));
+    
+    private int NumFreeIndices
+    {
+        get => *NumFreeIndicesPtr;
+        set => *NumFreeIndicesPtr = value;
+    }
+
+    private TMapFreeListIndex* FreeList => (TMapFreeListIndex*)(Self + MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR + sizeof(nint));
+
+    private int** HashesPtr
+    {
+        get => (int**)(Self + MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR + MapConstants.SIZE_OF_FREE_LIST);
+    }
+    private int* Hashes
+    {
+        get => *HashesPtr;
+        set => *HashesPtr = value;
+    }
+
+    private int* HashSizePtr => (int*)(Self + MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR + MapConstants.SIZE_OF_FREE_LIST + sizeof(nint));
+
+    private int HashSize
+    {
+        get => *HashSizePtr;
+        set => *HashSizePtr = value;
+    }
+
+    // 0x50
+    private static int SizeOf => MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR + MapConstants.SIZE_OF_FREE_LIST + sizeof(nint) + sizeof(nint);
+    
+    /// <summary>
+    /// Wraps a <c>TMapDictionary</c> around an existing <c>TMap</c> created in C++
+    /// </summary>
+    /// <param name="_Self">Pointer to an existing <c>TMap</c></param>
+    /// <param name="_Allocator">The Unreal allocator, used for methods that modify the <c>TMap</c></param>
+    public TMapDynamicDictionary(TMap<TElemKey, byte>* _Self, Type _ValueType, IUnrealMemoryInternal _Allocator)
+    {
+        Self = (nint)_Self;
+        ValueType = _ValueType;
+        Allocator = _Allocator;
+        Elements = new(ElementsRaw, ValueType, Allocator);
+        OwnsInstance = false;
+        BitAllocator = new(BitAllocatorRaw, Allocator);
+    }
+   
+    // ValueType*
+    private nint TryGetLinear(TElemKey key)
+    {
+        if (Elements.Size == 0) return nint.Zero;
+        for (int i = 0; i < Elements.Size; i++)
+        {
+            if (Elements.GetKey(i).Equals(key))
+            {
+                return Elements.GetAddress(i);
+            }
+        }
+        return nint.Zero;
+    }
+
+    private nint TryGetByHash(TElemKey key)
+    {
+        var value = nint.Zero;
+        // Hash alloc doesn't exist for single element maps,
+        // so fallback to linear search
+        if (Hashes == null) return TryGetLinear(key);
+        var elementTarget = Hashes[key.GetTypeHash() & (HashSize - 1)];
+        while (elementTarget != MapConstants.INVALID_HASH_ID)
+        {
+            if (Elements.GetKey(elementTarget).Equals(key))
+            {
+                value = Elements.GetAddress(elementTarget);
+                break;
+            }
+            elementTarget = Elements.GetNextHashId(elementTarget);
+        }
+        return value;
+    }
+    private int GetBucketListTail(int HashIndex)
+    {
+        int currentIndex = Hashes[HashIndex];
+        while (true)
+        {
+            if (Elements.GetNextHashId(currentIndex) == MapConstants.INVALID_HASH_ID) break;
+            currentIndex = Elements.GetNextHashId(currentIndex);
+        }
+        return currentIndex;
+    }
+    
+    public bool TryGetValue(TElemKey key, out nint pValue)
+    {
+        pValue = new(TryGetByHash(key));
+        return pValue != nint.Zero;
+    }
+    
+    public int Count => Elements.Size;
+
+    /*
+    private void Rehash(int NewSize)
+    {
+        
+        int* NewHashAlloc = (int*)Allocator.Malloc(sizeof(int) * NewSize);
+        NativeMemory.Fill(NewHashAlloc, (nuint)(NewSize * sizeof(int)), 0xff);
+        if (Hashes != null) Allocator.Free((nint)Hashes);
+        Hashes = NewHashAlloc;
+        for (int i = 0; i < Elements.Size; i++)
+        {
+            var newHashIndex = (int)Elements.GetKey(i).GetTypeHash() & (NewSize - 1);
+            Elements.SetHashIndex(i, newHashIndex);
+            if (Hashes[newHashIndex] == MapConstants.INVALID_HASH_ID) Hashes[newHashIndex] = i;
+            else Elements.SetNextHashId(GetBucketListTail(newHashIndex), i);
+            Elements.SetNextHashId(i, MapConstants.INVALID_HASH_ID);
+        }
+        HashSize = NewSize;
+    }
+
+    private void ResizeTo(int NewSize)
+    {
+
+        nint NewElementAlloc = Allocator.Malloc(NewSize * Elements.SizeOf());
+        if (Elements.Allocation != null)
+        {
+            NativeMemory.Copy((byte*)Elements.Allocation, (byte*)NewElementAlloc, (nuint)(Elements.Size * Elements.SizeOf()));
+            Allocator.Free((nint)Elements.Allocation);
+        }
+        Elements.Allocation = (TMapElementHashable<TElemKey, TElemValue>*)NewElementAlloc;
+        Elements.Capacity = NewSize;
+    }
+
+    int CalculateNewArraySize() => (Elements.Allocation != null) ? Elements.Capacity * 2 : MapConstants.DEFAULT_ARRAY_SIZE;
+    /// <summary>
+    /// Relinquishes ownership of the TMap so that C#'s garbage collector doesn't delete this.
+    /// </summary>
+    public void Leak() => OwnsInstance = false;
+
+    bool InBounds(int index) => index >= 0 && index < Elements.Size;
+    */
+    
+    #region DISPOSE INTERFACE
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!Disposed)
+        {
+            if (disposing) // Dispose managed resources
+            {
+                Elements.Dispose();
+                BitAllocator.Dispose();
+            }
+            // Disposed unmanaged resources (for Unreal)
+            if (OwnsInstance)
+            {
+                if (FreeList != null)
+                {
+                    Allocator.Free((nint)FreeList);
+                }
+                if (Hashes != null)
+                {
+                    Allocator.Free((nint)Hashes);
+                }
+                Allocator.Free(Self);
+            }
+            Disposed = true;
+        }
+    }
+
+    ~TMapDynamicDictionary() => Dispose(false);
+
+    #endregion
 }

@@ -46,4 +46,8 @@ public interface IUnrealFactory
 
     IFWorldContext CreateFWorldContext(nint ptr);
     IUEngine CreateUEngine(nint ptr);
+    IUGameInstance CreateUGameInstance(nint ptr);
+    
+    IFStaticConstructObjectParameters CreateFStaticConstructObjectParameters();
+    IFActorSpawnParameters CreateFActorSpawnParameters();
 }

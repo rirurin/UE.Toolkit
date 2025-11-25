@@ -90,4 +90,8 @@ public abstract class BaseUnrealFactory : IUnrealFactory
     
     public abstract IFWorldContext CreateFWorldContext(nint ptr);
     public abstract IUEngine CreateUEngine(nint ptr);
+    public abstract IUGameInstance CreateUGameInstance(nint ptr);
+    
+    public abstract IFStaticConstructObjectParameters CreateFStaticConstructObjectParameters();
+    public abstract IFActorSpawnParameters CreateFActorSpawnParameters();
 }

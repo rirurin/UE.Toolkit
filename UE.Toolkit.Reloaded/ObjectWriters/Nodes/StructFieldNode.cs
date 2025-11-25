@@ -3,7 +3,7 @@ using System.Xml;
 
 namespace UE.Toolkit.Reloaded.ObjectWriters.Nodes;
 
-internal record FieldData(Type type, nint offset);
+internal record FieldData(Type type, nint offset, int bit);
 
 public class StructFieldNode : IFieldNode
 {
@@ -18,11 +18,18 @@ public class StructFieldNode : IFieldNode
     private static Dictionary<string, FieldData> GetFieldsFromStruct(Type structType)
     {
         var FieldList = new Dictionary<string, FieldData>();
+        int? LastOffset = null;
+        int CurrentBit = 0;
         foreach (var Field in structType.GetFields().SelectMany((x, i) =>
                  {
                      if (i == 0 && x.Name == "Super") return GetFieldsFromStruct(x.FieldType).AsEnumerable();
+                     // Handle cases where sequences of booleans are in bitflag form (1 bit) instead of C form (1 byte)
+                     // We'll need to save the current bit as well to correctly write values for Object XML
+                     var CurrentOffset = (int)Marshal.OffsetOf(structType, x.Name);
+                     CurrentBit = x.FieldType == typeof(bool) && LastOffset == CurrentOffset ? CurrentBit + 1 : 0;
+                     LastOffset = CurrentOffset;
                      return Enumerable.Repeat<KeyValuePair<string, FieldData>>(new(
-                         x.Name, new(x.FieldType, Marshal.OffsetOf(structType, x.Name))), 1);
+                         x.Name, new(x.FieldType, CurrentOffset, CurrentBit)), 1);
                  }))
         {
             // ToDictionary() implementation will crash if there are duplicate field names
@@ -68,7 +75,7 @@ public class StructFieldNode : IFieldNode
                 var fieldType = fieldData.type;
                 // var fieldPtr = _structPtr + Marshal.OffsetOf(_structType, fieldName);
                 var fieldPtr = _structPtr + fieldData.offset;
-                if (_nodeFactory.TryCreate(fieldName, fieldPtr, fieldType, out var fieldNode))
+                if (_nodeFactory.TryCreate(fieldName, fieldPtr, fieldData.bit, fieldType, out var fieldNode))
                 {
                     fieldNode.ConsumeNode(reader);
                 }

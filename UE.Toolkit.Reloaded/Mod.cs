@@ -75,7 +75,7 @@ public class Mod : ModBase, IExports
         _address = new();
         _classes = new(_factory, _memory, _hooks, _address);
         _methods = new(_factory, _memory, _classes, _objects, _hooks);
-        _state = new(_factory);
+        _state = new(_factory, _classes);
         
         _modLoader.AddOrReplaceController(_owner, _memory);
         _modLoader.AddOrReplaceController<IDataTables>(_owner, _tables);

@@ -5,10 +5,11 @@ namespace UE.Toolkit.Reloaded.ObjectWriters.Writers;
 
 public static class FieldWriterFactory
 {
-    public static IFieldWriter? Create(string fieldName, nint fieldPtr, Type fieldType, IObjectCreator objCreator)
+    
+    public static IFieldWriter? Create(string fieldName, nint fieldPtr, int fieldBit, Type fieldType, IObjectCreator objCreator)
     {
         if (fieldType.IsPrimitive || fieldType.Name == nameof(String))
-            return new PrimitiveFieldWriter(fieldName, fieldPtr, fieldType);
+            return new PrimitiveFieldWriter(fieldName, fieldPtr, fieldBit, fieldType);
 
         if (fieldType == typeof(FText) || fieldType == typeof(FString) || fieldType == typeof(FName))
             return new TextFieldWriter(fieldName, fieldPtr, fieldType, objCreator);

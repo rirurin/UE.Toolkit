@@ -70,6 +70,11 @@ public class UnrealFactory : BaseUnrealFactory
     public override IFGenericPropertyParams CreateFGenericPropertyParams(nint ptr) => new FGenericPropertyParams_UE5_4_4(ptr, this);
     public override IFWorldContext CreateFWorldContext(nint ptr) => new FWorldContext_UE5_4_4(ptr, this);
     public override IUEngine CreateUEngine(nint ptr) => new UEngine_UE5_4_4(ptr, this);
+    public override IUGameInstance CreateUGameInstance(nint ptr) => new UGameInstance_UE5_4_4(ptr, this);
+    public override IFStaticConstructObjectParameters CreateFStaticConstructObjectParameters()
+        => new FStaticConstructObjectParameters_UE5_4_4(this);
+    public override IFActorSpawnParameters CreateFActorSpawnParameters()
+        => new FActorSpawnParameters_UE5_4_4(this);
 }
 
 public unsafe class FOptionalProperty_UE5_4_4(nint ptr, IUnrealFactory factory)
@@ -622,4 +627,102 @@ public unsafe class UEngine_UE5_4_4(nint ptr, IUnrealFactory factory)
     internal TArray<Ptr<FWorldContext>>* GetWorldListInner() => &_self->WorldList;
     
     public IEnumerable<IFWorldContext> GetWorldList() => new FWorldContextEnumerator(this, factory);
+}
+
+public unsafe class FStaticConstructObjectParameters_UE5_4_4
+    : IFStaticConstructObjectParameters, IDisposable
+{
+    private readonly FStaticConstructObjectParameters* _self;
+    public nint Ptr => (nint)_self;
+    protected readonly IUnrealFactory _factory;
+    private bool Disposed = false;
+
+    public FStaticConstructObjectParameters_UE5_4_4(IUnrealFactory factory)
+    {
+        _factory = factory;
+        _self = (FStaticConstructObjectParameters*)_factory.Memory.MallocZeroed(sizeof(FStaticConstructObjectParameters));
+    }
+
+    public void SetParams(IUClass Class, IUObject? Owner, FName Name)
+    {
+        _self->Class = (UClass*)Class.Ptr;
+        _self->Outer = (UObjectBase*)Owner?.Ptr;
+        _self->Name = Name;
+    }
+    
+    #region DISPOSE INTERFACE
+    
+    public void Dispose()
+    {
+        Disposing();
+        GC.SuppressFinalize(this);
+    }
+    
+    protected virtual void Disposing()
+    {
+        if (Disposed) return;
+        _factory.Memory.Free(Ptr);
+        Disposed = true;
+    }
+
+    ~FStaticConstructObjectParameters_UE5_4_4() => Disposing();
+    
+    #endregion
+}
+
+public unsafe class FActorSpawnParameters_UE5_4_4
+    : IFActorSpawnParameters, IDisposable
+{
+    private readonly FActorSpawnParameters* _self;
+    public nint Ptr => (nint)_self;
+    protected readonly IUnrealFactory _factory;
+    private bool Disposed = false;
+
+    public FActorSpawnParameters_UE5_4_4(IUnrealFactory factory)
+    {
+        _factory = factory;
+        _self = (FActorSpawnParameters*)_factory.Memory.MallocZeroed(sizeof(FActorSpawnParameters));
+    }
+    
+    public void SetParams(EObjectFlags Flags)
+    {
+        _self->ObjectFlags = Flags;
+    }
+    
+    #region DISPOSE INTERFACE
+    
+    public void Dispose()
+    {
+        Disposing();
+        GC.SuppressFinalize(this);
+    }
+    
+    protected virtual void Disposing()
+    {
+        if (Disposed) return;
+        _factory.Memory.Free(Ptr);
+        Disposed = true;
+    }
+
+    ~FActorSpawnParameters_UE5_4_4() => Disposing();
+    
+    #endregion
+}
+
+public unsafe class UGameInstance_UE5_4_4(nint ptr, IUnrealFactory factory)
+    : UObject_UE5_4_4(ptr, factory), IUGameInstance
+{
+    private readonly UGameInstance* _self = (UGameInstance*)ptr;
+
+    public bool TryGetSubsystem(IUClass Class, out IUObject? Subsystem)
+    {
+        var Subsystems = new TMapDictionary<HashablePtr<UClass>, HashablePtr<UObjectBase>>(
+           (TMap<HashablePtr<UClass>, HashablePtr<UObjectBase>>*)(&_self->SubsystemCollection.Subsystems),
+            factory.Memory);
+        Subsystem = Subsystems.TryGetValue(new HashablePtr<UClass>(new Ptr<UClass>((UClass*)Class.Ptr)),
+            out var pSubsystem)
+            ? _factory.CreateUObject((nint)pSubsystem.Value->Ptr.Value)
+            : null;
+        return Subsystem != null;
+    }
 }

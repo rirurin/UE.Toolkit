@@ -59,7 +59,7 @@ public class TArrayFieldNode(string fieldName, nint fieldPtr, Type fieldType, Fi
             }
 
             var itemPtr = itemIdx * itemSize + (nint)tempArray->AllocatorInstance;
-            if (nodeFactory.TryCreate($"{fieldName} (ID: {id})", itemPtr, itemType, out var itemNode))
+            if (nodeFactory.TryCreate($"{fieldName} (ID: {id})", itemPtr, 0, itemType, out var itemNode))
             {
                 itemNode.ConsumeNode(subReader);
             }

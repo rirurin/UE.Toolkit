@@ -11,13 +11,13 @@ public class FieldNodeFactory(ITypeRegistry typeReg, IObjectCreator objCreator, 
     public ITypeRegistry TypeRegistry { get; } = typeReg;
     public IUnrealMemoryInternal Memory { get; } = memory;
     
-    public bool TryCreate(string fieldName, nint fieldPtr, Type fieldType, [NotNullWhen(true)]out IFieldNode? node)
+    public bool TryCreate(string fieldName, nint fieldPtr, int fieldBit, Type fieldType, [NotNullWhen(true)]out IFieldNode? node)
     {
-        node = Create(fieldName, fieldPtr, fieldType);
+        node = Create(fieldName, fieldPtr, fieldBit, fieldType);
         return node != null;
     }
 
-    private IFieldNode? Create(string fieldName, nint fieldPtr, Type fieldType)
+    private IFieldNode? Create(string fieldName, nint fieldPtr, int fieldBit, Type fieldType)
     {
         
         Log.Debug($"{nameof(FieldNodeFactory)} || Create Node '{fieldName}' with type '{fieldType.Name}'.");
@@ -29,7 +29,7 @@ public class FieldNodeFactory(ITypeRegistry typeReg, IObjectCreator objCreator, 
             || fieldType == typeof(FString)
             || fieldType == typeof(FName))
         {
-            return new PrimitiveFieldNode(fieldName, fieldPtr, fieldType, objCreator);
+            return new PrimitiveFieldNode(fieldName, fieldPtr, fieldBit, fieldType, objCreator);
         }
 
         if (fieldType.Name.StartsWith("TArray"))
@@ -47,13 +47,49 @@ public class FieldNodeFactory(ITypeRegistry typeReg, IObjectCreator objCreator, 
             var keyType = fieldType.GetGenericArguments()[0];
             if (keyType == typeof(int))
             {
-                return new TMapIntFieldNode(fieldName, fieldPtr, fieldType, this);
+                var valueType = fieldType.GetGenericArguments()[1];
+                // Check if it has a StructLayout with an explicit alignment value, this lets us avoid iterating
+                // through each field to determine alignment
+                // Every type defined in the extension mod has an alignment value in it's StructLayout
+                if (valueType.StructLayoutAttribute != null)
+                {
+                    return valueType.StructLayoutAttribute!.Pack switch
+                    {
+                         <= 4 => new TMapIntFieldNode(fieldName, fieldPtr, fieldType, this),
+                         _ => new TMapInt8FieldNode(fieldName, fieldPtr, fieldType, this)
+                    };
+                }
+                // Fallback: Iterate through fields (this should not be necessary)
+                var LastOffset = 0;
+                var bUseInt8 = false;
+                foreach (var Field in valueType.GetFields())
+                {
+                    // Check that the size for each field doesn't exceed 4 bytes
+                    if (Marshal.SizeOf(Field.GetType()) > 4)
+                    {
+                        bUseInt8 = true;
+                        break;
+                    }
+                }
+                return bUseInt8 switch
+                {
+                    true => new TMapInt8FieldNode(fieldName, fieldPtr, fieldType, this),
+                    false => new TMapIntFieldNode(fieldName, fieldPtr, fieldType, this),
+                };
             }
-            Log.Warning($"{nameof(FieldNodeFactory)} || TODO: Field '{fieldName}' with type '{fieldType.Name}'.");
-            foreach (var Generic in fieldType.GenericTypeArguments)
+
+            if (keyType == typeof(FName))
             {
-                Log.Warning($"{nameof(FieldNodeFactory)} || TMap Argument: {Generic.Name}");
+                return new TMapNameFieldNode(fieldName, fieldPtr, fieldType, this);
             }
+
+            /*
+            if (keyType.Name.StartsWith("Ptr")) // TODO
+            {
+                
+            }
+            */
+            Log.Warning($"{nameof(FieldNodeFactory)} || Field '{fieldName}' with type '{fieldType.Name}' is not currently supported for map editing operations.");
             return null;
         }
 

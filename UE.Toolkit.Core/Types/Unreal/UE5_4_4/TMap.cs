@@ -62,13 +62,26 @@ public struct TMapElementHashable<KeyType, ValueType>
     public int HashIndex;
 }
 
-public unsafe struct HashablePtr<T> : IMapHashable, IEquatable<HashablePtr<T>> where T: unmanaged
+public unsafe struct HashablePtr<T>(Ptr<T> ptr) : IMapHashable, IEquatable<HashablePtr<T>> where T: unmanaged
 {
-    public Ptr<T> Ptr;
-    public HashablePtr(Ptr<T> ptr) { Ptr = ptr; }
-    public uint GetTypeHash() // FUN_140904980
+    public Ptr<T> Ptr = ptr;
+    public uint GetTypeHash() => HashablePtrUtils.GetPtrTypeHash((nint)Ptr.Value); 
+    public bool Equals(HashablePtr<T> other) => Ptr.Value == other.Ptr.Value;
+}
+
+public struct HashableUntypedPtr(nint ptr) : IMapHashable, IEquatable<HashableUntypedPtr>
+{
+    public nint Ptr = ptr;
+    public uint GetTypeHash() => HashablePtrUtils.GetPtrTypeHash(Ptr);
+
+    public bool Equals(HashableUntypedPtr other) => Ptr == other.Ptr;
+}
+
+internal static class HashablePtrUtils
+{
+    internal static uint GetPtrTypeHash(nint Ptr) // FUN_140904980
     {
-        uint iVar4 = (uint)((nint)Ptr.Value >> 4);
+        uint iVar4 = (uint)(Ptr >> 4);
         uint uVar3 = 0x9e3779b9U - iVar4 ^ iVar4 << 8;
         uint uVar1 = (uint)-(uVar3 + iVar4) ^ uVar3 >> 0xd;
         uint uVar5 = (iVar4 - uVar3) - uVar1 ^ uVar1 >> 0xc;
@@ -77,10 +90,10 @@ public unsafe struct HashablePtr<T> : IMapHashable, IEquatable<HashablePtr<T>> w
         uVar5 = (uVar5 - uVar3) - uVar1 ^ uVar1 >> 3;
         uVar3 = (uVar3 - uVar5) - uVar1 ^ uVar5 << 10;
         uint ret = ((uVar1 - uVar3) - uVar5) ^ (uVar3 >> 0xf);
-        return ret;
-    }
-    public bool Equals(HashablePtr<T> other) => Ptr.Value == other.Ptr.Value;
+        return ret;   
+    }   
 }
+
 public struct HashableInt : IMapHashable, IEquatable<HashableInt>
 {
     public int Value;
@@ -521,7 +534,7 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
 
     public Ptr<TElemValue> this[TElemKey key] 
     {
-        get => new Ptr<TElemValue>(TryGetByHash(key));
+        get => new(TryGetByHash(key));
         set => *TryGetByHash(key) = *value.Value;
     }
 
@@ -920,10 +933,52 @@ public unsafe class TMapDynamicDictionary<TElemKey> : IDisposable
         pValue = new(TryGetByHash(key));
         return pValue != nint.Zero;
     }
+
+    public void AddIndirect(TElemKey key, nint pNewItem)
+    {
+        if (ContainsKey(key)) return; // Don't allow duplicate keys
+        if (Hashes == null && Elements.Size + 1 >= MapConstants.MIN_SIZE_FOR_HASH_LIST) Rehash(MapConstants.HASH_INITIAL_SIZE);
+        else if (Hashes != null && Elements.Size == HashSize) Rehash(HashSize * 2);
+        if (Elements.Size == Elements.Capacity) ResizeTo(CalculateNewArraySize());
+        // Get hash index for new key
+        if (Hashes != null)
+        {
+            var hashIndex = (int)(key.GetTypeHash() & (HashSize - 1));
+            if (Hashes[hashIndex] == MapConstants.INVALID_HASH_ID) Hashes[hashIndex] = Elements.Size;
+            else Elements.SetNextHashId(GetBucketListTail(hashIndex), Elements.Size);
+            Elements.SetNextHashId(Elements.Size, MapConstants.INVALID_HASH_ID);
+            Elements.SetHashIndex(Elements.Size, hashIndex);
+        }
+        else
+        {
+            Elements.SetNextHashId(Elements.Size, Elements.Size - 1);
+            Elements.SetHashIndex(Elements.Size, 0);
+        }
+        // Add a new element to the array
+        Elements.SetKey(Elements.Size, key);
+        NativeMemory.Copy((void*)pNewItem, (void*)Elements.GetAddress(Elements.Size), (nuint)Elements.ValueSize);
+        // Update the bit allocator
+        BitAllocator.Add(true);
+        Elements.Size++;
+    }
+    
+    public ICollection<TElemKey> Keys
+    {
+        get
+        {
+            ICollection<TElemKey> Keys = new List<TElemKey>();
+            for (int i = 0; i < Elements.Size; i++)
+            {
+                Keys.Add(Elements.GetKey(i));
+            }
+            return Keys;
+        }
+    }
+    
+    public bool ContainsKey(TElemKey key) => Keys.Contains(key);
     
     public int Count => Elements.Size;
 
-    /*
     private void Rehash(int NewSize)
     {
         
@@ -945,13 +1000,13 @@ public unsafe class TMapDynamicDictionary<TElemKey> : IDisposable
     private void ResizeTo(int NewSize)
     {
 
-        nint NewElementAlloc = Allocator.Malloc(NewSize * Elements.SizeOf());
+        var NewElementAlloc = (byte*)Allocator.Malloc(NewSize * Elements.SizeOf());
         if (Elements.Allocation != null)
         {
-            NativeMemory.Copy((byte*)Elements.Allocation, (byte*)NewElementAlloc, (nuint)(Elements.Size * Elements.SizeOf()));
+            NativeMemory.Copy(Elements.Allocation, NewElementAlloc, (nuint)(Elements.Size * Elements.SizeOf()));
             Allocator.Free((nint)Elements.Allocation);
         }
-        Elements.Allocation = (TMapElementHashable<TElemKey, TElemValue>*)NewElementAlloc;
+        Elements.Allocation = NewElementAlloc;
         Elements.Capacity = NewSize;
     }
 
@@ -962,7 +1017,6 @@ public unsafe class TMapDynamicDictionary<TElemKey> : IDisposable
     public void Leak() => OwnsInstance = false;
 
     bool InBounds(int index) => index >= 0 && index < Elements.Size;
-    */
     
     #region DISPOSE INTERFACE
 

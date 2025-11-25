@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using UE.Toolkit.Core.Common;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
@@ -28,6 +27,7 @@ using FObjectProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FObjectProperty;
 using FProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FProperty;
 using FPropertyParamsBase = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FPropertyParamsBase;
 using FSetProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FSetProperty;
+using FStaticConstructObjectParameters = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FStaticConstructObjectParameters;
 using FStructParams = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FStructParams;
 using FStructProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FStructProperty;
 using FWorldContext = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FWorldContext;
@@ -36,6 +36,7 @@ using UEngine = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UEngine;
 using UEnum = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UEnum;
 using UField = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UField;
 using UFunction = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UFunction;
+using UGameInstance = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UGameInstance;
 using UObjectBase = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UObjectBase;
 using UScriptStruct = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UScriptStruct;
 using UStruct = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UStruct;
@@ -64,14 +65,14 @@ public class UnrealFactory : BaseUnrealFactory
                 nameof(IFBoolProperty) => sizeof(FBoolProperty),
                 nameof(IFEnumProperty) => sizeof(FEnumProperty),
                 nameof(IFObjectProperty) => sizeof(FObjectProperty),
-                nameof(IFSoftClassProperty) => sizeof(UE.Toolkit.Core.Types.Unreal.UE5_4_4.FSoftClassProperty),
+                nameof(IFSoftClassProperty) => sizeof(FSoftClassProperty),
                 nameof(IFClassProperty) => sizeof(FClassProperty),
                 nameof(IFStructProperty) => sizeof(FStructProperty),
                 nameof(IFMapProperty) => sizeof(FMapProperty),
-                nameof(IFInterfaceProperty) => sizeof(UE.Toolkit.Core.Types.Unreal.UE5_4_4.FInterfaceProperty),
+                nameof(IFInterfaceProperty) => sizeof(FInterfaceProperty),
                 nameof(IFArrayProperty) => sizeof(FArrayProperty),
                 nameof(IFSetProperty) => sizeof(FSetProperty),
-                nameof(IFOptionalProperty) => sizeof(UE.Toolkit.Core.Types.Unreal.UE5_4_4.FOptionalProperty),
+                nameof(IFOptionalProperty) => sizeof(FOptionalProperty),
                 _ => throw new NotSupportedException(TypeName)
             };
         }
@@ -132,7 +133,16 @@ public class UnrealFactory : BaseUnrealFactory
     public override IFGenericPropertyParams CreateFGenericPropertyParams(nint ptr) => new FGenericPropertyParamsUE4_27_2(ptr, this);
     
     public override IFWorldContext CreateFWorldContext(nint ptr) => new FWorldContextUE4_27_2(ptr, this);
+    
     public override IUEngine CreateUEngine(nint ptr) => new UEngineUE4_27_2(ptr, this);
+    
+    public override IUGameInstance CreateUGameInstance(nint ptr) => new UGameInstanceUE4_27_2(ptr, this);
+
+    public override IFStaticConstructObjectParameters CreateFStaticConstructObjectParameters()
+        => new FStaticConstructObjectParametersUE4_27_2(this);
+    
+    public override IFActorSpawnParameters CreateFActorSpawnParameters()
+        => new FActorSpawnParametersUE4_27_2(this);
 }
 
 public unsafe class FSetPropertyUE4_27_2(nint ptr, IUnrealFactory factory)
@@ -474,8 +484,8 @@ public unsafe class UClassUE4_27_2(nint ptr, IUnrealFactory factory)
 
     public IUFunction? GetFunction(string Name)
     {
-        var FuncMapDict = new UE.Toolkit.Core.Types.Unreal.UE5_4_4.TMapDictionary<FName, Ptr<UFunction>>(
-            (UE.Toolkit.Core.Types.Unreal.UE5_4_4.TMap<FName, Ptr<UFunction>>*)(&_self->func_map),
+        var FuncMapDict = new TMapDictionary<FName, Ptr<UFunction>>(
+            (TMap<FName, Ptr<UFunction>>*)(&_self->func_map),
             _factory.Memory
         );
         return FuncMapDict.TryGetValue(new(Name), out var Function)
@@ -654,4 +664,102 @@ public unsafe class UEngineUE4_27_2(nint ptr, IUnrealFactory factory)
     internal TArray<Ptr<FWorldContext>>* GetWorldListInner() => &_self->WorldList;
     
     public IEnumerable<IFWorldContext> GetWorldList() => new FWorldContextEnumerator(this, factory);
+}
+
+public unsafe class FStaticConstructObjectParametersUE4_27_2
+    : IFStaticConstructObjectParameters, IDisposable
+{
+    private readonly FStaticConstructObjectParameters* _self;
+    public nint Ptr => (nint)_self;
+    protected readonly IUnrealFactory _factory;
+    private bool Disposed = false;
+
+    public FStaticConstructObjectParametersUE4_27_2(IUnrealFactory factory)
+    {
+        _factory = factory;
+        _self = (FStaticConstructObjectParameters*)_factory.Memory.MallocZeroed(sizeof(FStaticConstructObjectParameters));
+    }
+
+    public void SetParams(IUClass Class, IUObject? Owner, FName Name)
+    {
+        _self->Class = (UClass*)Class.Ptr;
+        _self->Outer = (UObjectBase*)Owner?.Ptr;
+        _self->Name = Name;
+    }
+    
+    #region DISPOSE INTERFACE
+    
+    public void Dispose()
+    {
+        Disposing();
+        GC.SuppressFinalize(this);
+    }
+    
+    protected virtual void Disposing()
+    {
+        if (Disposed) return;
+        _factory.Memory.Free(Ptr);
+        Disposed = true;
+    }
+
+    ~FStaticConstructObjectParametersUE4_27_2() => Disposing();
+    
+    #endregion
+}
+
+public unsafe class FActorSpawnParametersUE4_27_2
+    : IFActorSpawnParameters, IDisposable
+{
+    private readonly FActorSpawnParameters* _self;
+    public nint Ptr => (nint)_self;
+    protected readonly IUnrealFactory _factory;
+    private bool Disposed = false;
+
+    public FActorSpawnParametersUE4_27_2(IUnrealFactory factory)
+    {
+        _factory = factory;
+        _self = (FActorSpawnParameters*)_factory.Memory.MallocZeroed(sizeof(FActorSpawnParameters));
+    }
+
+    public void SetParams(EObjectFlags Flags)
+    {
+        _self->ObjectFlags = Flags;
+    }
+    
+    #region DISPOSE INTERFACE
+    
+    public void Dispose()
+    {
+        Disposing();
+        GC.SuppressFinalize(this);
+    }
+    
+    protected virtual void Disposing()
+    {
+        if (Disposed) return;
+        _factory.Memory.Free(Ptr);
+        Disposed = true;
+    }
+
+    ~FActorSpawnParametersUE4_27_2() => Disposing();
+    
+    #endregion
+}
+
+public unsafe class UGameInstanceUE4_27_2(nint ptr, IUnrealFactory factory)
+    : UObjectUE4_27_2(ptr, factory), IUGameInstance
+{
+    private readonly UGameInstance* _self = (UGameInstance*)ptr;
+
+    public bool TryGetSubsystem(IUClass Class, out IUObject? Subsystem)
+    {
+        var Subsystems = new TMapDictionary<HashablePtr<UClass>, HashablePtr<UObjectBase>>(
+            (TMap<HashablePtr<UClass>, HashablePtr<UObjectBase>>*)(&_self->SubsystemCollection.Subsystems),
+            factory.Memory);
+        Subsystem = Subsystems.TryGetValue(new HashablePtr<UClass>(new Ptr<UClass>((UClass*)Class.Ptr)),
+            out var pSubsystem)
+            ? _factory.CreateUObject((nint)pSubsystem.Value->Ptr.Value)
+            : null;
+        return Subsystem != null;
+    }
 }

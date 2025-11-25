@@ -38,7 +38,7 @@ public class DataTableFieldNode(string fieldName, nint fieldPtr, Type fieldType,
             if (tempTable.TryGetValue(new(id), out var row))
             {
                 var rowValuePtr = (nint)row.Value;
-                if (nodeFactory.TryCreate($"{fieldName} (ID: {id})", rowValuePtr, itemType, out var itemNode))
+                if (nodeFactory.TryCreate($"{fieldName} (ID: {id})", rowValuePtr, 0, itemType, out var itemNode))
                 {
                     var itemTree = subReader.ReadSubtree();
                     itemTree.MoveToContent();

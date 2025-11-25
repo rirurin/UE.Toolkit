@@ -12,4 +12,9 @@ public interface IUnrealState
     /// <param name="TargetWorld">The target world.</param>
     /// <returns>If a target world could be found.</returns>
     public bool GetCurrentPlayWorld(out IUObject? TargetWorld);
+
+    public bool GetSubsystem<TSubsystem>(IUGameInstance? GameInstance, out IUObject? Subsystem) 
+        where TSubsystem : unmanaged;
+
+    public bool GetSubsystem(IUGameInstance? GameInstance, IUClass? SubsystemType, out IUObject? SubsystemObj);
 }

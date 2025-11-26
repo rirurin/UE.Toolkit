@@ -45,6 +45,7 @@ public class Mod : ModBase, IExports
     private readonly Common.ResolveAddress _address;
     private readonly UnrealMethods _methods;
     private readonly UnrealState _state;
+    private readonly UnrealSpawning _spawning;
 
     public Mod(ModContext context)
     {
@@ -64,10 +65,11 @@ public class Mod : ModBase, IExports
         GameConfig.SetGame(_modLoader.GetAppConfig().AppId);
 
         _factory = GameConfig.Instance.Factory;
+        _memory = GameConfig.Instance.Memory;
+        _factory.Memory = _memory;
         _names = new();
         _objects = new(_factory);
         _tables = new();
-        _memory = GameConfig.Instance.Memory;
         _typeRegistry = new();
         _writer = new(_typeRegistry, _objects, _tables, _memory);
         _toolkit = new(_writer);
@@ -76,6 +78,7 @@ public class Mod : ModBase, IExports
         _classes = new(_factory, _memory, _hooks, _address);
         _methods = new(_factory, _memory, _classes, _objects, _hooks);
         _state = new(_factory, _classes);
+        _spawning = new(_classes, _factory, _state);
         
         _modLoader.AddOrReplaceController(_owner, _memory);
         _modLoader.AddOrReplaceController<IDataTables>(_owner, _tables);
@@ -88,6 +91,7 @@ public class Mod : ModBase, IExports
         _modLoader.AddOrReplaceController(_owner, _factory);
         _modLoader.AddOrReplaceController<IUnrealMethods>(_owner, _methods);
         _modLoader.AddOrReplaceController<IUnrealState>(_owner, _state);
+        _modLoader.AddOrReplaceController<IUnrealSpawning>(_owner, _spawning);
         
         _modLoader.ModLoaded += OnModLoaded;
     }
@@ -128,6 +132,6 @@ public class Mod : ModBase, IExports
     [
         typeof(IDataTables), typeof(IUnrealObjects), typeof(IToolkit), typeof(ITypeRegistry), typeof(UObjectBase),
         typeof(IUnrealFactory), typeof(IUnrealNames), typeof(IUnrealMemory), typeof(IUnrealStrings),
-        typeof(IUnrealClasses), typeof(IUnrealMethods), typeof(IUnrealState)
+        typeof(IUnrealClasses), typeof(IUnrealMethods), typeof(IUnrealState), typeof(IUnrealSpawning)
     ];
 }

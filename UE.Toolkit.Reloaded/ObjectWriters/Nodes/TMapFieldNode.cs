@@ -31,18 +31,26 @@ public abstract class TMapBaseFieldNode<TKeyValue>(string fieldName, nint fieldP
             var id = subReader.GetAttribute(WriterConstants.ItemIdAttr);
             if (id == null)
             {
-                Log.Error($"{nameof(TArrayFieldNode)} || '{WriterConstants.ItemTag}' is missing an ID.");
+                Log.Error($"{nameof(TMapBaseFieldNode<TKeyValue>)} || '{WriterConstants.ItemTag}' is missing an ID.");
                 break;
             }
 
             if (!CreateKeyValue(id, out var KeyMaybe))
             {
-                Log.Error($"{nameof(TArrayFieldNode)} || Could not process map key {id}");
+                Log.Error($"{nameof(TMapBaseFieldNode<TKeyValue>)} || Could not process map key {id}");
                 break;               
             }
             var Key = KeyMaybe!.Value;
-            // Get existing value
+            unsafe
+            {
+                var tempMapBitAlloc = (TArray<byte>*)(tempMap.Self + 0x20);
+                // Ensure that TMap is properly initialized for newly allocated items - BitAllocator's capacity should
+                // be 0x80 (128) to account for inline bits (equivalent to Reset()).
+                if (tempMapBitAlloc->ArrayMax < 128)
+                    tempMapBitAlloc->ArrayMax = 128;
+            }
             
+            // Get existing value
             if (!ContainsKey(tempMap, Key))
             {
                 var newEntry = nodeFactory.Memory.MallocZeroed(valueSize);

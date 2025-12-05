@@ -17,7 +17,7 @@ public class DataTableFieldNode(string fieldName, nint fieldPtr, Type fieldType,
         
         // DataTable map type is always FName + Pointer, can just use UObject.
         // var tempTable = new ToolkitDataTable<UObjectBase>((UDataTable<UObjectBase>*)fieldPtr); 
-        var tempTable = new UDataTableManaged<UObjectBase>((UDataTable<UObjectBase>*)fieldPtr, nodeFactory.Memory);
+        var tempTable = new UDataTableManaged<Ptr<UObjectBase>>((UDataTable<Ptr<UObjectBase>>*)fieldPtr, nodeFactory.Memory);
         
         // Get any item nodes.
         using var subReader = reader.ReadSubtree();
@@ -34,23 +34,21 @@ public class DataTableFieldNode(string fieldName, nint fieldPtr, Type fieldType,
                 Log.Error($"{nameof(DataTableFieldNode)} || '{WriterConstants.ItemTag}' in field '{fieldName}' is missing an ID.");
                 break;
             }
-            
-            if (tempTable.TryGetValue(new(id), out var row))
+
+            var Key = new FName(id);
+            if (!tempTable.ContainsKey(Key))
             {
-                var rowValuePtr = (nint)row.Value;
-                if (nodeFactory.TryCreate($"{fieldName} (ID: {id})", rowValuePtr, 0, itemType, out var itemNode))
-                {
-                    var itemTree = subReader.ReadSubtree();
-                    itemTree.MoveToContent();
-                
-                    itemNode.ConsumeNode(itemTree);
-                }
+                tempTable.AddRow(Key, new Ptr<UObjectBase>((UObjectBase*)nodeFactory.Memory.MallocZeroed(itemSize)));
+                // tempTable.Add(Key, new Ptr<UObjectBase>((UObjectBase*)nodeFactory.Memory.MallocZeroed(itemSize)));
+                Log.Debug($"{nameof(DataTableFieldNode)} || Added row with ID '{id}' into '{fieldName}'.");   
             }
-            else
+            
+            if (tempTable.TryGetValue(Key, out var row)
+                && nodeFactory.TryCreate($"{fieldName} (ID: {id})", (nint)row.Value->Value, 0, itemType, out var itemNode))
             {
-                tempTable.Add(new (id), new Ptr<UObjectBase>((UObjectBase*)nodeFactory.Memory.MallocZeroed(itemSize)));
-                Log.Debug($"{nameof(DataTableFieldNode)} || Added row with ID '{id}' into '{fieldName}'.");
-                break;
+                var itemTree = subReader.ReadSubtree();
+                itemTree.MoveToContent();
+                itemNode.ConsumeNode(itemTree);
             }
         }
         

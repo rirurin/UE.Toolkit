@@ -311,16 +311,16 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
     ///             <description>0x10</description>
     ///         </item>
     ///         <item>
-    ///             <term><c>TMapFreeListIndex*</c> Free List</term>
+    ///             <term><c>int</c> FirstFreeIndex</term>
     ///             <description>0x30</description>
     ///         </item>
     ///         <item>
-    ///             <term><c>int</c> FirstFreeIndex</term>
-    ///             <description>0x38</description>
+    ///             <term><c>int</c> NumFreeIndices</term>
+    ///             <description>0x34</description>
     ///         </item>
     ///         <item>
-    ///             <term><c>int</c> NumFreeIndices</term>
-    ///             <description>0x3c</description>
+    ///             <term><c>TMapFreeListIndex*</c> Free List</term>
+    ///             <description>0x38</description>
     ///         </item>
     ///     </list>
     ///     <list type="bullet">
@@ -338,11 +338,11 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
     ///         </item>
     ///     </list>
     /// </summary>
-    public nint Self { get; private set; }
+    public nint Self { get; }
 
     protected IUnrealMemoryInternal Allocator;
     protected TMapElementAccessor<TElemKey, TElemValue> Elements;
-    protected TBitArrayList BitAllocator;
+    protected TBitArrayList BitAllocator { get; }
     protected Action<string>? DebugCallback;
     protected bool OwnsInstance;
     protected bool Disposed = false;
@@ -406,6 +406,22 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
         OwnsInstance = false;
         BitAllocator = new(BitAllocatorRaw, Allocator);
         DebugCallback = _DebugCallback;
+    }
+
+    /// <summary>
+    /// Allocate a new <c>TMap</c> owned by this <c>TMapDictionary</c> instance. It will be garbage collected once
+    /// taken out of scope.
+    /// </summary>
+    /// <param name="_Allocator">The Unreal allocator, used for methods that modify the <c>TMap</c></param>
+    public TMapDictionary(IUnrealMemoryInternal _Allocator)
+    {
+        Self = _Allocator.MallocZeroed(SizeOf);
+        Allocator = _Allocator;
+        Elements = new(ElementsRaw, Allocator);
+        OwnsInstance = true;
+        BitAllocator = new(BitAllocatorRaw, Allocator);
+        // Sets ArrayMax for BitAllocator to number of inline bits (128)
+        BitAllocator.Clear();
     }
 
     private TElemValue* TryGetLinear(TElemKey key)
@@ -565,6 +581,8 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
         BitAllocator.Add(true);
         Elements.Size++;
     }
+
+    public void AddValue(TElemKey key, TElemValue value) => Add(key, new(&value));
 
     public bool ContainsKey(TElemKey key) => Keys.Contains(key);
 

@@ -140,31 +140,29 @@ public unsafe class TBitArrayList : IDisposable, IList<bool>
         if (add)
         {
             // Allow assigning to this[ArrayNum] to add a new entry
-            if (!InBoundsForInsertion(index))
-            {
-                return;
-            }
-            if (ArrayNum == ArrayMax)
-            {
-                Resize();
-            }
-            // Shift elements to the right
+            if (!InBoundsForInsertion(index)) return;
+            if (ArrayNum == ArrayMax) Resize();
+            // Shifts bits if we're inserting into an index other than ArrayNum
+            // Shift bytes to the right
             var StartIndex = ArrayNum / TBitArrayConstants.BITS_PER_BYTE;
             var EndIndex = index / TBitArrayConstants.BITS_PER_BYTE;
-            for (int i = StartIndex; i >= EndIndex; i--)
+            for (var i = StartIndex; i > EndIndex; i--)
             {
                 Data[i + 1] |= (byte)(Data[i] >> 7);
                 Data[i] <<= 1;
             }
+            // Shifts bits to the right
+            var EndBit = index % TBitArrayConstants.BITS_PER_BYTE;
+            byte BitMaskGen() => (byte)((1 << EndBit) - 1);
+            var NoShiftBits = Data[EndIndex] & BitMaskGen();
+            var ShiftBits = (Data[EndIndex] & ~BitMaskGen()) << 1;
+            Data[EndIndex] = (byte)(NoShiftBits | ShiftBits);
             ArrayNum++;
         }
         else
         {
             // We're only replacing existing entries, so this[ArrayNum] is out of bounds
-            if (!InBounds(index))
-            {
-                return;
-            }
+            if (!InBounds(index)) return;
         }
         if (item)
         {
@@ -203,6 +201,7 @@ public unsafe class TBitArrayList : IDisposable, IList<bool>
     {
         NativeMemory.Clear(Data, (nuint)ArrayMax / TBitArrayConstants.BITS_PER_BYTE);
         ArrayNum = 0;
+        ArrayMax = InlineBits;
     }
 
     public bool Contains(bool item)

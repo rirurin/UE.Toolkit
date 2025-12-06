@@ -64,6 +64,7 @@ public class StructFieldNode : IFieldNode
         var anyElementFound = false;
         while (reader.Read())
         {
+            if (reader.Name == _structName && reader.NodeType == XmlNodeType.EndElement) break;
             if (reader.NodeType != XmlNodeType.Element) continue;
             if (AtItemElement(reader)) Log.Warning($"{nameof(StructFieldNode)} || Unexpected '{WriterConstants.ItemTag}' element found. Error?");
             
@@ -73,7 +74,6 @@ public class StructFieldNode : IFieldNode
             if (_fields.TryGetValue(fieldName, out var fieldData))
             {
                 var fieldType = fieldData.type;
-                // var fieldPtr = _structPtr + Marshal.OffsetOf(_structType, fieldName);
                 var fieldPtr = _structPtr + fieldData.offset;
                 if (_nodeFactory.TryCreate(fieldName, fieldPtr, fieldData.bit, fieldType, out var fieldNode))
                 {

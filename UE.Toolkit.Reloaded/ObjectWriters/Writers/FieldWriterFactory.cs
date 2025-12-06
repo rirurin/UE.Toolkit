@@ -13,6 +13,9 @@ public static class FieldWriterFactory
 
         if (fieldType == typeof(FText) || fieldType == typeof(FString) || fieldType == typeof(FName))
             return new TextFieldWriter(fieldName, fieldPtr, fieldType, objCreator);
+
+        if (fieldType.Name.StartsWith("TSoftObjectPtr") || fieldType.Name.StartsWith("TSoftClassPtr"))
+            return new PtrFieldWriter(fieldName, fieldPtr, fieldType, objCreator);
         
         Log.Error($"{nameof(FieldWriterFactory)} || No writer found for field '{fieldName}' of type '{fieldType.Name}'.");
         return null;

@@ -27,7 +27,10 @@ public class FieldNodeFactory(ITypeRegistry typeReg, IObjectCreator objCreator, 
             || fieldType == typeof(string)
             || fieldType == typeof(FText)
             || fieldType == typeof(FString)
-            || fieldType == typeof(FName))
+            || fieldType == typeof(FName)
+            || fieldType.Name.StartsWith("TSoftObjectPtr")
+            || fieldType.Name.StartsWith("TSoftClassPtr")
+            )
         {
             return new PrimitiveFieldNode(fieldName, fieldPtr, fieldBit, fieldType, objCreator);
         }

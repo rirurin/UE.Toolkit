@@ -5,13 +5,17 @@ namespace UE.Toolkit.Reloaded.ObjectWriters.Writers;
 
 public static class FieldWriterFactory
 {
-    public static IFieldWriter? Create(string fieldName, nint fieldPtr, Type fieldType, IObjectCreator objCreator)
+    
+    public static IFieldWriter? Create(string fieldName, nint fieldPtr, int fieldBit, Type fieldType, IObjectCreator objCreator)
     {
         if (fieldType.IsPrimitive || fieldType.Name == nameof(String))
-            return new PrimitiveFieldWriter(fieldName, fieldPtr, fieldType);
+            return new PrimitiveFieldWriter(fieldName, fieldPtr, fieldBit, fieldType);
 
         if (fieldType == typeof(FText) || fieldType == typeof(FString) || fieldType == typeof(FName))
             return new TextFieldWriter(fieldName, fieldPtr, fieldType, objCreator);
+
+        if (fieldType.Name.StartsWith("TSoftObjectPtr") || fieldType.Name.StartsWith("TSoftClassPtr"))
+            return new PtrFieldWriter(fieldName, fieldPtr, fieldType, objCreator);
         
         Log.Error($"{nameof(FieldWriterFactory)} || No writer found for field '{fieldName}' of type '{fieldType.Name}'.");
         return null;

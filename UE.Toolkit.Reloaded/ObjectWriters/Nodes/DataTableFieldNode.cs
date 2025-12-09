@@ -1,5 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 using System.Xml;
+using UE.Toolkit.Core.Types;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Interfaces;
 
@@ -11,9 +13,11 @@ public class DataTableFieldNode(string fieldName, nint fieldPtr, Type fieldType,
     {
         // DataTable item type.
         if (!TryGetRowType(reader, out var itemType)) return;
+        var itemSize = Marshal.SizeOf(itemType);
         
         // DataTable map type is always FName + Pointer, can just use UObject.
-        var tempTable = new ToolkitDataTable<UObjectBase>((UDataTable<UObjectBase>*)fieldPtr); 
+        // var tempTable = new ToolkitDataTable<UObjectBase>((UDataTable<UObjectBase>*)fieldPtr); 
+        var tempTable = new UDataTableManaged<Ptr<UObjectBase>>((UDataTable<Ptr<UObjectBase>>*)fieldPtr, nodeFactory.Memory);
         
         // Get any item nodes.
         using var subReader = reader.ReadSubtree();
@@ -31,22 +35,20 @@ public class DataTableFieldNode(string fieldName, nint fieldPtr, Type fieldType,
                 break;
             }
 
-            if (tempTable.TryGetValue(id, out var row))
+            var Key = new FName(id);
+            if (!tempTable.ContainsKey(Key))
             {
-                var rowValuePtr = (nint)row.Value;
-                if (nodeFactory.TryCreate($"{fieldName} (ID: {id})", rowValuePtr, itemType, out var itemNode))
-                {
-                    var itemTree = subReader.ReadSubtree();
-                    itemTree.MoveToContent();
-                
-                    itemNode.ConsumeNode(itemTree);
-                }
+                tempTable.AddRow(Key, new Ptr<UObjectBase>((UObjectBase*)nodeFactory.Memory.MallocZeroed(itemSize)));
+                // tempTable.Add(Key, new Ptr<UObjectBase>((UObjectBase*)nodeFactory.Memory.MallocZeroed(itemSize)));
+                Log.Debug($"{nameof(DataTableFieldNode)} || Added row with ID '{id}' into '{fieldName}'.");   
             }
-            else
+            
+            if (tempTable.TryGetValue(Key, out var row)
+                && nodeFactory.TryCreate($"{fieldName} (ID: {id})", (nint)row.Value->Value, 0, itemType, out var itemNode))
             {
-                
-                Log.Error($"{nameof(DataTableFieldNode)} || Failed to find row with ID '{id}' in '{fieldName}'.");;
-                break;
+                var itemTree = subReader.ReadSubtree();
+                itemTree.MoveToContent();
+                itemNode.ConsumeNode(itemTree);
             }
         }
         

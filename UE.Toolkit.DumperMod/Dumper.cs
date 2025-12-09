@@ -112,6 +112,15 @@ public unsafe class Dumper
         {
             sb = new();
             AddHeader(sb);
+            AddPtrDefinition(sb);
+        }
+        else
+        {
+            var outputFile = Path.Join(_dumpDir, "Builtin_Ptr.cs");
+            var sbPtr = new StringBuilder();
+            AddHeader(sbPtr);
+            AddPtrDefinition(sbPtr);
+            File.WriteAllText(outputFile, sbPtr.ToString());
         }
 
         var numDumped = 0;
@@ -242,7 +251,7 @@ public unsafe class Dumper
 
     private static void AddHeader(StringBuilder sb)
     {
-        sb.AppendLine("/* Generated with UE Toolkit: Dumper (1.4.5)     */");
+        sb.AppendLine("/* Generated with UE Toolkit: Dumper (1.6.0)     */");
         sb.AppendLine("/* GitHub: https://github.com/RyoTune/UE.Toolkit */");
         sb.AppendLine("/* Author: RyoTune                               */");
         sb.AppendLine("/* Special thanks to UE4SS team and Rirurin      */");
@@ -267,6 +276,20 @@ public unsafe class Dumper
         }
     }
 
+    private static void AddPtrDefinition(StringBuilder sb)
+    {
+        sb.AppendLine("public readonly unsafe struct Ptr<T>(T* value) : IEquatable<Ptr<T>>");
+        sb.AppendLine("    where T : unmanaged");
+        sb.AppendLine("{");
+        sb.AppendLine("    public readonly T* Value = value;");
+        sb.AppendLine();
+        sb.AppendLine("    public bool Equals(Ptr<T> other) => Value == other.Value;");
+        sb.AppendLine("    public static bool operator ==(Ptr<T> a, Ptr<T> b) => a.Equals(b);");
+        sb.AppendLine("    public static bool operator !=(Ptr<T> a, Ptr<T> b) => !a.Equals(b);");
+        sb.AppendLine("}");
+        sb.AppendLine();
+    }
+
     private void GenerateObjectDefinition(IUClass uclass)
     {
         var className = uclass.NamePrivate.ToString();
@@ -277,6 +300,7 @@ public unsafe class Dumper
         // TODO: Flag stuff?
 
         var super = uclass.GetSuperClass();
+        var superSize = super?.PropertiesSize ?? 0;
         var superName = super?.NamePrivate.ToString();
         //var superNativeName = super != null ? GetNativeClassName(super) : "UObjectBaseUtility";
         
@@ -284,7 +308,7 @@ public unsafe class Dumper
         
         // TODO: Generate delegates.
 
-        var properties = ResolveProperties(uclass.PropertyLink);
+        var properties = ResolveProperties(uclass.PropertyLink, superSize);
 
         // TODO: Generate functions.
 
@@ -301,10 +325,11 @@ public unsafe class Dumper
         var size = scriptStruct.PropertiesSize;
         var alignment = scriptStruct.MinAlignment;
         var super = scriptStruct.SuperStruct;
+        var superSize = super?.PropertiesSize ?? 0;
         var superName = super?.NamePrivate.ToString();
         //var superNativeName = super != null ? GetNativeStructName((UScriptStruct*)super) : null;
         
-        var props = ResolveProperties(scriptStruct.PropertyLink);
+        var props = ResolveProperties(scriptStruct.PropertyLink, superSize);
 
         _UStructDefinitions[structName] = new(structName, structNativeName, size, alignment, props, superName);
         Log.Debug($"UScriptStruct: {structNativeName}");
@@ -372,11 +397,16 @@ public unsafe class Dumper
         _UEnumDefinitions[name] = new(name, underlyingType, entries);
     }
 
-    private PropertyDefinition[] ResolveProperties(IEnumerable<IFProperty> propLink)
+    private PropertyDefinition[] ResolveProperties(IEnumerable<IFProperty> propLink, int SuperStructEnd)
     {
         var props = new List<PropertyDefinition>();
         foreach (var prop in propLink)
         {
+            // Stop when we find a property with an offset lower than the size of the super struct.
+            // PropertyLink contains a list of fields declared by object in ascending order, then from it's super
+            // object and so on.
+            if (prop.Offset_Internal < SuperStructEnd)
+                break;
             var newProp = ResolveProperty(prop);
             var numSameName = props.Count(x => x.Name.StartsWith(newProp.Name)); // Compare against sanitized name, since that's what props are using.
             
@@ -492,15 +522,13 @@ public unsafe class Dumper
                     
                     _UStructDefinitions.TryGetValue(mapPropKeyType.TrimEnd('*'), out var knownKeyStruct);
                     _UStructDefinitions.TryGetValue(mapPropValueType.TrimEnd('*'), out var knownValueStruct);
-                    
-                    var keyType = isKeyPtr ? "nint" : SanitizeName(knownKeyStruct?.DisplayName ?? mapPropKeyType);
-                    var valueType = isValuePtr ? "nint" : SanitizeName(knownValueStruct?.DisplayName ?? mapPropValueType);
 
-                    if (isKeyPtr || isValuePtr)
-                    {
-                        return $"TMap<{keyType}, {valueType}> /* TMap<{mapPropKeyType}, {mapPropValueType}> */";
-                    }
+                    var keyName = SanitizeName(knownKeyStruct?.DisplayName ?? mapPropKeyType);
+                    var valueName = SanitizeName(knownValueStruct?.DisplayName ?? mapPropValueType);
                     
+                    var keyType = isKeyPtr ? $"Ptr<{keyName}>" : keyName;
+                    var valueType = isValuePtr ? $"Ptr<{valueName}>" : valueName;
+                   
                     return $"TMap<{keyType}, {valueType}>";
                 };
             case "InterfaceProperty":
@@ -512,9 +540,10 @@ public unsafe class Dumper
                 {
                     var isPtrType = arrayPropType.EndsWith('*') || arrayPropType.Contains('<'); // Use nint for pointers and generic types.
                     _UStructDefinitions.TryGetValue(arrayPropType.TrimEnd('*'), out var knownStruct);
+                    var arrTypeSanitized = SanitizeName(knownStruct?.DisplayName ?? arrayPropType);
                     return isPtrType ?
-                        $"TArray<nint> /* TArray<{knownStruct?.DisplayName ?? arrayPropType}> */" :
-                        $"TArray<{SanitizeName(knownStruct?.DisplayName ?? arrayPropType)}>";
+                        $"TArray<Ptr<{arrTypeSanitized}>>" :
+                        $"TArray<{arrTypeSanitized}>";
                 };
             case "SetProperty":
                 var setPropType = GetPropertyTypeName(_factory.Cast<IFSetProperty>(prop).ElementProp);

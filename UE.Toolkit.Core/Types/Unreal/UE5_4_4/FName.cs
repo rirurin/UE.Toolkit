@@ -112,7 +112,10 @@ public unsafe struct FName : IMapHashable, IEquatable<FName>
             return base.ToString()!;
         }
 
-        return GetFNameEntry()->ToString();
+        string Output = GetFNameEntry()->ToString();
+        if (Number.Value != 0)
+            Output += $"_{Number.Value - 1}";
+        return Output;
     }
 
     private FNameEntry* GetFNameEntry()
@@ -126,9 +129,9 @@ public unsafe struct FName : IMapHashable, IEquatable<FName>
     
     private static nint GetPool(uint poolIdx) => *((nint*)(GFNamePool + 1) + poolIdx);
 
-    public uint GetTypeHash() => ComparisonIndex.GetTypeHash();
+    public uint GetTypeHash() => ComparisonIndex.GetTypeHash() + Number.Value;
 
-    public bool Equals(FName other) => ComparisonIndex.Equals(other.ComparisonIndex);
+    public bool Equals(FName other) => ComparisonIndex.Equals(other.ComparisonIndex) && Number.Equals(other.Number);
 }
 
 public unsafe delegate FName FNameHelper_FindOrStoreString(FNameStringView* view, EFindName findType);

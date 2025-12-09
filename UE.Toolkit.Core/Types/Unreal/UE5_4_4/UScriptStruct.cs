@@ -10,3 +10,11 @@ public struct UScriptStruct
     public bool bPrepareCppStructOpsCompleted;
     public nint CppStructOps;
 }
+
+[StructLayout(LayoutKind.Sequential)]
+public struct ICppStructOps
+{
+    public nint VTable;
+    public uint Size;
+    public uint Alignment;
+}

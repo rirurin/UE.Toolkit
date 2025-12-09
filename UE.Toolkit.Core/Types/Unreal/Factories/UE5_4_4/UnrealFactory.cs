@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Runtime.InteropServices;
 using UE.Toolkit.Core.Common;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
@@ -9,8 +10,40 @@ namespace UE.Toolkit.Core.Types.Unreal.Factories.UE5_4_4;
 
 public class UnrealFactory : BaseUnrealFactory
 {
+    
+    public override nint SizeOf<T>()
+    {
+        var TypeName = typeof(T).Name;
+        unsafe
+        {
+            return TypeName switch
+            {
+                nameof(IUObject) => sizeof(UObjectBase),
+                nameof(IUClass) => sizeof(UClass),
+                nameof(IUScriptStruct) => sizeof(UScriptStruct),
+                nameof(IUEnum) => sizeof(UEnum),
+                nameof(IUUserDefinedEnum) => sizeof(UUserDefinedEnum),
+                nameof(IFProperty) => sizeof(FProperty),
+                nameof(IFByteProperty) => sizeof(FByteProperty),
+                nameof(IFBoolProperty) => sizeof(FBoolProperty),
+                nameof(IFEnumProperty) => sizeof(FEnumProperty),
+                nameof(IFObjectProperty) => sizeof(FObjectProperty),
+                nameof(IFSoftClassProperty) => sizeof(FSoftClassProperty),
+                nameof(IFClassProperty) => sizeof(FClassProperty),
+                nameof(IFStructProperty) => sizeof(FStructProperty),
+                nameof(IFMapProperty) => sizeof(FMapProperty),
+                nameof(IFInterfaceProperty) => sizeof(FInterfaceProperty),
+                nameof(IFArrayProperty) => sizeof(FArrayProperty),
+                nameof(IFSetProperty) => sizeof(FSetProperty),
+                nameof(IFOptionalProperty) => sizeof(FOptionalProperty),
+                _ => throw new NotSupportedException(TypeName)
+            };
+        }
+    }
+    
     public override IFProperty CreateFProperty(nint ptr) => new FProperty_UE5_4_4(ptr, this);
     public override IFByteProperty CreateFByteProperty(nint ptr) => new FByteProperty_UE5_4_4(ptr, this);
+    public override IFBoolProperty CreateFBoolProperty(nint ptr) => new FBoolProperty_UE5_4_4(ptr, this);
     public override IFEnumProperty CreateFEnumProperty(nint ptr) => new FEnumProperty_UE5_4_4(ptr, this);
     public override IFObjectProperty CreateFObjectProperty(nint ptr) => new FObjectProperty_UE5_4_4(ptr, this);
     public override IFSoftClassProperty CreateFSoftClassProperty(nint ptr) => new FSoftClassProperty_UE5_4_4(ptr, this);
@@ -29,8 +62,19 @@ public class UnrealFactory : BaseUnrealFactory
     public override IUField CreateUField(nint ptr) => new UField_UE5_4_4(ptr, this);
     public override IUStruct CreateUStruct(nint ptr) => new UStruct_UE5_4_4(ptr, this);
     public override IUUserDefinedEnum CreateUUserDefinedEnum(nint ptr) => new UUserDefinedEnum_UE5_4_4(ptr, this);
+    public override IUFunction CreateUFunction(nint ptr) => new UFunction_UE5_4_4(ptr, this);
     public override IFFieldClass CreateFFieldClass(nint ptr) => new FFieldClass_UE5_4_4(ptr, this);
     public override IFField CreateFField(nint ptr) => new FField_UE5_4_4(ptr, this);
+    public override IFStructParams CreateFStructParams(nint ptr) => new FStructParams_UE5_4_4(ptr, this);
+    public override IFPropertyParams CreateFPropertyParams(nint ptr) => new FPropertyParams_UE5_4_4(ptr, this);
+    public override IFGenericPropertyParams CreateFGenericPropertyParams(nint ptr) => new FGenericPropertyParams_UE5_4_4(ptr, this);
+    public override IFWorldContext CreateFWorldContext(nint ptr) => new FWorldContext_UE5_4_4(ptr, this);
+    public override IUEngine CreateUEngine(nint ptr) => new UEngine_UE5_4_4(ptr, this);
+    public override IUGameInstance CreateUGameInstance(nint ptr) => new UGameInstance_UE5_4_4(ptr, this);
+    public override IFStaticConstructObjectParameters CreateFStaticConstructObjectParameters()
+        => new FStaticConstructObjectParameters_UE5_4_4(this);
+    public override IFActorSpawnParameters CreateFActorSpawnParameters()
+        => new FActorSpawnParameters_UE5_4_4(this);
 }
 
 public unsafe class FOptionalProperty_UE5_4_4(nint ptr, IUnrealFactory factory)
@@ -103,6 +147,7 @@ public unsafe class FFieldClass_UE5_4_4(nint ptr, IUnrealFactory factory)
 {
     private readonly FFieldClass* _self = (FFieldClass*)ptr;
 
+    public nint Ptr => ptr;
     public string Name => _self->Name.ToString();
     public ulong Id => _self->Id;
     public ulong CastFlags => _self->CastFlags;
@@ -228,12 +273,13 @@ public unsafe class IFPropertyEnumerable(IFProperty initial, PropertyType propTy
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
-public enum PropertyType
+public unsafe class FBoolProperty_UE5_4_4(nint ptr, IUnrealFactory factory)
+    : FProperty_UE5_4_4(ptr, factory), IFBoolProperty
 {
-    PropertyLink,
-    NextRef,
-    DestructorLink,
-    PostConstructLink,
+    public byte FieldSize => ((FBoolProperty*)ptr)->FieldSize;
+    public byte ByteOffset => ((FBoolProperty*)ptr)->ByteOffset;
+    public byte ByteMask => ((FBoolProperty*)ptr)->ByteMask;
+    public byte FieldMask => ((FBoolProperty*)ptr)->FieldMask;
 }
 
 public unsafe class FByteProperty_UE5_4_4(nint ptr, IUnrealFactory factory)
@@ -401,6 +447,33 @@ public unsafe class UClass_UE5_4_4(nint ptr, IUnrealFactory factory)
 
     public IUClass? GetSuperClass()
         => _self->GetSuperClass() != null ? _factory.CreateUClass((nint)_self->GetSuperClass()) : null;
+    
+    public IUFunction? GetFunction(string Name)
+    {
+        var FuncMapDict = new TMapDictionary<FName, UFunction>(
+            (TMap<FName, UFunction>*)(&_self->FuncMap), factory.Memory
+        );
+        return FuncMapDict.TryGetValue(new(Name), out var Function)
+            ? factory.CreateUFunction((nint)Function.Value)
+            : null;
+    }
+}
+
+public unsafe class UFunction_UE5_4_4(nint ptr, IUnrealFactory factory)
+    : UStruct_UE5_4_4(ptr, factory), IUFunction
+{
+    private readonly UFunction* _self = (UFunction*)ptr;
+
+    public EFunctionFlags FunctionFlags => _self->FunctionFlags;
+    public int ParamCount => _self->NumParms;
+    public int ParamSize => _self->ParmsSize;
+    public int ReturnValueOffset => _self->ReturnValueOffset;
+    
+    public int GetTotalParameterSize()
+    {
+        var LastProperty = ChildProperties.Any() ? _factory.CreateFProperty(ChildProperties.Last().Ptr) : null;
+        return LastProperty != null ? LastProperty!.Offset_Internal + LastProperty!.ElementSize : 0;
+    }
 }
 
 public unsafe class UObjectArray_UE5_4_4(nint ptr, IUnrealFactory factory) : IUObjectArray
@@ -416,5 +489,240 @@ public unsafe class UObjectArray_UE5_4_4(nint ptr, IUnrealFactory factory) : IUO
         if (objItem == null || objItem->Object == null) return null;
         
         return factory.CreateUObject((nint)objItem->Object);
+    }
+
+    public void AddToRootSet(int idx)
+    {
+        var objItem = _self->ObjObjects.GetItem(idx);
+        if (objItem == null || objItem->Object == null) return;
+        objItem->Flags |= EInternalObjectFlags.RootSet;
+        objItem->Object->ObjectFlags |= EObjectFlags.RF_MarkAsRootSet;
+    }
+
+    public void RemoveFromRootSet(int idx)
+    {
+        var objItem = _self->ObjObjects.GetItem(idx);
+        if (objItem == null || objItem->Object == null) return;
+        objItem->Flags &= ~EInternalObjectFlags.RootSet;
+        objItem->Object->ObjectFlags &= ~EObjectFlags.RF_MarkAsRootSet;
+    }
+}
+
+public class FPropertyParamEnumerator(IFStructParams owner) 
+    : IEnumerator<IFPropertyParams>, IEnumerable<IFPropertyParams>
+{
+    private int CurrentIndex = -1;
+    
+    #region impl IEnumerator
+    
+    public bool MoveNext() => ++CurrentIndex < owner.PropertyCount;
+
+    public void Reset() => CurrentIndex = -1;
+
+    public IFPropertyParams Current => owner.GetProperty(CurrentIndex);
+
+    object? IEnumerator.Current => Current;
+
+    public void Dispose() {}
+    
+    #endregion
+    
+    #region impl IEnumerable
+    
+    public IEnumerator<IFPropertyParams> GetEnumerator() => this;
+    
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    
+    #endregion
+}
+
+public unsafe class FStructParams_UE5_4_4(nint ptr, IUnrealFactory factory) : IFStructParams
+{
+    private readonly FStructParams* _self = (FStructParams*)ptr;
+    protected readonly IUnrealFactory _factory = factory;
+
+    public nint Ptr => (nint)_self;
+
+    public nint OuterFunc => _self->OuterFunc;
+    public nint SuperFunc => _self->SuperFunc;
+    public nint StructOpsFunc => _self->StructOpsFunc;
+    public string Name => Marshal.PtrToStringUTF8(_self->NameUTF8)!;
+    public ulong Size => _self->SizeOf;
+    public ulong Alignment => _self->AlignOf;
+    public EObjectFlags ObjectFlags => _self->ObjectFlags;
+    public EStructFlags StructFlags => _self->StructFlags;
+    public int PropertyCount => _self->NumProperties;
+    public IFPropertyParams? GetProperty(int Index)
+    {
+        var Result = ((FStructParams*)Ptr)->GetProperty(Index);
+        return Result != null ? _factory.CreateFPropertyParams((nint)Result) : null;
+    }
+    
+    public IEnumerable<IFPropertyParams> Properties => new FPropertyParamEnumerator(this);
+}
+
+public unsafe class FPropertyParams_UE5_4_4(nint ptr, IUnrealFactory factory) : IFPropertyParams
+{
+    private readonly FPropertyParamsBase* _self = (FPropertyParamsBase*)ptr;
+    protected readonly IUnrealFactory _factory = factory;   
+    
+    public nint Ptr => (nint)_self;
+    public string Name => Marshal.PtrToStringUTF8(_self->NameUTF8)!;
+    public EPropertyFlags PropertyFlags => _self->PropertyFlags;
+    public EPropertyGenFlags GenFlags => _self->PropertyGenFlags;
+    public EObjectFlags ObjectFlags => _self->ObjectFlags;
+}
+
+public unsafe class FGenericPropertyParams_UE5_4_4(nint ptr, IUnrealFactory factory) 
+    : FPropertyParams_UE5_4_4(ptr, factory), IFGenericPropertyParams
+{
+    private readonly FGenericPropertyParams* _self = (FGenericPropertyParams*)ptr;
+
+    public int ArrayDim => _self->Super.ArrayDim;
+    public int Offset => _self->Super.Offset;
+}
+
+public unsafe class FWorldContext_UE5_4_4(nint ptr, IUnrealFactory factory) : IFWorldContext
+{
+    protected readonly IUnrealFactory _factory = factory;
+    private readonly FWorldContext* _self = (FWorldContext*)ptr;
+    public nint Ptr => (nint)_self;
+    public WorldType GetWorldType() => _self->WorldType;
+    public nint GetWorld() => (nint)_self->ThisCurrentWorld;
+}
+
+public unsafe class FWorldContextEnumerator(UEngine_UE5_4_4 owner, IUnrealFactory factory) 
+    : IEnumerator<IFWorldContext>, IEnumerable<IFWorldContext>
+{
+    private int CurrentIndex = -1;
+    
+    #region impl IEnumerator 
+    
+    public bool MoveNext() => ++CurrentIndex < owner.GetWorldListInner()->ArrayNum;
+
+    public void Reset() => CurrentIndex = -1;
+
+    public IFWorldContext Current => factory.CreateFWorldContext((nint)owner.GetWorldListInner()->AllocatorInstance[CurrentIndex].Value);
+
+    object? IEnumerator.Current => Current;
+
+    public void Dispose() {}
+    
+    #endregion
+    
+    #region impl IEnumerable
+    
+    public IEnumerator<IFWorldContext> GetEnumerator() => this;
+    
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    
+    #endregion
+}
+
+public unsafe class UEngine_UE5_4_4(nint ptr, IUnrealFactory factory) 
+    : UObject_UE5_4_4(ptr, factory), IUEngine
+{
+    private readonly UEngine* _self = (UEngine*)ptr;
+
+    internal TArray<Ptr<FWorldContext>>* GetWorldListInner() => &_self->WorldList;
+    
+    public IEnumerable<IFWorldContext> GetWorldList() => new FWorldContextEnumerator(this, factory);
+}
+
+public unsafe class FStaticConstructObjectParameters_UE5_4_4
+    : IFStaticConstructObjectParameters, IDisposable
+{
+    private readonly FStaticConstructObjectParameters* _self;
+    public nint Ptr => (nint)_self;
+    protected readonly IUnrealFactory _factory;
+    private bool Disposed = false;
+
+    public FStaticConstructObjectParameters_UE5_4_4(IUnrealFactory factory)
+    {
+        _factory = factory;
+        _self = (FStaticConstructObjectParameters*)_factory.Memory.MallocZeroed(sizeof(FStaticConstructObjectParameters));
+    }
+
+    public void SetParams(IUClass Class, IUObject? Owner, FName Name)
+    {
+        _self->Class = (UClass*)Class.Ptr;
+        _self->Outer = (UObjectBase*)Owner?.Ptr;
+        _self->Name = Name;
+    }
+    
+    #region DISPOSE INTERFACE
+    
+    public void Dispose()
+    {
+        Disposing();
+        GC.SuppressFinalize(this);
+    }
+    
+    protected virtual void Disposing()
+    {
+        if (Disposed) return;
+        _factory.Memory.Free(Ptr);
+        Disposed = true;
+    }
+
+    ~FStaticConstructObjectParameters_UE5_4_4() => Disposing();
+    
+    #endregion
+}
+
+public unsafe class FActorSpawnParameters_UE5_4_4
+    : IFActorSpawnParameters, IDisposable
+{
+    private readonly FActorSpawnParameters* _self;
+    public nint Ptr => (nint)_self;
+    protected readonly IUnrealFactory _factory;
+    private bool Disposed = false;
+
+    public FActorSpawnParameters_UE5_4_4(IUnrealFactory factory)
+    {
+        _factory = factory;
+        _self = (FActorSpawnParameters*)_factory.Memory.MallocZeroed(sizeof(FActorSpawnParameters));
+    }
+    
+    public void SetParams(EObjectFlags Flags)
+    {
+        _self->ObjectFlags = Flags;
+    }
+    
+    #region DISPOSE INTERFACE
+    
+    public void Dispose()
+    {
+        Disposing();
+        GC.SuppressFinalize(this);
+    }
+    
+    protected virtual void Disposing()
+    {
+        if (Disposed) return;
+        _factory.Memory.Free(Ptr);
+        Disposed = true;
+    }
+
+    ~FActorSpawnParameters_UE5_4_4() => Disposing();
+    
+    #endregion
+}
+
+public unsafe class UGameInstance_UE5_4_4(nint ptr, IUnrealFactory factory)
+    : UObject_UE5_4_4(ptr, factory), IUGameInstance
+{
+    private readonly UGameInstance* _self = (UGameInstance*)ptr;
+
+    public bool TryGetSubsystem(IUClass Class, out IUObject? Subsystem)
+    {
+        var Subsystems = new TMapDictionary<HashablePtr<UClass>, HashablePtr<UObjectBase>>(
+           (TMap<HashablePtr<UClass>, HashablePtr<UObjectBase>>*)(&_self->SubsystemCollection.Subsystems),
+            factory.Memory);
+        Subsystem = Subsystems.TryGetValue(new HashablePtr<UClass>(new Ptr<UClass>((UClass*)Class.Ptr)),
+            out var pSubsystem)
+            ? _factory.CreateUObject((nint)pSubsystem.Value->Ptr.Value)
+            : null;
+        return Subsystem != null;
     }
 }

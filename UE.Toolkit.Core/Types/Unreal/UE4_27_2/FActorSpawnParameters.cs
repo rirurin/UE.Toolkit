@@ -1,0 +1,14 @@
+﻿using System.Runtime.InteropServices;
+using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
+
+namespace UE.Toolkit.Core.Types.Unreal.UE4_27_2;
+
+[StructLayout(LayoutKind.Explicit, Size = 0x30)]
+public unsafe struct FActorSpawnParameters
+{
+    /* A name to assign as the Name of the Actor being spawned. If no value is specified, the name of the spawned Actor will be automatically generated using the form [Class]_[Number]. */
+    [FieldOffset(0x0)] public FName Name;
+    
+    /* The parent component to set the Actor in. */
+    [FieldOffset(0x2c)] public EObjectFlags ObjectFlags;
+}

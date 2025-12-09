@@ -9,4 +9,8 @@ public interface IUObjectArray
     
     IUObject? IndexToObject(int idx);
 
+    void AddToRootSet(int idx);
+    
+    void RemoveFromRootSet(int idx);
+
 }

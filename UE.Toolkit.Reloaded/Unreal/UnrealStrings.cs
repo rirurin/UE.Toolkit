@@ -54,16 +54,20 @@ public unsafe class UnrealStrings : IUnrealStrings
     }
 
     public string FTextToString(FText* text) => _FText_ToString.Wrapper(text)->ToString();
-    
-    public FString* CreateFString(string? content = null)
+
+    public FString* CreateFString(string? content = null) => UnrealStringsStatic.CreateFString(content);
+}
+
+public static unsafe class UnrealStringsStatic
+{
+    public static FString* CreateFString(string? content = null)
     {
-        content ??= string.Empty;
-        
-        var fstring = (FString*)UnrealMemory._FMemory.Malloc(sizeof(FString));
+        content = (content ?? string.Empty) + "\0";
+        var fstring = (FString*)UnrealMemory._FMemory!.Malloc(sizeof(FString));
+        fstring->Data.ArrayNum = content.Length;
+        fstring->Data.ArrayMax = content.Length;
         
         var strBytes = Encoding.Unicode.GetBytes(content);
-        fstring->Data.ArrayNum = strBytes.Length;
-        fstring->Data.ArrayMax = strBytes.Length;
         fstring->Data.AllocatorInstance = (char*)UnrealMemory._FMemory.Malloc(strBytes.Length);
         Marshal.Copy(strBytes, 0, (nint)fstring->Data.AllocatorInstance, strBytes.Length);
         

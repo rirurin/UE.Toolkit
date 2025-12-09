@@ -54,7 +54,7 @@ public unsafe class ObjectWriter
 
         // TODO: Possibly rework XML node tree creation to return
         // a collection of generated writers to allow resetting values on rewrites.
-        if (_nodeFactory.TryCreate(ObjectName, objPtr, _objType, out var rootNode))
+        if (_nodeFactory.TryCreate(ObjectName, objPtr, 0, _objType, out var rootNode))
         {
             rootNode.ConsumeNode(reader);
         }

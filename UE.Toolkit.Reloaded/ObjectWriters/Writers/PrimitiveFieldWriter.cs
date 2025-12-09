@@ -1,9 +1,10 @@
 namespace UE.Toolkit.Reloaded.ObjectWriters.Writers;
 
-public unsafe class PrimitiveFieldWriter(string fieldName, nint fieldPtr, Type fieldType) : IFieldWriter
+public unsafe class PrimitiveFieldWriter(string fieldName, nint fieldPtr, int fieldBit, Type fieldType) : IFieldWriter
 {
     private nint? _ogValue;
     private Type _fieldType = fieldType;
+    private int _fieldBit = fieldBit;
 
     public void Reset()
     {
@@ -29,6 +30,10 @@ public unsafe class PrimitiveFieldWriter(string fieldName, nint fieldPtr, Type f
             {
                 SetField(intValue);
             }
+        }
+        else if (bool.TryParse(value, out var boolValue))
+        {
+            SetField(boolValue);
         }
         else if (double.TryParse(value, out var numValue))
         {
@@ -72,7 +77,8 @@ public unsafe class PrimitiveFieldWriter(string fieldName, nint fieldPtr, Type f
                 *(sbyte*)fieldPtr = Convert.ToSByte(value);
                 break;
             case "Boolean":
-                *(bool*)fieldPtr = Convert.ToBoolean(value);
+                var Value = Convert.ToBoolean(value);
+                *(byte*)fieldPtr |= (byte)(*(byte*)&Value << _fieldBit);
                 break;
             case "Single":
                 *(float*)fieldPtr = Convert.ToSingle(value);

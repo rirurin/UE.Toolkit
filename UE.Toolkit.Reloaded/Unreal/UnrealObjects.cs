@@ -1,6 +1,6 @@
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.Structs;
 using UE.Toolkit.Core.Common;
@@ -24,6 +24,8 @@ public unsafe class UnrealObjects : IUnrealObjects
     
     private static IHook<PostLoadSubobjectsFunction>? _UObject_PostLoadSubobjects;
     private static Action<nint>? _onObjectLoaded;
+
+    internal ConcurrentDictionary<nint, Action<IUClass>> OnCDOLoaded = new();
     
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
     private static void UObject_PostLoadSubobjects(nint self, nint outerInstanceGraph)
@@ -35,8 +37,12 @@ public unsafe class UnrealObjects : IUnrealObjects
         _onObjectLoaded?.Invoke(self);
     }
 
+    private IUnrealFactory Factory;
+
     public UnrealObjects(IUnrealFactory factory)
     {
+        Factory = factory;
+        
         Project.Scans.AddScanHook(nameof(UObject_PostLoadSubobjects),
             (result, hooks) => _UObject_PostLoadSubobjects = hooks.CreateHook<PostLoadSubobjectsFunction>((delegate* unmanaged[Stdcall]<nint, nint, void>)&UObject_PostLoadSubobjects, result).Activate());
         
@@ -93,20 +99,7 @@ public unsafe class UnrealObjects : IUnrealObjects
     
     public string FTextToString(FText* text) => _FText_ToString.Wrapper(text)->ToString();
 
-    public FString* CreateFString(string content)
-    {
-        content += '\0';
-        
-        var fstring = (FString*)UnrealMemory._FMemory!.Malloc(sizeof(FString));
-        fstring->Data.ArrayNum = content.Length;
-        fstring->Data.ArrayMax = content.Length;
-        
-        var strBytes = Encoding.Unicode.GetBytes(content);
-        fstring->Data.AllocatorInstance = (char*)UnrealMemory._FMemory.Malloc(strBytes.Length);
-        Marshal.Copy(strBytes, 0, (nint)fstring->Data.AllocatorInstance, strBytes.Length);
-        
-        return fstring;
-    }
+    public FString* CreateFString(string content) => UnrealStringsStatic.CreateFString(content);
 
 #pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
     private struct PostLoadSubobjectsFunction

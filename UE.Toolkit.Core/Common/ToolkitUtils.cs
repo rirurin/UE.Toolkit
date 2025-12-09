@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 
@@ -5,7 +6,7 @@ namespace UE.Toolkit.Core.Common;
 
 public static unsafe class ToolkitUtils
 {
-    private static readonly Dictionary<FName, string> PrivateToNativeNameMap = [];
+    private static readonly ConcurrentDictionary<FName, string> PrivateToNativeNameMap = [];
 
     public static nint GetGlobalAddress(nint address) => *(int*)address + address + 4;
     

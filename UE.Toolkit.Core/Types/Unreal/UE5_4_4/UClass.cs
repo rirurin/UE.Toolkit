@@ -27,6 +27,9 @@ public unsafe struct UClass
     public TArray<FRepRecord> ClassReps;
     public TArray<UField> NetFields;
     public UObjectBase* ClassDefaultObject;
+    public nint SparseClassData;
+    public UScriptStruct* SparseClassDataStruct;
+    public TMap<FName, nint> FuncMap;
 
     public readonly UClass* GetSuperClass() => (UClass*)Super.SuperStruct;
     

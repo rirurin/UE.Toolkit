@@ -36,16 +36,26 @@ public class TArrayFieldNode(string fieldName, nint fieldPtr, Type fieldType, Fi
                 Log.Warning($"{nameof(TArrayFieldNode)} || Invalid ID: {id}");
                 break;
             }
-
-            itemIdx -= 1; // We're doing 1 indexing because normal people can't handle 0...
-            if (itemIdx < 0 || itemIdx > tempArray->ArrayNum)
+            
+            if (itemIdx != -1)
             {
-                Log.Warning($"{nameof(TArrayFieldNode)} || ID is either less than 1 or more than item count: {id} || Total: {tempArray->ArrayNum}");
-                break;
+                itemIdx -= 1; // We're doing 1 indexing because normal people can't handle 0...
+                if (itemIdx < 0 || itemIdx > tempArray->ArrayNum)
+                {
+                    Log.Warning($"{nameof(TArrayFieldNode)} || ID is either less than 1 or more than item count: {id} || Total: {tempArray->ArrayNum}");
+                    break;
+                }   
+            } else
+            {
+                Log.Verbose($"{nameof(TArrayFieldNode)} @ 0x{(nint)tempArray:x} || Old Size : {tempArray->ArrayNum} || Old Capacity: {tempArray->ArrayMax}");
+                if (tempArray->ArrayNum == tempArray->ArrayMax)
+                    TArrayListStatic.ResizeToStatic(tempArray, TArrayListStatic.CalculateNewArraySizeStatic(tempArray), itemSize, nodeFactory.Memory);
+                itemIdx = tempArray->ArrayNum;
+                tempArray->ArrayNum++;
             }
 
             var itemPtr = itemIdx * itemSize + (nint)tempArray->AllocatorInstance;
-            if (nodeFactory.TryCreate($"{fieldName} (ID: {id})", itemPtr, itemType, out var itemNode))
+            if (nodeFactory.TryCreate($"{fieldName} (ID: {id})", itemPtr, 0, itemType, out var itemNode))
             {
                 itemNode.ConsumeNode(subReader);
             }

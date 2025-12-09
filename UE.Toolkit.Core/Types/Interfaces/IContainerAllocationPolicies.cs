@@ -46,7 +46,7 @@ public class HeapAllocatorInt32<TType> : HeapAllocator<TType, int>
 public unsafe abstract class InlineAllocator<TType, TSize> : ContainerAllocationPolicy<TType, TSize>
     where TType : unmanaged where TSize : INumber<TSize>
 {
-    protected TType* Heap;
+    protected TType* Heap = null;
     protected TSize NumInlineElements;
 
     public bool HasAllocation() => Heap != null;
@@ -62,12 +62,8 @@ public class InlineAllocatorInt32<TType> : InlineAllocator<TType, int>
     public override nint GetAllocatedSize(int NumAllocatedElements, nint NumBytesPerElement)
     {
         if (NumAllocatedElements > NumInlineElements)
-        {
             return (NumAllocatedElements - NumInlineElements) * NumBytesPerElement;
-        } else
-        {
-            return 0;
-        }
+        return 0;
     }
 }
 

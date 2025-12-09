@@ -23,6 +23,7 @@ public class Mod : ModBase, IExports
     public static Config Config = null!;
 #pragma warning restore CA2211
     
+    // Reloaded-II API
     private readonly IModLoader _modLoader;
     private readonly IReloadedHooks _hooks;
     private readonly ILogger _log;
@@ -30,15 +31,21 @@ public class Mod : ModBase, IExports
 
     private readonly IModConfig _modConfig;
 
+    // Unreal Toolkit API
     private readonly IUnrealFactory _factory;
     private readonly UnrealNames _names;
-    private readonly UnrealMemory _memory;
+    private readonly IUnrealMemory _memory;
     private readonly UnrealObjects _objects;
     private readonly DataTablesService _tables;
     private readonly TypeRegistry _typeRegistry;
     private readonly ObjectWriterService _writer;
     private readonly ToolkitApi _toolkit;
     private readonly UnrealStrings _strings;
+    private readonly UnrealClasses _classes;
+    private readonly Common.ResolveAddress _address;
+    private readonly UnrealMethods _methods;
+    private readonly UnrealState _state;
+    private readonly UnrealSpawning _spawning;
 
     public Mod(ModContext context)
     {
@@ -58,23 +65,33 @@ public class Mod : ModBase, IExports
         GameConfig.SetGame(_modLoader.GetAppConfig().AppId);
 
         _factory = GameConfig.Instance.Factory;
+        _memory = GameConfig.Instance.Memory;
+        _factory.Memory = _memory;
         _names = new();
         _objects = new(_factory);
         _tables = new();
-        _memory = new();
         _typeRegistry = new();
-        _writer = new(_typeRegistry, _objects, _tables);
+        _writer = new(_typeRegistry, _objects, _tables, _memory);
         _toolkit = new(_writer);
         _strings = new();
+        _address = new();
+        _classes = new(_factory, _memory, _hooks, _address);
+        _methods = new(_factory, _memory, _classes, _objects, _hooks);
+        _state = new(_factory, _classes);
+        _spawning = new(_classes, _factory, _state);
         
-        _modLoader.AddOrReplaceController<IUnrealMemory>(_owner, _memory);
+        _modLoader.AddOrReplaceController(_owner, _memory);
         _modLoader.AddOrReplaceController<IDataTables>(_owner, _tables);
         _modLoader.AddOrReplaceController<IUnrealObjects>(_owner, _objects);
         _modLoader.AddOrReplaceController<ITypeRegistry>(_owner, _typeRegistry);
         _modLoader.AddOrReplaceController<IToolkit>(_owner, _toolkit);
         _modLoader.AddOrReplaceController<IUnrealNames>(_owner, _names);
         _modLoader.AddOrReplaceController<IUnrealStrings>(_owner, _strings);
+        _modLoader.AddOrReplaceController<IUnrealClasses>(_owner, _classes);
         _modLoader.AddOrReplaceController(_owner, _factory);
+        _modLoader.AddOrReplaceController<IUnrealMethods>(_owner, _methods);
+        _modLoader.AddOrReplaceController<IUnrealState>(_owner, _state);
+        _modLoader.AddOrReplaceController<IUnrealSpawning>(_owner, _spawning);
         
         _modLoader.ModLoaded += OnModLoaded;
     }
@@ -113,7 +130,8 @@ public class Mod : ModBase, IExports
 
     public Type[] GetTypes() =>
     [
-        typeof(IDataTables), typeof(IUnrealObjects), typeof(IToolkit),typeof(ITypeRegistry), typeof(UObjectBase),
+        typeof(IDataTables), typeof(IUnrealObjects), typeof(IToolkit), typeof(ITypeRegistry), typeof(UObjectBase),
         typeof(IUnrealFactory), typeof(IUnrealNames), typeof(IUnrealMemory), typeof(IUnrealStrings),
+        typeof(IUnrealClasses), typeof(IUnrealMethods), typeof(IUnrealState), typeof(IUnrealSpawning)
     ];
 }

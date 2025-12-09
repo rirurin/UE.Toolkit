@@ -14,6 +14,26 @@ public unsafe struct TArray<T> where T : unmanaged
     public int ArrayMax;
 }
 
+public unsafe class TArrayListStatic
+{
+    internal const int DEFAULT_ARRAY_SIZE = 4;
+    
+    public static int CalculateNewArraySizeStatic(TArray<byte>* Arr) => Arr->AllocatorInstance != null ? Arr->ArrayMax * 2 : DEFAULT_ARRAY_SIZE;
+    
+    // Expose this to allow for TArray reallocation in Object XML
+    public static void ResizeToStatic(TArray<byte>* Arr, int newSize, int elemSize, IUnrealMemoryInternal Allocator)
+    {
+        var newAlloc = (byte*)Allocator.Malloc(elemSize * newSize);
+        if (Arr->AllocatorInstance != null)
+        {
+            NativeMemory.Copy(Arr->AllocatorInstance, newAlloc, (nuint)(Arr->ArrayMax * elemSize));
+            Allocator.Free((nint)Arr->AllocatorInstance);
+        }
+        Arr->AllocatorInstance = newAlloc;
+        Arr->ArrayMax = newSize;
+    }
+}
+
 /// <summary>
 /// <para>
 /// A dynamically sizable array of typed elements. Assumes that your elements can be relocated without a copy constructor.
@@ -34,7 +54,7 @@ public unsafe class TArrayList<TType> : IDisposable, IList<Ptr<TType>> where TTy
     protected bool OwnsInstance;
     protected bool Disposed = false;
 
-    private const int DEFAULT_ARRAY_SIZE = 4;
+    
 
     /// <summary>
     /// Wraps a <c>TArrayList</c> around an existing <c>TArray</c> created in C++
@@ -82,7 +102,7 @@ public unsafe class TArrayList<TType> : IDisposable, IList<Ptr<TType>> where TTy
     bool InBounds(int index) => index >= 0 && index < ArrayNum;
     bool InBoundsForInsertion(int index) => index >= 0 && index <= ArrayNum;
 
-    int CalculateNewArraySize() => (Allocation != null) ? ArrayMax * 2 : DEFAULT_ARRAY_SIZE;
+    int CalculateNewArraySize() => TArrayListStatic.CalculateNewArraySizeStatic((TArray<byte>*)Self);
 
     /// <summary>
     /// Relinquish ownership of this <c>TArray</c>. This is used in cases where you know that Unreal will deallocate it or it otherwise
@@ -90,17 +110,7 @@ public unsafe class TArrayList<TType> : IDisposable, IList<Ptr<TType>> where TTy
     /// </summary>
     public void Leak() => OwnsInstance = false;
 
-    public void ResizeTo(int newSize)
-    {
-        var newAlloc = (TType*)Allocator.Malloc(sizeof(TType) * newSize);
-        if (Allocation != null)
-        {
-            NativeMemory.Copy(Allocation, newAlloc, (nuint)(ArrayMax * sizeof(TType)));
-            Allocator.Free((nint)Allocation);
-        }
-        Allocation = newAlloc;
-        ArrayMax = newSize;
-    }
+    public void ResizeTo(int newSize) => TArrayListStatic.ResizeToStatic((TArray<byte>*)Self, newSize, sizeof(TType), Allocator);
 
     public void Resize() => ResizeTo(CalculateNewArraySize());
 
